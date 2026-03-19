@@ -1,0 +1,2127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Gym Braulio">
+<meta name="theme-color" content="#0f0f0f">
+<title>Gym Braulio</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{--bg:#0f0f0f;--s1:#1a1a1a;--s2:#222;--bd:#2e2e2e;--t1:#f0f0f0;--t2:#b0b0b0;--t3:#808080;--warm:#f59e0b;--cool:#38bdf8;--acc:#f43f5e;}
+body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;max-width:430px;margin:0 auto;min-height:100vh;overflow-x:hidden;font-size:15px;line-height:1.5;touch-action:manipulation;}
+button{font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+input{font-family:inherit;}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+::-webkit-scrollbar{display:none;}
+.screen{display:none;flex-direction:column;min-height:100vh;}
+.screen.active{display:flex;}
+.hbar{background:var(--s1);padding:14px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px;flex-shrink:0;position:sticky;top:0;z-index:10;}
+.back-btn{background:transparent;border:none;color:var(--t2);padding:4px 6px 4px 0;font-size:22px;line-height:1;}
+.prog-wrap{flex:1;}
+.prog-row{display:flex;justify-content:space-between;margin-bottom:5px;}
+.prog-row span{font-size:11px;color:var(--t3);}
+.prog-track{height:4px;background:var(--bd);border-radius:4px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:4px;transition:width .4s ease;}
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:16px;}
+.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;padding:4px 10px;border-radius:6px;}
+.btn{width:100%;border:none;border-radius:12px;padding:16px;font-size:15px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-sm{width:100%;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;gap:6px;}
+.btn-outline{background:var(--s2);color:var(--t1);border:1px solid var(--bd);border-radius:12px;padding:14px;font-size:14px;font-weight:600;width:100%;}
+.ss{flex:1;overflow-y:auto;padding:18px 16px 40px;}
+.sf{padding:16px;background:var(--bg);border-top:1px solid var(--bd);flex-shrink:0;}
+.sl{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--t3);margin-bottom:12px;}
+
+/* Accordion for form/errors */
+details.form-acc{background:var(--s2);border-radius:10px;margin-bottom:14px;overflow:hidden;}
+details.form-acc summary{padding:12px 14px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between;list-style:none;user-select:none;}
+details.form-acc summary::-webkit-details-marker{display:none;}
+details.form-acc summary::after{content:"▸";font-size:11px;color:var(--t3);transition:transform .2s;}
+details.form-acc[open] summary::after{transform:rotate(90deg);}
+#wo-details summary::-webkit-details-marker{display:none;}
+#wo-details[open] summary span:last-child{transform:rotate(90deg);display:inline-block;transition:transform .2s;}
+#wo-details summary span:last-child{transition:transform .2s;}
+.form-body{padding:4px 14px 14px;}
+.form-point{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;}
+.form-dot{flex-shrink:0;margin-top:5px;width:6px;height:6px;border-radius:50%;}
+.form-txt{font-size:13px;color:var(--t2);line-height:1.5;}
+.err-point{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;}
+.err-icon{font-size:13px;flex-shrink:0;margin-top:2px;}
+.err-txt{font-size:13px;color:var(--t2);line-height:1.5;}
+
+/* Inline rest timer */
+.rest-inline{background:var(--s1);border-radius:14px;padding:16px;margin-top:12px;display:none;border:1px solid var(--bd);}
+.rest-row{display:flex;align-items:center;gap:14px;}
+.rest-circle{position:relative;width:72px;height:72px;flex-shrink:0;}
+.rest-circle svg{transform:rotate(-90deg);display:block;}
+.rest-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;}
+.rest-info{flex:1;}
+.rest-lbl{font-size:10px;color:var(--t3);letter-spacing:1px;margin-bottom:3px;}
+.rest-next{font-size:13px;font-weight:700;margin-bottom:8px;color:var(--t1);}
+.rest-actions{display:flex;gap:8px;}
+.rest-skip{background:var(--s2);color:var(--t2);border:1px solid var(--bd);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;}
+.rest-easy{background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;display:none;}
+
+/* Increase weight modal */
+#inc-modal{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.88);flex-direction:column;align-items:center;justify-content:flex-end;}
+#inc-modal.show{display:flex;}
+.inc-inner{background:var(--s1);border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:24px 20px 40px;}
+.inc-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+
+/* Set rows (used by warmup/cooldown hold tracker) */
+.set-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;background:var(--s2);padding:11px 14px;border-radius:10px;}
+.set-check{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;}
+
+/* Strong-style set table */
+.st-row{display:grid;grid-template-columns:36px 1fr 1fr 60px 36px;gap:4px;padding:6px 4px;align-items:center;border-radius:8px;margin-bottom:4px;}
+.st-row.done{background:var(--s2);}
+.st-row.active{background:var(--s1);border:1.5px solid var(--bd);}
+.st-num{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;}
+.st-prev{font-size:12px;color:var(--t3);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.st-input{background:var(--s2);border:1.5px solid var(--bd);border-radius:8px;padding:8px 6px;font-size:15px;font-weight:700;color:var(--t1);text-align:center;width:100%;outline:none;font-family:inherit;-webkit-appearance:none;}
+.st-input:focus{border-color:var(--acc);}
+.st-input.done-input{background:transparent;border-color:transparent;color:var(--t2);}
+.st-check{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--bd);background:var(--s2);cursor:pointer;font-size:14px;}
+.st-check.checked{border-color:transparent;}
+
+/* Phase step timer (warmup/cooldown) */
+.phase-timer{background:var(--s1);border:1.5px solid var(--bd);border-radius:14px;padding:20px;text-align:center;}
+.pt-label{font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:10px;}
+.pt-num{font-size:60px;font-weight:800;margin-bottom:16px;line-height:1;}
+.pt-side{font-size:13px;color:var(--t2);margin-bottom:16px;}
+.pt-btn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:12px;padding:13px 28px;font-size:15px;font-weight:800;cursor:pointer;}
+
+/* Hold tracker (warmup ISO) */
+.hold-tracker{background:var(--s1);border:1.5px solid var(--bd);border-radius:14px;padding:16px;}
+.hold-sets-done{margin-bottom:12px;}
+.hold-current{text-align:center;padding:16px 0;}
+.hold-label{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--warm);margin-bottom:8px;}
+.hold-num{font-size:52px;font-weight:800;margin-bottom:16px;}
+
+/* Stats strip */
+.stats{display:flex;margin:12px 16px;background:var(--s1);border:1px solid var(--bd);border-radius:14px;overflow:hidden;}
+.si{flex:1;text-align:center;padding:14px 8px;}
+.si+.si{border-left:1px solid var(--bd);}
+.sv{font-size:22px;font-weight:700;}
+.slb{font-size:10px;color:var(--t3);margin-top:2px;}
+
+/* Day grid */
+.day-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px;}
+.day-card{background:var(--s1);border-radius:16px;padding:16px;text-align:left;border:1.5px solid var(--bd);position:relative;overflow:hidden;}
+.day-card.done{opacity:.62;}
+.dca{position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 16px 0 60px;opacity:.12;pointer-events:none;}
+
+/* Phase step preview in day detail */
+.step-item{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start;}
+.step-icon{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:10px;}
+.step-name{font-size:13px;font-weight:600;}
+.step-note{font-size:11px;color:var(--t3);margin-top:1px;}
+
+/* Ex list in day detail */
+.ex-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--s2);}
+.ex-nb{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;}
+
+/* Nutrition */
+.nutr-block{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:12px;}
+
+/* History/PR */
+.hist-row{background:var(--s1);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.pr-row{background:var(--s1);border-radius:10px;padding:13px 16px;margin-bottom:8px;border:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;}
+
+/* Cardio protocol */
+.proto-step{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;gap:14px;}
+.proto-num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:800;}
+
+/* Cardio modal */
+#cardio-modal{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.9);flex-direction:column;align-items:center;justify-content:flex-end;}
+#cardio-modal.show{display:flex;}
+.cm-inner{background:var(--s1);border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:24px 20px 40px;}
+.co-btn{background:var(--s2);border:1.5px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:12px;text-align:left;width:100%;display:flex;align-items:center;gap:14px;}
+
+/* Done screen */
+#done-sc{display:none;position:fixed;inset:0;background:var(--bg);z-index:600;flex-direction:column;align-items:center;justify-content:center;padding:28px;overflow-y:auto;}
+#done-sc.show{display:flex;}
+
+/* Nav */
+.nav-btn{background:var(--s1);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;color:var(--t2);display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;}
+.diet-row{padding:7px 0;border-bottom:1px solid var(--bd);font-size:14px;color:var(--t1);}
+.diet-row:last-child{border-bottom:none;}
+</style>
+</head>
+<body>
+
+<!-- CUSTOM CONFIRM MODAL (iOS PWA compatible) -->
+<div id="confirm-modal" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.88);flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:var(--s1);border-radius:18px;width:100%;max-width:340px;padding:28px 24px;text-align:center;">
+    <div id="confirm-icon" style="font-size:36px;margin-bottom:12px;">⚠️</div>
+    <div id="confirm-title" style="font-size:18px;font-weight:800;margin-bottom:8px;"></div>
+    <div id="confirm-body" style="font-size:14px;color:var(--t2);margin-bottom:24px;line-height:1.5;"></div>
+    <button id="confirm-ok" style="width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;color:#fff;background:#ef4444;margin-bottom:10px;" onclick="confirmOK()"></button>
+    <button onclick="confirmClose()" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px;font-size:15px;font-weight:600;color:var(--t1);">Cancelar</button>
+  </div>
+</div>
+
+<!-- WEIGHT INCREASE MODAL -->
+<div id="inc-modal">
+  <div class="inc-inner">
+    <div id="inc-header"></div>
+    <div class="inc-opts" id="inc-opts"></div>
+    <button onclick="applyIncrease(0)" class="btn-outline">Mantener el peso actual</button>
+  </div>
+</div>
+
+<!-- CARDIO MODAL -->
+<div id="cardio-modal">
+  <div class="cm-inner">
+    <div style="font-size:11px;color:var(--t3);letter-spacing:1px;margin-bottom:6px;">CARDIO POST-ENTRENO</div>
+    <div style="font-size:20px;font-weight:800;margin-bottom:6px;">¿Cuánto tiempo tienes?</div>
+    <div style="font-size:13px;color:var(--t2);margin-bottom:20px;">Elige según tu disponibilidad de hoy</div>
+    <button class="co-btn" onclick="selectCardio('liss')"><div style="font-size:28px;">🚴</div><div><div style="font-size:15px;font-weight:700;">20-25 min — LISS Elíptica</div><div style="font-size:12px;color:var(--t3);">Zona 2 · Quema grasa óptima</div></div></button>
+    <button class="co-btn" onclick="selectCardio('hiit')"><div style="font-size:28px;">⚡</div><div><div style="font-size:15px;font-weight:700;">~14 min — HIIT Elíptica</div><div style="font-size:12px;color:var(--t3);">5 intervalos · Máxima eficiencia</div></div></button>
+    <button class="co-btn" onclick="selectCardio('skip')"><div style="font-size:28px;">⏭️</div><div><div style="font-size:15px;font-weight:700;">No hoy — saltar cardio</div><div style="font-size:12px;color:var(--t3);">Ir directo a resultados</div></div></button>
+  </div>
+</div>
+
+<!-- DONE SCREEN -->
+<div id="done-sc">
+  <div style="font-size:56px;margin-bottom:16px;">🏆</div>
+  <div id="done-tag" style="font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:8px;"></div>
+  <div id="done-name" style="font-size:26px;font-weight:800;margin-bottom:4px;"></div>
+  <div id="done-focus" style="font-size:14px;color:var(--t2);margin-bottom:24px;"></div>
+  <div style="display:flex;gap:36px;margin-bottom:24px;">
+    <div style="text-align:center;"><div id="done-time" style="font-size:28px;font-weight:800;"></div><div style="font-size:10px;color:var(--t3);margin-top:2px;">TIEMPO</div></div>
+    <div style="text-align:center;"><div id="done-vol" style="font-size:28px;font-weight:800;"></div><div style="font-size:10px;color:var(--t3);margin-top:2px;">VOLUMEN</div></div>
+    <div style="text-align:center;"><div id="done-exc" style="font-size:28px;font-weight:800;"></div><div style="font-size:10px;color:var(--t3);margin-top:2px;">EJERC.</div></div>
+  </div>
+  <!-- Mandatory post-workout recommendations -->
+  <div id="done-tips" style="background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;margin-bottom:16px;max-width:320px;width:100%;text-align:left;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--t3);margin-bottom:10px;">📋 DESPUÉS DEL ENTRENO</div>
+    <div style="font-size:13px;color:var(--t1);margin-bottom:8px;">💧 <strong>Hidratación</strong> — Toma 500-700ml de agua en los próximos 30 min.</div>
+    <div style="font-size:13px;color:var(--t1);margin-bottom:8px;">🚶 <strong>Caminata</strong> — 10 min de caminata suave para bajar la FC y activar la recuperación.</div>
+    <div style="font-size:13px;color:var(--t1);margin-bottom:8px;">🍗 <strong>Comida post-entreno</strong> — Come dentro de los siguientes 60 min. Proteína + carbos.</div>
+    <div style="font-size:13px;color:var(--t1);">💤 <strong>Descanso</strong> — Si entrenas de noche, duerme mínimo 7 horas para recuperar.</div>
+  </div>
+  <!-- Weight recommendations -->
+  <div id="done-weight-recs" style="display:none;background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;margin-bottom:16px;max-width:320px;width:100%;text-align:left;"></div>
+  <button id="done-nutr-btn" onclick="showNutrition()" class="btn" style="max-width:320px;margin-bottom:12px;">🥗 Recomendaciones post-entreno</button>
+  <button onclick="goHome()" class="btn-outline" style="max-width:320px;">Volver al inicio</button>
+</div>
+
+
+<!-- WORKOUT DETAIL MODAL -->
+<div id="workout-detail-modal" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:650;overflow-y:auto;padding:0;">
+  <div style="padding:16px;position:sticky;top:0;background:var(--bg);z-index:1;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;">
+    <button onclick="document.getElementById('workout-detail-modal').style.display='none'" style="background:transparent;border:none;color:var(--t2);font-size:22px;padding:4px;">‹</button>
+    <span id="wd-title" style="font-size:15px;font-weight:700;"></span>
+    <button id="wd-delete-btn" style="background:transparent;border:none;color:#ef4444;font-size:12px;font-weight:600;padding:4px 8px;">Borrar</button>
+  </div>
+  <div id="wd-body" style="padding:16px;"></div>
+</div>
+
+<!-- DIET -->
+<div id="screen-diet" class="screen">
+  <div class="hbar"><button class="back-btn" onclick="showScreen('home')">‹</button><div style="font-size:17px;font-weight:700;">🥗 Mi Dieta Diaria</div></div>
+  <div id="diet-body" style="flex:1;overflow-y:auto;padding:16px 16px 40px;"></div>
+</div>
+
+<!-- DIET SWAP SHEET -->
+<div id="swap-sheet" style="display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.88);flex-direction:column;align-items:center;justify-content:flex-end;">
+  <div style="background:var(--s1);border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:24px 20px 44px;max-height:75vh;overflow-y:auto;">
+    <div id="swap-original" style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--t3);margin-bottom:6px;"></div>
+    <div id="swap-title" style="font-size:18px;font-weight:800;margin-bottom:4px;"></div>
+    <div style="font-size:13px;color:var(--t2);margin-bottom:20px;">Desliza para ver equivalentes en proteína y calorías</div>
+    <div id="swap-options"></div>
+    <button onclick="closeSwap()" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px;font-size:14px;font-weight:600;color:var(--t1);margin-top:12px;">Mantener actual</button>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="screen-home" class="screen active">
+  <div style="padding:24px 16px 12px;display:flex;justify-content:space-between;align-items:flex-start;">
+    <div><div style="font-size:11px;color:var(--t3);letter-spacing:1px;margin-bottom:6px;">RUTINA PPL × 2</div>
+      <div style="font-size:26px;font-weight:800;letter-spacing:-.5px;">BRAULIO</div>
+      <div style="font-size:13px;color:var(--t2);margin-top:3px;">26 años · 86.7 kg · 18.2% grasa</div></div>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="nav-btn" onclick="showScreen('calendar')">📅</button>
+      <button class="nav-btn" onclick="showScreen('prs')">⭐ PRs</button>
+      <button class="nav-btn" onclick="showScreen('history')">📊 Log</button>
+      <button class="nav-btn" onclick="resetAllData()" style="color:#ef4444;border-color:#ef444433;">🗑</button>
+    </div>
+  </div>
+  <div id="prog-banner"></div>
+  <div class="stats">
+    <div class="si"><div class="sv" id="h-sess">0</div><div class="slb">SESIONES</div></div>
+    <div class="si"><div class="sv" id="h-vol">—</div><div class="slb">VOL. TOTAL</div></div>
+    <div class="si"><div class="sv" id="h-prs">0</div><div class="slb">PRs</div></div>
+  </div>
+  <!-- CYCLE BANNER -->
+  <div id="last-box" style="margin:0 16px 14px;display:none;"></div>
+  <div style="padding:0 16px;margin-bottom:12px;">
+    <div class="sl">SEMANA DE ENTRENAMIENTO</div>
+    <div class="day-grid" id="day-grid"></div>
+  </div>
+  <div style="padding:0 16px 24px;">
+    <button onclick="showScreen('diet')" class="btn-outline" style="display:flex;align-items:center;gap:8px;justify-content:center;">
+      🥗 <span>Ver mi dieta diaria</span>
+    </button>
+  </div>
+</div>
+
+<!-- DAY DETAIL -->
+<div id="screen-day" class="screen">
+  <div class="hbar">
+    <button class="back-btn" onclick="showScreen('home')">‹</button>
+    <div style="flex:1;">
+      <div id="dd-num" style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--t3);margin-bottom:2px;"></div>
+      <div id="dd-name" style="font-size:17px;font-weight:800;"></div>
+    </div>
+    <div id="dd-last" style="text-align:right;display:none;">
+      <div id="dd-last-vol" style="font-size:14px;font-weight:700;"></div>
+      <div id="dd-last-t" style="font-size:11px;color:var(--t3);"></div>
+    </div>
+  </div>
+  <div class="ss">
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--warm);"></div>
+        <div class="sl" style="margin-bottom:0;">CALENTAMIENTO <span style="color:var(--warm);">+ ISOMETRÍA</span></div>
+      </div>
+      <div id="dd-wu" class="card" style="border-color:#f59e0b33;"></div>
+    </div>
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <div id="dd-dot" style="width:10px;height:10px;border-radius:50%;"></div>
+        <div class="sl" style="margin-bottom:0;" id="dd-ex-lbl"></div>
+      </div>
+      <div id="dd-phase-info" style="display:none;background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:16px;"></div>
+    <div id="dd-ex-list" class="card"></div>
+    </div>
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--cool);"></div>
+        <div class="sl" style="margin-bottom:0;">ENFRIAMIENTO <span style="color:var(--cool);">+ ISOMETRÍA</span></div>
+      </div>
+      <div id="dd-cd" class="card" style="border-color:#38bdf833;"></div>
+    </div>
+    <div id="dd-cardio" style="display:none;margin-bottom:20px;"></div>
+  </div>
+  <div class="sf"><button id="dd-start" onclick="startWorkout()" class="btn">▶ INICIAR SESIÓN</button></div>
+</div>
+
+<!-- WARMUP -->
+<div id="screen-warmup" class="screen">
+  <div class="hbar">
+    <button class="back-btn" onclick="wuBack()" title="Anterior">‹</button>
+    <button class="back-btn" onclick="confirmCancel()" style="font-size:16px;margin-right:4px;">✕</button>
+    <div class="prog-wrap">
+      <div class="prog-row"><span id="wu-lbl" style="color:var(--warm);">⚡ CALENTAMIENTO</span><span id="wu-cnt"></span></div>
+      <div style="display:flex;justify-content:space-between;"><span id="wu-day-lbl" style="font-size:10px;color:var(--t3);"></span><span id="wu-timer" style="font-size:10px;color:var(--t3);font-weight:600;"></span></div>
+      <div class="prog-track"><div id="wu-prog" class="prog-fill" style="background:var(--warm);width:0%;"></div></div>
+    </div>
+  </div>
+  <div class="ss">
+    <div id="wu-iso-tag" style="margin-bottom:12px;display:none;"><span class="tag" style="background:#f59e0b22;color:#f59e0b;">ISOMÉTRICO — Activación Articular</span></div>
+    <div id="wu-name" style="font-size:20px;font-weight:800;margin-bottom:6px;line-height:1.25;"></div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:4px;" id="wu-muscles"></div>
+    <div id="wu-note" style="font-size:14px;color:var(--t2);margin-bottom:14px;line-height:1.5;"></div>
+    <div id="wu-band-sub" style="display:none;font-size:12px;color:#f59e0b;background:#f59e0b12;border:1px solid #f59e0b33;border-radius:8px;padding:8px 12px;margin-bottom:12px;line-height:1.4;"></div>
+    <div id="wu-form-acc"></div>
+    <div id="wu-action"></div>
+  </div>
+  <div class="sf">
+    <div style="text-align:center;padding-bottom:10px;">
+      <button onclick="wuSkip()" style="background:transparent;border:none;font-size:12px;color:var(--t3);text-decoration:underline;cursor:pointer;padding:6px 16px;">saltar este paso →</button>
+    </div>
+    <button id="wu-next" onclick="wuAdvance()" class="btn-outline">SIGUIENTE →</button>
+  </div>
+</div>
+
+<!-- WORKOUT -->
+<div id="screen-workout" class="screen">
+  <div class="hbar">
+    <button class="back-btn" onclick="woPrev()" title="Anterior">‹</button>
+    <button class="back-btn" onclick="confirmCancel()" style="font-size:16px;margin-right:4px;">✕</button>
+    <div class="prog-wrap">
+      <div class="prog-row"><span id="wo-lbl" style="color:var(--t2);"></span><span id="wo-cnt"></span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="font-size:10px;color:var(--t3);">⏱ tiempo</span><span id="wo-timer" style="font-size:10px;color:var(--t3);font-weight:600;"></span></div>
+      <div class="prog-track"><div id="wo-prog" class="prog-fill" style="width:0%;"></div></div>
+    </div>
+  </div>
+  <div class="ss">
+    <!-- EXERCISE NAME -->
+    <div id="wo-name" style="font-size:18px;font-weight:800;line-height:1.2;margin-bottom:2px;"></div>
+    <div id="wo-meta" style="font-size:12px;color:var(--t2);margin-bottom:8px;"></div>
+    <span id="wo-pr-tag" class="tag" style="background:#ffd70020;color:#ffd700;display:none;margin-bottom:8px;">⭐ PR</span>
+    <!-- MUSCLES -->
+    <div id="wo-muscles" style="font-size:12px;color:var(--t3);margin-bottom:8px;"></div>
+    <!-- NOTES (like Strong's yellow notes) -->
+    <div id="wo-notes-block" style="display:none;background:#f59e0b18;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:8px 12px;margin-bottom:10px;">
+      <div id="wo-notes-text" style="font-size:12px;color:#f59e0b;line-height:1.5;"></div>
+    </div>
+    <!-- FORM/TIPS (collapsible) -->
+    <details id="wo-details" style="margin-bottom:10px;background:var(--s2);border:1.5px solid var(--bd);border-radius:12px;overflow:hidden;">
+      <summary style="padding:12px 14px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between;list-style:none;user-select:none;color:var(--t2);">
+        <span>📋 Forma y errores comunes</span><span style="font-size:13px;">▸</span>
+      </summary>
+      <div style="padding:4px 14px 14px;">
+        <div id="wo-form-acc"></div>
+      </div>
+    </details>
+    <!-- SUGGESTION BADGE (compact) -->
+    <div id="wo-suggestion" style="display:none;border-radius:8px;padding:8px 12px;margin-bottom:10px;"></div>
+    <!-- SET TABLE (Strong-style) -->
+    <div id="wo-table-wrap">
+      <!-- Header row -->
+      <div style="display:grid;grid-template-columns:36px 1fr 1fr 60px 36px;gap:4px;padding:6px 4px;align-items:center;">
+        <div style="font-size:11px;font-weight:700;color:var(--t3);text-align:center;">Serie</div>
+        <div style="font-size:11px;font-weight:700;color:var(--t3);text-align:center;">Anterior</div>
+        <div style="font-size:11px;font-weight:700;color:var(--t3);text-align:center;"><button id="unit-toggle" onclick="toggleUnit()" style="font-size:11px;font-weight:700;color:var(--t1);background:var(--s2);border:1.5px solid var(--acc);border-radius:6px;padding:2px 10px;cursor:pointer;">kg</button></div>
+        <div style="font-size:11px;font-weight:700;color:var(--t3);text-align:center;">Rep.</div>
+        <div style="font-size:11px;font-weight:700;color:var(--t3);text-align:center;">✓</div>
+      </div>
+      <!-- Set rows rendered by JS -->
+      <div id="wo-set-rows"></div>
+    </div>
+    <!-- PLATE CALCULATOR -->
+    <div id="wo-plates" style="display:none;margin:10px 0;padding:8px 10px;background:var(--s2);border-radius:8px;text-align:center;"></div>
+    <!-- HOLD TIMER (for time-based exercises like Plank) -->
+    <div id="wo-hold-wrap" style="display:none;margin:10px 0;"></div>
+    <!-- NEXT EXERCISE BUTTON (shown when all sets done) -->
+    <div id="wo-next-wrap" style="display:none;margin:12px 0;">
+      <button id="wo-next-btn" onclick="nextExercise()" class="btn" style="font-size:15px;font-weight:800;">SIGUIENTE EJERCICIO →</button>
+    </div>
+    <!-- INLINE REST (shown when resting) -->
+    <div class="rest-inline" id="rest-inline">
+      <div style="text-align:center;font-size:11px;font-weight:700;letter-spacing:1px;color:var(--t3);margin-bottom:8px;">DESCANSO</div>
+      <div class="rest-row">
+        <div class="rest-circle">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle cx="36" cy="36" r="30" fill="none" stroke="#2e2e2e" stroke-width="5"/>
+            <circle id="rest-arc" cx="36" cy="36" r="30" fill="none" stroke="#f43f5e" stroke-width="5"
+              stroke-dasharray="188.5" stroke-dashoffset="0"
+              style="transform:rotate(-90deg);transform-origin:36px 36px;transition:stroke-dashoffset .5s linear;stroke-linecap:round;"/>
+          </svg>
+          <div class="rest-center" id="rest-num">—</div>
+        </div>
+        <div class="rest-info">
+          <div class="rest-lbl">PRÓXIMO</div>
+          <div class="rest-next" id="rest-next-info"></div>
+          <div class="rest-actions">
+            <button class="rest-skip" onclick="skipRest()">Saltar →</button>
+            <button class="rest-easy" id="rest-easy-btn" onclick="showIncreaseModal()">💪 ¿Subir peso?</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:10px;">
+      <button onclick="woSkipExercise()" style="background:transparent;border:none;font-size:12px;color:var(--t3);text-decoration:underline;cursor:pointer;padding:4px 16px;">saltar ejercicio →</button>
+    </div>
+    <!-- Water reminder -->
+    <div id="water-reminder" style="display:none;position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#0ea5e9;color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:700;z-index:50;box-shadow:0 4px 20px rgba(0,0,0,.5);text-align:center;max-width:300px;" onclick="this.style.display='none'">💧 Toma agua — mantente hidratado</div>
+  </div>
+</div>
+
+<!-- COOLDOWN -->
+<div id="screen-cooldown" class="screen">
+  <div class="hbar">
+    <button class="back-btn" onclick="cdBack()" title="Anterior">‹</button>
+    <button class="back-btn" onclick="confirmCancel()" style="font-size:16px;margin-right:4px;">✕</button>
+    <div class="prog-wrap">
+      <div class="prog-row"><span style="color:var(--cool);">❄️ ENFRIAMIENTO</span><span id="cd-cnt"></span></div>
+      <div style="display:flex;justify-content:space-between;"><span id="cd-day-lbl" style="font-size:10px;color:var(--t3);"></span><span id="cd-timer" style="font-size:10px;color:var(--t3);font-weight:600;"></span></div>
+      <div class="prog-track"><div id="cd-prog" class="prog-fill" style="background:var(--cool);width:0%;"></div></div>
+    </div>
+  </div>
+  <div class="ss">
+    <div id="cd-iso-tag" style="margin-bottom:12px;display:none;"><span class="tag" style="background:#38bdf820;color:#38bdf8;">ISOMÉTRICO — Mantenimiento Tendinoso</span></div>
+    <div id="cd-name" style="font-size:20px;font-weight:800;margin-bottom:6px;line-height:1.25;"></div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:4px;" id="cd-muscles"></div>
+    <div id="cd-note" style="font-size:14px;color:var(--t2);margin-bottom:14px;line-height:1.5;"></div>
+    <div id="cd-band-sub" style="display:none;font-size:12px;color:#f59e0b;background:#f59e0b12;border:1px solid #f59e0b33;border-radius:8px;padding:8px 12px;margin-bottom:12px;line-height:1.4;"></div>
+    <div id="cd-form-acc"></div>
+    <div id="cd-action"></div>
+  </div>
+  <div class="sf">
+    <div style="text-align:center;padding-bottom:10px;">
+      <button onclick="cdSkip()" style="background:transparent;border:none;font-size:12px;color:var(--t3);text-decoration:underline;cursor:pointer;padding:6px 16px;">saltar este paso →</button>
+    </div>
+    <button id="cd-next" onclick="cdAdvance()" class="btn-outline">SIGUIENTE →</button>
+  </div>
+</div>
+
+<!-- CARDIO PROTOCOL — INTERVAL TIMER -->
+<div id="screen-cardio-protocol" class="screen">
+  <div style="background:var(--s1);padding:12px 16px 8px;border-bottom:1px solid var(--bd);flex-shrink:0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <span id="cp-session-name" style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--t3);"></span>
+      <span id="cp-interval-cnt" style="font-size:11px;color:var(--t3);"></span>
+    </div>
+    <div style="height:4px;background:var(--bd);border-radius:4px;overflow:hidden;">
+      <div id="cp-prog" style="height:100%;border-radius:4px;width:0%;transition:width .4s;"></div>
+    </div>
+  </div>
+  <div class="ss" style="display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:28px;">
+    <!-- Big circle timer -->
+    <div style="position:relative;width:196px;height:196px;margin-bottom:16px;flex-shrink:0;">
+      <svg width="196" height="196" viewBox="0 0 196 196" style="display:block;">
+        <circle cx="98" cy="98" r="86" fill="none" stroke="#2a2a3a" stroke-width="9"/>
+        <circle id="cp-arc" cx="98" cy="98" r="86" fill="none" stroke="#ef4444" stroke-width="9"
+          stroke-dasharray="540.4" stroke-dashoffset="0"
+          style="transform:rotate(-90deg);transform-origin:98px 98px;transition:stroke-dashoffset .5s linear;stroke-linecap:round;"/>
+      </svg>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div id="cp-timer" style="font-size:54px;font-weight:800;line-height:1;letter-spacing:-2px;">0:00</div>
+        <div id="cp-phase-lbl" style="font-size:10px;color:var(--t3);letter-spacing:1.5px;margin-top:4px;text-align:center;padding:0 16px;"></div>
+      </div>
+    </div>
+    <!-- Intensity -->
+    <div id="cp-intensity" style="font-size:22px;font-weight:800;margin-bottom:20px;"></div>
+    <!-- Metrics -->
+    <div style="display:flex;gap:48px;margin-bottom:14px;">
+      <div style="text-align:center;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--t3);margin-bottom:4px;">RPM</div>
+        <div id="cp-rpm" style="font-size:30px;font-weight:800;"></div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--t3);margin-bottom:4px;">CARGA</div>
+        <div id="cp-load" style="font-size:30px;font-weight:800;"></div>
+      </div>
+    </div>
+    <!-- Next interval -->
+    <div id="cp-next" style="font-size:12px;color:var(--t3);text-align:center;padding:0 20px;"></div>
+  </div>
+  <div class="sf"><button onclick="confirmFinishCardio()" class="btn-outline">🏆 Finalizar entrenamiento</button></div>
+</div>
+
+<!-- NUTRITION -->
+<div id="screen-nutrition" class="screen">
+  <div class="hbar">
+    <button class="back-btn" onclick="backFromNutrition()">‹</button>
+    <div style="font-size:17px;font-weight:700;">🥗 Post-Entreno</div>
+  </div>
+  <div class="ss" id="nutr-body"></div>
+  <div class="sf"><button onclick="goHome()" class="btn" style="background:#22c55e;">✓ Volver al inicio</button></div>
+</div>
+
+<!-- HISTORY -->
+<div id="screen-history" class="screen">
+  <div class="hbar"><button class="back-btn" onclick="showScreen('home')">‹</button><div style="font-size:17px;font-weight:700;">Historial</div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px;" id="hist-stats"></div>
+  <div style="flex:1;overflow-y:auto;padding:0 16px 32px;" id="hist-list"></div>
+</div>
+
+<!-- PRs -->
+<div id="screen-prs" class="screen">
+  <div class="hbar"><button class="back-btn" onclick="showScreen('home')">‹</button><div style="font-size:17px;font-weight:700;">⭐ Récords Personales</div></div>
+  <div style="flex:1;overflow-y:auto;padding:16px 16px 32px;" id="prs-list"></div>
+</div>
+
+<!-- CALENDAR -->
+<div id="screen-calendar" class="screen">
+  <div class="hbar"><button class="back-btn" onclick="showScreen('home')">‹</button><div style="font-size:17px;font-weight:700;">📅 Calendario</div></div>
+  <div style="flex:1;overflow-y:auto;padding:16px;" id="cal-body"></div>
+</div>
+
+<script>
+const DAYS=[{"id": 1, "num": "DÍA 1", "name": "Empuje A", "emoji": "💪", "focus": "Pecho · Hombros · Tríceps", "label": "EMPUJE A", "color": "#f43f5e", "dayType": "push", "warmup": [{"name": "Bicicleta / Elíptica", "type": "time", "val": 300, "note": "5 min intensidad baja-media. Activa el sistema cardiovascular.", "img": "bike", "muscles": "Cardiovascular · Calentamiento general", "form": ["Ajusta el asiento a la altura de la cadera antes de subir", "Mantén la espalda erguida — no te apoyes en el manubrio con todo el peso", "Cadencia suave y constante: 60-65 RPM, resistencia baja", "Respira por la nariz — si no puedes, estás yendo demasiado fuerte"], "errors": ["Apoyarte completamente en el manubrio — anula el esfuerzo del core", "Ir demasiado rápido o con mucha resistencia — es calentamiento, no cardio"]}, {"name": "Círculos de Brazos Progresivos", "type": "reps", "val": "10+10", "note": "10 hacia adelante y 10 hacia atrás, aumentando el rango.", "img": "stretch", "muscles": "Hombro · Manguito rotador", "form": ["Comienza con círculos pequeños e incrementa gradualmente el radio", "Mantén el cuerpo estático — solo se mueve el brazo", "Realiza el movimiento lento y controlado en ambas direcciones", "Siente cómo se calienta el hombro con cada repetición"], "errors": ["Hacer los círculos demasiado rápido — pierde el efecto de movilización", "Mover el torso para compensar la falta de movilidad del hombro"]}, {"name": "[ISO] Rotación Externa de Hombro", "type": "hold", "val": 20, "sets": 3, "note": "Con banda o cable. Por lado. Prepara el manguito rotador.", "img": "stretch", "muscles": "Manguito rotador · Deltoides posterior", "form": ["Codo a 90° pegado al costado", "Rota el antebrazo hacia afuera — movimiento controlado", "El codo NO se mueve del costado"], "errors": ["Mover el codo", "Hacer el movimiento demasiado rápido"]}, {"name": "Y-T-W en Banco Inclinado", "type": "reps", "val": "10", "note": "Sin peso. Hold 2s en cada posición. Estabilizadores escapulares.", "img": "stretch", "muscles": "Trapecio · Romboides · Deltoides", "form": ["Banco inclinado a 45°, frente apoyada, brazos colgando", "Y: lleva brazos a 45° sobre la cabeza, pulgares arriba", "T: brazos perpendiculares al cuerpo, pulgares arriba", "W: codos a 90°, rotación externa — \"alas de pájaro\"", "Hold 2s en cada posición, sin peso o muy ligero"], "errors": ["Usar el trapecio para elevar — debe ser deltoides posterior y romboides", "Hacer el movimiento demasiado rápido sin el hold isométrico", "Doblar los codos en la Y — los brazos van extendidos"]}, {"name": "Lagartijas con Pausa", "type": "reps", "val": "12", "note": "2 segundos abajo. Activa escápulas y pectoral antes de cargar.", "img": "bench", "muscles": "Pectoral · Deltoides · Tríceps", "form": ["Cuerpo en línea recta de cabeza a talones, core activado", "Baja controlado 2 segundos hasta que el pecho roza el suelo", "Pausa 1s abajo — activa la retracción escapular antes de subir", "Empuja explosivo manteniendo los codos a ~45° del torso"], "errors": ["Dejar caer las caderas o elevar el trasero — pierde la línea corporal", "No hacer la pausa abajo — se convierte en rebote sin activación", "Codos a 90° hacia afuera — sobrecarga el hombro anterior"]}, {"name": "Serie Activación Press Banca", "type": "activation", "note": "Al 50% de tu peso de trabajo de hoy", "img": "bench", "activationFor": "1-1", "muscles": "Pectoral · Deltoides · Tríceps", "form": ["Usa el 50% del peso de tu primera serie de trabajo", "Ejecuta 15 reps con técnica perfecta — foco en sentir el pectoral", "Retrae escápulas como en la serie real antes de cada rep", "Este set no debe cansar — es activación neuromuscular"], "errors": ["Usar más del 50% — se convierte en calentamiento fatígoso", "Hacer el movimiento mecánicamente sin conectar con el músculo objetivo"]}], "exercises": [{"id": "1-1", "name": "Press Banca con Barra", "sets": 4, "reps": "6-8", "rest": 180, "img": "bench", "muscles": "Pectoral mayor · Deltoides anterior · Tríceps", "tip": "💡 Escápulas retraídas, arco lumbar natural. Baja hasta rozar el pecho.", "form": ["Agarre ligeramente más ancho que los hombros", "Retrae y deprime las escápulas — crea un arco lumbar natural (no exagerado)", "Pies planos en el suelo o en plataforma durante todo el movimiento", "Baja controlado hasta rozar el pecho a la altura del pezón — codos a ~60-75° del torso", "Empuja explosivo sin bloquear codos en la extensión"], "errors": ["Botar la barra en el pecho para ganar impulso", "Perder la retracción escapular a mitad del movimiento", "Codos a 90° del torso — sobrecarga el hombro anterior", "Levantar los pies del suelo — pierdes la base estable"]}, {"id": "1-2", "name": "Press Inclinado Mancuernas", "sets": 3, "reps": "10-12", "rest": 90, "img": "bench", "muscles": "Pectoral clavicular · Deltoides anterior", "tip": "💡 Banco a 30-45°. Más inclinado activa más el hombro que el pecho.", "form": ["Banco a 30-45° máximo — más de 45° el hombro roba el trabajo", "Mancuernas a la altura del pecho, codos a ~60° del torso", "Presiona hacia arriba y ligeramente al centro", "Contrae el pectoral en extensión — pausa 1s", "Baja controlado sintiendo el estiramiento del pectoral superior"], "errors": ["Banco demasiado inclinado — se convierte en press de hombros", "Llevar los codos demasiado atrás en la bajada — riesgo de hombro", "Muñecas dobladas hacia atrás"]}, {"id": "1-3", "name": "Aperturas en Cable — Poleas Altas", "sets": 3, "reps": "12-15", "rest": 75, "img": "cable-fly", "muscles": "Pectoral mayor · énfasis en aducción y contracción", "tip": "💡 'Abraza un árbol'. Pausa 1s en la contracción. Codos ligeramente flexionados.", "form": ["Poleas altas para énfasis en parte inferior/media del pectoral", "Codos ligeramente flexionados — fijos durante el movimiento", "El movimiento nace del hombro, no del codo", "'Abraza un árbol' en la contracción — mantén 1s", "Controla la excéntrica — 3 segundos de regreso"], "errors": ["Doblar los codos excesivamente — se convierte en press", "No controlar la excéntrica — se pierde el estímulo del cable"]}, {"id": "1-4", "name": "Press Hombros — Máquina", "sets": 3, "reps": "10-12", "rest": 90, "img": "ohp", "muscles": "Deltoides anterior y medio · Tríceps · Trapecios", "tip": "💡 No bloquear codos arriba. Sin arquear la lumbar.", "form": ["Ajusta el asiento para que los agarres estén a la altura de las orejas", "Empuja vertical sin inclinar el torso", "No bloquear los codos en la extensión", "Mantén los trapecios relajados"], "errors": ["Arquear excesivamente la lumbar", "Elevar los trapecios durante el movimiento", "Usar impulso del torso"]}, {"id": "1-5", "name": "Elevaciones Laterales Mancuerna", "sets": 3, "reps": "15-20", "rest": 60, "img": "lat-raise", "muscles": "Deltoides medio", "tip": "💡 Meñique ligeramente arriba. Excéntrica 3 segundos bajando.", "form": ["Ligera inclinación del torso hacia adelante (~15°)", "Meñique ligeramente más alto que el pulgar — como vaciar una jarra", "Hasta paralelo al suelo — no más alto", "Excéntrica lenta: 3 segundos bajando"], "errors": ["Usar impulso del torso — balanceo", "Subir demasiado alto — trapecios roban el movimiento", "Bajar demasiado rápido — pierde el estímulo excéntrico"]}, {"id": "1-6", "name": "Triceps Pushdown — Barra Recta", "sets": 3, "reps": "12-15", "rest": 60, "img": "tricep", "muscles": "Tríceps cabeza lateral y medial", "tip": "💡 Codos pegados al cuerpo, fijos. Extensión completa.", "form": ["Codos pegados a los costados — no se mueven", "Extiende completamente — contrae el tríceps fuerte", "Excéntrica de 2-3 segundos", "Muñecas neutras"], "errors": ["Separar los codos del cuerpo", "Inclinar el torso hacia adelante para ayudarse", "No completar la extensión"]}, {"id": "1-7", "name": "Extensión Tríceps sobre Cabeza", "sets": 3, "reps": "12-15", "rest": 60, "img": "tricep", "muscles": "Tríceps cabeza larga (énfasis)", "tip": "💡 Codos apuntando al techo, sin moverse. La cabeza larga solo se activa aquí.", "form": ["Polea baja o media, da la espalda a la máquina", "Codos apuntando al techo — fijos", "Extiende completamente — pausa 1s", "Solo en esta posición se activa la cabeza larga al máximo"], "errors": ["Mover los codos durante el movimiento", "No alcanzar la extensión completa", "Peso excesivo que fuerza a mover los codos"]}], "cooldown": [{"name": "Estiramiento Pectoral en Poste", "type": "stretch", "secs": 30, "sides": 2, "note": "Brazo en L, rota el torso alejándote del poste.", "img": "stretch", "muscles": "Pectoral mayor", "form": ["Brazo en L a 90°", "Rota el torso alejándote suavemente", "Sin forzar el rango — estira hasta donde sientas"], "errors": ["Forzar el rango más allá del límite cómodo"]}, {"name": "Estiramiento Cruzado de Hombro", "type": "stretch", "secs": 30, "sides": 2, "note": "Lleva el brazo cruzado al pecho, mantén.", "img": "stretch", "muscles": "Deltoides posterior · Manguito rotador", "form": ["Brazo cruzado al pecho, a la altura del hombro", "Presiona con el antebrazo opuesto — no con la mano", "Mantén el hombro relajado"], "errors": ["Presionar con la mano en lugar del antebrazo — lesión de codo"]}, {"name": "Estiramiento Tríceps sobre Cabeza", "type": "stretch", "secs": 30, "sides": 2, "note": "Codo apuntando al techo, mano en la espalda.", "img": "stretch", "muscles": "Tríceps · cabeza larga", "form": ["Codo apuntando al techo", "Mano bajando por la espalda", "Ayuda con la mano opuesta si es necesario"], "errors": ["Tirar del codo con demasiada fuerza", "Inclinar el torso lateralmente para compensar"]}, {"name": "[ISO-CD] Flexión de Hombro Isométrica", "type": "hold", "val": 30, "sets": 3, "note": "3×30s. Empuja la pared con el brazo extendido a 90°. Fortalece tendones del hombro.", "img": "stretch", "muscles": "Deltoides anterior · Tendones del hombro", "form": ["Brazo extendido a 90° contra la pared", "Empuja como si quisieras mover la pared — sin movimiento real", "Contrae todo el hombro durante el hold"], "errors": ["Doblar el codo — pierde el estímulo tendinoso"]}, {"name": "Gato-Vaca Suave", "type": "reps", "val": "10", "note": "Movilidad torácica y lumbar.", "img": "stretch", "muscles": "Columna vertebral · Erectores", "form": ["Cuadrupedia: muñecas bajo hombros, rodillas bajo caderas", "Cat: exhala — redondea toda la columna, mentón al pecho", "Cow: inhala — pecho hacia adelante, cadera arriba, mirada al frente", "Lento y fluido, 2s en cada posición"], "errors": ["Solo mover la lumbar — debe ser toda la columna torácica", "Hacer el movimiento brusco o rápido"]}, {"name": "Respiración Diafragmática", "type": "time", "secs": 120, "note": "2 min. Inhala 4s, aguanta 4s, exhala 6s. Activa el sistema parasimpático.", "img": "stretch", "muscles": "Diafragma · Sistema nervioso", "form": ["Inhala por la nariz 4 segundos", "Aguanta 4 segundos", "Exhala por la boca 6 segundos — lento y continuo"], "errors": ["Respirar con el pecho — la mano del pecho no debe moverse", "Exhalar de golpe — debe ser lento y continuo", "Tensionar el cuerpo durante la retención"]}], "cardio": null}, {"id": 2, "num": "DÍA 2", "name": "Jalón A", "emoji": "🏋️", "focus": "Espalda Ancho · Bíceps", "label": "JALÓN A", "color": "#3b82f6", "dayType": "pull", "warmup": [{"name": "Remo Ligero — Activación Escapular", "type": "reps", "val": "15+15", "note": "2 series muy ligeras. Siente la escápula moverse.", "img": "row", "muscles": "Escápula · Trapecio medio", "form": ["Peso muy ligero — el objetivo es sentir la escápula moverse", "Inicia cada rep con depresión y retracción escapular", "Haz el movimiento lento, 3s concéntrica y 3s excéntrica", "Dos series de 15 reps"], "errors": ["Usar demasiado peso — anula el objetivo de activación", "Tirar con los brazos sin iniciar con la escápula"]}, {"name": "[ISO] Aperturas con Banda", "type": "hold", "val": 2, "sets": 4, "note": "4 series × 2s hold al final. Activa deltoides posterior.", "img": "stretch", "muscles": "Deltoides posterior · Romboides", "form": ["Banda a la altura del pecho", "Jala hasta que los brazos queden en línea con los hombros", "Aguanta 2s en la posición abierta — squeeze deltoides posterior"], "errors": ["No llegar a la posición de apertura completa", "No aguantar el hold"]}, {"name": "Rotaciones de Torso", "type": "reps", "val": "10 c/lado", "note": "Movilidad de columna torácica.", "img": "stretch", "muscles": "Columna torácica · Oblicuos", "form": ["De pie o sentado, pies a la anchura de caderas", "Rotación lenta del torso de lado a lado", "Las caderas permanecen fijas — solo rota el torso", "Mantén los brazos cruzados al pecho o extendidos para más palanca"], "errors": ["Rotar las caderas — solo debe moverse la columna torácica", "Hacer el movimiento brusco y rápido — riesgo de lesión lumbar"]}, {"name": "[ISO] Bicho Muerto con Pausa", "type": "hold", "val": 3, "sets": 10, "note": "10 reps × 3s hold por rep. 2 series. Core anti-rotación.", "img": "plank", "muscles": "Core profundo · Transverso abdominal", "form": ["Espalda pegada al suelo — no debe haber espacio lumbar", "Extiende pierna y brazo opuesto simultáneamente", "Aguanta 3s — el core no debe rotar ni arquear"], "errors": ["Perder el contacto lumbar con el suelo", "Apresurarse — la pausa es lo más importante"]}, {"name": "Serie Activación Jalón", "type": "activation", "note": "Al 50% de tu peso de trabajo de hoy", "img": "lat-pull", "activationFor": "2-1", "muscles": "Dorsal · Bíceps", "form": ["Peso al 50% de tu primera serie de jalón", "15 reps lentas enfocándote en sentir el dorsal, no los bíceps", "Inicia cada rep con depresión escapular antes de jalar", "Excéntrica lenta de 3s — activa la conexión neuromuscular"], "errors": ["Jalar con los bíceps en lugar de iniciar con el dorsal", "Usar demasiado peso — debe sentirse fácil y controlado"]}], "exercises": [{"id": "2-1", "name": "Jalón Agarre Ancho", "sets": 4, "reps": "8-10", "rest": 150, "img": "lat-pull", "muscles": "Dorsal ancho · Redondo mayor · Bíceps", "tip": "💡 Lleva los codos hacia los bolsillos traseros. Excéntrica 3s.", "form": ["Inclínate ~15° atrás, pecho hacia arriba", "Jala llevando los codos hacia los bolsillos traseros", "Exprime la espalda en la posición baja — 1s", "Excéntrica controlada: 3 segundos de regreso"], "errors": ["Inclinar excesivamente el torso (>30°)", "Usar impulso del cuerpo", "No llegar a la contracción completa del dorsal", "Tirar con los bíceps en lugar de iniciar con el dorsal"]}, {"id": "2-2", "name": "Remo Polea Agarre Neutro", "sets": 3, "reps": "10-12", "rest": 90, "img": "row", "muscles": "Dorsal · Romboides · Trapecio medio", "tip": "💡 Escápulas juntas al final — mantén 1s. Espalda erguida.", "form": ["Espalda erguida y neutral durante todo el movimiento", "Jala hacia el ombligo, codos pegados al torso", "Escápulas juntas al final — mantén 1s", "No te inclines hacia atrás para ayudarte"], "errors": ["Redondear la espalda baja al jalar", "Usar el torso como palanca", "No llevar el remo hasta la contracción completa"]}, {"id": "2-3", "name": "Jalón Agarre Supino", "sets": 3, "reps": "10-12", "rest": 90, "img": "lat-pull", "muscles": "Dorsal inferior · Bíceps (mayor activación)", "tip": "💡 Palmas hacia ti. Mayor contracción del dorsal inferior.", "form": ["Agarre supino (palmas hacia ti) anchura de hombros", "Mayor activación del dorsal inferior y bíceps", "Lleva el codo hacia el bolsillo de la cadera al bajar"], "errors": ["Doblar las muñecas — riesgo de lesión", "Tirar solo con los bíceps sin iniciar con el dorsal"]}, {"id": "2-4", "name": "Remo Mancuerna 1 Brazo", "sets": 3, "reps": "10-12", "rest": 75, "img": "row", "muscles": "Dorsal · Romboides · Trapecio inferior", "tip": "⚡ EMPIEZA LADO DERECHO SIEMPRE. Jala hacia la cadera, no al hombro.", "form": ["Rodilla y mano ipsilateral en el banco — espalda paralela al suelo", "Jala hacia la cadera (NO hacia el hombro)", "Rota ligeramente el torso para mayor rango", "Codo hacia el techo al subir"], "errors": ["Rotar excesivamente el torso — pierde tensión en el dorsal", "Tirar del codo muy alto — trapecios compensan", "No controlar la excéntrica"]}, {"id": "2-5", "name": "Jalón a la Cara — Cable con Cuerda", "sets": 3, "reps": "15-20", "rest": 60, "img": "facepull", "muscles": "Deltoides posterior · Manguito rotador · Trapecio medio", "tip": "💡 Pulgares detrás de las orejas al terminar. Esencial para la salud del hombro.", "form": ["Polea a la altura de la cara o ligeramente arriba", "Jala hacia la cara separando las manos al llegar", "Pulgares detrás de las orejas al terminar", "Contracción fuerte del deltoides posterior — pausa 1s"], "errors": ["Polea demasiado baja — activa más trapecios que deltoides posterior", "No separar las manos al final", "Peso demasiado elevado que compromete la técnica"]}, {"id": "2-6", "name": "Bayesian Curl — Cable Unilateral", "sets": 3, "reps": "10-12", "rest": 75, "img": "curl", "muscles": "Bíceps cabeza larga (máximo estiramiento)", "tip": "⚡ EMPIEZA BRAZO DERECHO SIEMPRE. Brazo completamente extendido atrás.", "form": ["Polea baja detrás de ti, da un paso al frente", "Brazo completamente extendido hacia atrás — máximo estiramiento", "Curl con supinación completa al llegar arriba", "Cuerpo perpendicular a la polea"], "errors": ["No dejar el brazo completamente extendido", "Mover el codo durante el curl", "No supinar la muñeca al subir"]}, {"id": "2-7", "name": "Curl con Barra", "sets": 3, "reps": "10-12", "rest": 75, "img": "curl", "muscles": "Bíceps braquial · Braquiorradial", "tip": "💡 Excéntrica 3s. Sin balanceo de torso. Supina completamente al subir.", "form": ["Codos pegados a los costados — no se mueven", "Supina completamente al subir (meñique hacia afuera)", "Excéntrica lenta: 3 segundos bajando", "Extensión completa abajo"], "errors": ["Balancear el cuerpo para subir el peso", "No llevar a la extensión completa abajo", "No supinar la mano al subir"]}, {"id": "2-8", "name": "Curl Martillo + Curl Invertido", "sets": 2, "reps": "12-15", "rest": 60, "img": "curl", "muscles": "Braquial · Braquiorradial · Antebrazos", "tip": "💡 Superset: los 2 seguidos sin descanso. Braquial y antebrazos.", "form": ["Hammer: agarre neutro (pulgares arriba) durante todo el movimiento", "Reverse: agarre prono (nudillos arriba) durante todo el movimiento", "Codos fijos en ambos ejercicios", "Haz los 2 seguidos sin descanso intermedio"], "errors": ["Dejar caer las muñecas en el Reverse Curl — riesgo de lesión", "Peso excesivo con mala técnica"]}], "cooldown": [{"name": "Estiramiento Dorsal en Polea", "type": "stretch", "secs": 30, "sides": 2, "note": "Agárrate y deja colgar ligeramente el cuerpo.", "img": "stretch", "muscles": "Dorsal ancho", "form": ["Agárrate a la polea o barra a la altura de la cadera", "Dobla ligeramente las rodillas", "Deja que el peso de tu cuerpo estire el dorsal"], "errors": ["Doblar los codos — pierde la tensión en el dorsal", "Tensionar los hombros en lugar de relajarlos completamente"]}, {"name": "Estiramiento Bíceps en Pared", "type": "stretch", "secs": 30, "sides": 2, "note": "Brazo extendido en pared, rota el cuerpo hacia afuera.", "img": "stretch", "muscles": "Bíceps · Pectoral", "form": ["Coloca el brazo extendido en la pared a la altura del hombro", "Rota el cuerpo hacia afuera — alejándote del brazo", "Siente el estiramiento en el bíceps y la parte anterior del hombro"], "errors": ["Doblar el codo durante el estiramiento", "Rotar demasiado rápido — el estiramiento debe ser progresivo"]}, {"name": "[ISO-CD] Flexión de Codo Isométrica", "type": "hold", "val": 30, "sets": 3, "note": "3×30s. Empuja hacia abajo contra una mesa con el antebrazo. Fortalece tendón distal del bíceps.", "img": "stretch", "muscles": "Tendón distal del bíceps", "form": ["Apoya el antebrazo debajo de una mesa", "Empuja hacia arriba como si quisieras levantar la mesa", "Sin movimiento real — contracción isométrica"], "errors": ["Hacer el movimiento demasiado suave — el estímulo necesita buena intensidad"]}, {"name": "Postura del Niño", "type": "time", "secs": 45, "note": "45 segundos. Brazos extendidos, frente al suelo.", "img": "stretch", "muscles": "Dorsal · Columna · Caderas", "form": ["Rodillas en el suelo, siéntate sobre los talones", "Extiende los brazos hacia adelante con las palmas en el suelo", "Frente apoyada en el suelo — o lo más cerca posible", "Respira profundo — con cada exhalación relaja más la espalda y caderas"], "errors": ["Tensionar los hombros en lugar de dejarlos caer", "No respirar profundo — la respiración es lo que produce el estiramiento"]}, {"name": "Rotaciones de Cuello Suaves", "type": "reps", "val": "10 c/lado", "note": "Lento y controlado. Sin forzar el rango.", "img": "stretch", "muscles": "Cervical · Trapecio superior", "form": ["De pie o sentado, columna erguida", "Inclina la cabeza lateralmente — oreja hacia el hombro", "Rotación lenta y controlada — nunca brusca", "Evita los círculos completos hacia atrás — solo adelante y lados"], "errors": ["Hacer círculos completos hacia atrás — riesgo en la columna cervical", "Mover los hombros en lugar de aislar el cuello"]}], "cardio": {"type": "🏃 Cardio", "liss": {"name": "LISS — Elíptica Zona 2 (~24 min)", "steps": [{"t": "Preparación", "d": "Elíptica resistencia 3. Pantalla en frecuencia cardíaca si está disponible."}, {"t": "Calentamiento 0-2 min", "d": "Resistencia 2, ritmo suave. Respira por la nariz."}, {"t": "Zona 2 — 2 a 22 min", "d": "Resistencia 4-6 · Cadencia cómoda · FC objetivo: 120-135 bpm. Debes poder hablar con algo de dificultad. Si FC >140, baja la resistencia."}, {"t": "Vuelta a la calma 22-24 min", "d": "Resistencia 2, ritmo suave hasta normalizar la respiración."}, {"t": "Resultado", "d": "~220-270 kcal. Zona 2 activa la lipólisis (quema de grasa) sin comprometer tu recuperación muscular. Con 6 días de fuerza, este es tu cardio ideal."}]}, "hiit": {"name": "HIIT — Solo si no hay tiempo (elíptica)", "steps": [{"t": "⚠️ ADVERTENCIA", "d": "Con 6 días de fuerza el HIIT agrega estrés innecesario. Usa solo si genuinamente no tienes los 24 min para LISS."}, {"t": "Calentamiento 0-2 min", "d": "Resistencia 3, ritmo suave."}, {"t": "5 Intervalos activos", "d": "45s a máximo esfuerzo — resistencia 8-10, cadencia alta."}, {"t": "5 Recuperaciones activas", "d": "75s a ritmo muy suave — resistencia 2-3."}, {"t": "Vuelta a la calma 2 min", "d": "Resistencia 2, respiración normalizada."}, {"t": "Total ~12 min", "d": "Opción de emergencia. LISS siempre es preferible."}]}}}, {"id": 3, "num": "DÍA 3", "name": "Piernas A", "emoji": "🦵", "focus": "Cuádriceps · Isquios · Gemelos", "label": "PIERNAS A", "color": "#22c55e", "dayType": "legs", "warmup": [{"name": "Bicicleta Estática", "type": "time", "secs": 300, "note": "5 min intensidad moderada. Calienta rodilla y cadera.", "img": "bike", "muscles": "Cardiovascular · Cuádriceps", "form": ["Ajusta el asiento a la altura de la cadera antes de empezar", "Mantén la espalda erguida — no te apoyes en el manubrio con todo tu peso", "Cadencia suave 60-65 RPM, resistencia baja — es calentamiento, no cardio", "Respira por la nariz — si no puedes, baja la resistencia"], "errors": ["Apoyarte completamente en el manubrio — anula el esfuerzo del core y piernas", "Ir demasiado fuerte — agotarás energía que necesitas para el entrenamiento"]}, {"name": "Balanceo de Piernas Adelante-Atrás", "type": "reps", "val": "15 c/lado", "note": "15 por dirección por pierna. Abre la cadera.", "img": "stretch", "muscles": "Cadera · Isquiotibiales", "form": ["Apóyate en una pared o barra para el equilibrio", "Pierna oscila como un péndulo — sin forzar el rango", "Adelante: llega hasta donde la cadera permite naturalmente", "Atrás: glúteo activo en la extensión, sin arquear la lumbar", "15 repeticiones por pierna por dirección"], "errors": ["Lanzar la pierna con fuerza — debe ser un movimiento suave de péndulo", "Arquear la lumbar en el swing hacia atrás para compensar"]}, {"name": "Círculos de Cadera", "type": "reps", "val": "10 c/dir.", "note": "Movilidad de cadera 360°.", "img": "stretch", "muscles": "Cadera · Glúteos", "form": ["De pie, manos en las caderas o en una barra para apoyo", "Dibuja círculos grandes con las caderas en sentido horario y antihorario", "Movimiento controlado — sin perder el equilibrio", "10 círculos en cada dirección"], "errors": ["Círculos demasiado pequeños — no moviliza la cadera", "Mover los hombros en lugar de aislar el movimiento en la cadera"]}, {"name": "[ISO] Sentadilla en Pared 90°", "type": "hold", "val": 40, "sets": 3, "note": "3×40s. Rodilla alineada con el pie. Activa cuádriceps.", "img": "stretch", "muscles": "Cuádriceps · Rodilla", "form": ["Espalda completamente plana en la pared", "Rodillas a 90° — muslos paralelos al suelo", "Rodilla alineada con el pie — ni adentro ni afuera"], "errors": ["Rodillas que colapsan hacia adentro", "Talones que se levantan del suelo"]}, {"name": "[ISO] Extensión Terminal de Rodilla — Banda", "type": "hold", "val": 20, "sets": 4, "note": "4×20s por pierna. Salud de la rodilla — vasto medial.", "img": "stretch", "muscles": "Vasto medial · Tendón rotuliano", "form": ["Banda detrás de la rodilla", "Extiende la rodilla completamente contra la resistencia de la banda", "Aguanta 20s con la contracción — activa el vasto medial (músculo interno)"], "errors": ["No llegar a la extensión completa"]}, {"name": "Puente de Glúteo con Pausa", "type": "reps", "val": "15", "note": "Pausa 2s arriba. Activa glúteos antes de la sentadilla.", "img": "hip-thrust", "muscles": "Glúteos · Isquiotibiales", "form": ["Tumbado boca arriba, rodillas dobladas, pies planos en el suelo", "Empuja con los talones — no con las puntas", "Sube hasta que el cuerpo forme una línea recta de hombros a rodillas", "Aprieta el glúteo con fuerza durante los 2 segundos de pausa", "Baja controlado — no dejes caer la cadera"], "errors": ["Hiperextender la lumbar arriba — el glúteo deja de trabajar", "No hacer la pausa — el objetivo es la activación isométrica del glúteo", "Empujar con las puntas de los pies en lugar de los talones"]}, {"name": "Serie Activación Sentadilla", "type": "activation", "note": "Al 50% de tu peso de trabajo de hoy", "img": "squat", "activationFor": "3-1", "muscles": "Cuádriceps · Glúteos", "form": ["50% del peso de tu primera serie de sentadilla", "15 reps con énfasis en la profundidad y posición de rodillas", "Practica el patrón Valsalva aunque sea con poco peso", "Verifica que la rodilla siga la dirección de los pies en cada rep"], "errors": ["No llegar a la profundidad correcta en la activación", "Ir demasiado rápido — este set es para confirmar el patrón motor"]}], "exercises": [{"id": "3-1", "name": "Sentadilla con Barra", "sets": 4, "reps": "6-8", "rest": 180, "img": "squat", "muscles": "Cuádriceps · Glúteos · Isquios · Erectores · Core", "tip": "💡 Muslos paralelos o más abajo. Valsalva antes de bajar.", "form": ["Pies a la anchura de los hombros, puntas ~15-30° hacia afuera", "Toma aire profundo y presuriza el abdomen (Valsalva) antes de bajar", "Rodillas en dirección de los pies en todo momento", "Profundidad mínima: muslos paralelos al suelo (idealmente más abajo)", "Sube explosivo manteniendo el torso rígido y el pecho arriba"], "errors": ["Rodillas hacia adentro (colapso valgo) — muy frecuente con mucho peso", "Talones que se levantan del suelo — problema de movilidad de tobillo", "Redondear la lumbar en la posición baja", "Inclinar excesivamente el torso hacia adelante"]}, {"id": "3-2", "name": "Prensa de Piernas", "sets": 3, "reps": "10-12", "rest": 120, "img": "leg-press", "muscles": "Cuádriceps · Glúteos · Isquios", "tip": "💡 Pies en zona media-alta. Baja hasta 90° sin que la pelvis se despegue.", "form": ["Pies a la anchura de caderas en zona media-alta de la plataforma", "Baja hasta ~90° sin que la pelvis bascule", "No bloquear las rodillas al extender — mantén ligera flexión", "Rodillas en dirección de los pies"], "errors": ["Bajar demasiado — la pelvis bascule y la lumbar se redondea", "Pies demasiado bajos — excesivo estrés en la rodilla", "Bloquear las rodillas en la extensión"]}, {"id": "3-3", "name": "Extensión de Cuádriceps", "sets": 3, "reps": "12-15", "rest": 75, "img": "legext", "muscles": "Cuádriceps — vasto medial y recto femoral", "tip": "💡 Rodillo encima del tobillo. Pausa 1s en extensión. Baja 3s.", "form": ["Rodillo encima del tobillo (no en el pie)", "Extiende completamente — pausa 1s en contracción máxima", "Baja lento: 3 segundos de excéntrica controlada"], "errors": ["Rodillo en el pie en lugar del tobillo", "No llegar a la extensión completa", "Hacer medias repeticiones rápidas"]}, {"id": "3-4", "name": "Abducción de Cadera — Máquina", "sets": 3, "reps": "15-20", "rest": 60, "img": "abduction", "muscles": "Glúteo menor · Glúteo medio", "tip": "💡 Control total. Pausa 1s al máximo. Sin impulso.", "form": ["Control total del movimiento — sin impulso ni balanceo", "Pausa 1s al máximo de apertura — contrae el glúteo medio", "Baja controlado — sin dejar caer el peso"], "errors": ["Usar impulso del torso para abrir las piernas", "No llegar al rango completo de apertura"]}, {"id": "3-5", "name": "RDL con Mancuernas", "sets": 3, "reps": "8-10", "rest": 120, "img": "rdl", "muscles": "Isquiotibiales · Glúteos · Erectores espinales", "tip": "💡 Rodillas semi-flexionadas fijas. Cuando sientas el estiramiento en isquios, sube. Usa straps si el agarre falla antes que los isquios.", "form": ["Rodillas ligeramente flexionadas — fijas durante todo el movimiento", "Empuja caderas hacia atrás mientras las mancuernas descienden pegadas a las piernas", "El estiramiento en los isquios es la señal para subir", "Activa los glúteos al volver a la posición inicial", "Mantén la espalda neutral — no redondees la lumbar"], "errors": ["Redondear la espalda baja — el mayor riesgo en este ejercicio", "Doblar demasiado las rodillas — se convierte en sentadilla", "No mantener las mancuernas pegadas al cuerpo"]}, {"id": "3-6", "name": "Curl Isquios Sentado", "sets": 3, "reps": "10-12", "rest": 75, "img": "legcurl", "muscles": "Isquiotibiales", "tip": "💡 Eje alineado con la rodilla. Contracción completa. Excéntrica 3s.", "form": ["Eje de la máquina alineado con la articulación de la rodilla", "Flexión completa — contracción máxima al fondo", "Excéntrica controlada: 3 segundos de regreso"], "errors": ["Eje de la máquina mal alineado — fricción y riesgo de lesión", "No completar la flexión completa al final", "Subir rápido sin controlar la excéntrica"]}, {"id": "3-7", "name": "Elevación de Talones de Pie", "sets": 4, "reps": "12-15", "rest": 60, "img": "calf", "muscles": "Gastrocnemio — cabeza medial y lateral", "tip": "💡 Talones por debajo de la plataforma en bajada. Pausa 1s arriba. Sin rebote.", "form": ["Baja los talones por debajo del nivel de la plataforma (estiramiento completo)", "Sube al máximo posible en puntas de pie", "Pausa 1s arriba con contracción máxima del gemelo", "Baja controlado — sin rebote en la posición baja"], "errors": ["Rango incompleto — hacer medias repeticiones", "Usar rebote en la posición baja — pierde el estiramiento", "Excesiva velocidad — el gemelo necesita tiempo bajo tensión"]}, {"id": "3-8", "name": "▸ CORE: Plancha", "sets": 3, "reps": "45-60s", "rest": 45, "img": "plank", "muscles": "Core completo · Estabilizadores", "tip": "💡 Glúteos apretados. Sin caer las caderas.", "form": ["Cuerpo en línea recta de cabeza a talones", "Glúteos apretados durante todo el tiempo", "Core activado — no dejes caer las caderas ni elevar el trasero", "Respiración controlada durante la posición"], "errors": ["Caderas que caen — la lumbar se hunde y pierde protección", "Trasero demasiado elevado — pierde el estímulo del core"]}, {"id": "3-9", "name": "▸ CORE: Crunch Declinado", "sets": 3, "reps": "15-20", "rest": 45, "img": "crunch", "muscles": "Recto abdominal · Oblicuos", "tip": "💡 Manos al pecho. Exhala completamente al subir.", "form": ["Manos cruzadas en el pecho (no detrás de la cabeza)", "Sube exhalando completamente — la exhalación potencia la contracción", "Baja controlado hasta sentir el estiramiento del recto abdominal"], "errors": ["Manos detrás de la cabeza tirando del cuello", "Bajar completamente sin control — riesgo lumbar", "Subir con impulso en lugar de contracción abdominal"]}], "cooldown": [{"name": "Estiramiento Cuádriceps de Pie", "type": "stretch", "secs": 30, "sides": 2, "note": "Mantén la rodilla alineada.", "img": "stretch", "muscles": "Cuádriceps", "form": ["Agarra el pie por el empeine (no el tobillo)", "Rodilla apuntando hacia abajo — no hacia afuera", "Mantén el core activo — no arquees la lumbar"], "errors": ["Arquear la lumbar para compensar la falta de flexibilidad"]}, {"name": "Estiramiento Isquios", "type": "stretch", "secs": 45, "sides": 2, "note": "Tumbado o sentado, sin redondear la espalda.", "img": "stretch", "muscles": "Isquiotibiales", "form": ["Pierna extendida, sin doblar la rodilla", "La espalda permanece neutral — no redondees", "El estiramiento lo sientes en la parte posterior del muslo, no en la rodilla"], "errors": ["Redondear la espalda para alcanzar más — estira la espalda, no los isquios", "Doblar la rodilla de la pierna que estiras"]}, {"name": "[ISO-CD] Isométrico Rodilla — Pared", "type": "hold", "val": 45, "sets": 3, "note": "3×45s. Empuja la pared con el pie (extensión). Fortalece el tendón rotuliano.", "img": "stretch", "muscles": "Tendón rotuliano · Vasto medial", "form": ["Siéntate en el suelo frente a la pared", "Coloca el pie contra la pared con la rodilla ligeramente flexionada", "Empuja el pie contra la pared como si quisieras estirar la rodilla", "Aguanta 45s — contracción isométrica del cuádricep"], "errors": ["Usar peso demasiado ligero — necesita buena intensidad de empuje"]}, {"name": "Postura de Paloma — Apertura de Cadera", "type": "stretch", "secs": 45, "sides": 2, "note": "45 segundos por lado.", "img": "stretch", "muscles": "Piriforme · Glúteo · Cadera", "form": ["Rodilla delantera doblada en el suelo (posición de paloma)", "Pierna trasera extendida directamente hacia atrás", "Baja el torso hacia el suelo progresivamente"], "errors": ["Forzar la posición — solo hasta donde seas cómodo"]}, {"name": "Estiramiento Gemelo en Pared", "type": "stretch", "secs": 30, "sides": 2, "note": "Pie trasero con talón en suelo.", "img": "stretch", "muscles": "Gastrocnemio · Sóleo", "form": ["Pie trasero completamente apoyado en el suelo", "Rodilla trasera extendida para el gastrocnemio", "Inclínate hacia la pared suavemente"], "errors": ["Levantar el talón — pierde completamente el estiramiento del gemelo", "Doblar la rodilla trasera cuando quieres estirar el gastrocnemio"]}, {"name": "Respiración Profunda", "type": "time", "secs": 90, "note": "90 seg. Recuperación del sistema nervioso.", "img": "stretch", "muscles": "Diafragma · Sistema nervioso", "form": ["Tumbado o sentado, columna neutral", "Inhala por la nariz 4s llenando primero el abdomen, luego el pecho", "Exhala lentamente por la boca 6-8s — vaciando de arriba hacia abajo", "El sistema nervioso parasimpático se activa reduciendo el cortisol post-entrenamiento"], "errors": ["Respirar superficialmente — el abdomen debe expandirse primero", "Tensar los hombros durante la inhalación"]}], "cardio": null}, {"id": 4, "num": "DÍA 4", "name": "Empuje B", "emoji": "💪", "focus": "Hombros · Pecho · Tríceps", "label": "EMPUJE B", "color": "#f97316", "dayType": "push", "warmup": [{"name": "Remo Polea Muy Ligero", "type": "reps", "val": "15+15", "note": "Activa antagonistas, prepara el hombro.", "img": "row", "muscles": "Escápula · Antagonistas", "form": ["Peso mínimo — 20-30% del trabajo", "Enfoca en sentir la escápula retraerse al final", "Espalda erguida, sin inclinar el torso", "Activa los antagonistas del pecho antes de presionar"], "errors": ["Inclinar el torso — pierde el foco en la activación escapular", "Usar el peso de calentamiento como si fuera un set real"]}, {"name": "[ISO] Aperturas con Banda", "type": "hold", "val": 2, "sets": 4, "note": "4×2s hold al final. Deltoides posterior e isométrico de hombro.", "img": "stretch", "muscles": "Deltoides posterior · Romboides", "form": ["Banda a la altura del pecho", "Jala hasta que los brazos queden en línea", "Aguanta 2s en la posición abierta"], "errors": ["No llegar a la posición de apertura completa — reduce la activación", "Doblar los codos durante el movimiento — debe ser con brazos extendidos", "No aguantar el isométrico — la pausa es lo más importante"]}, {"name": "[ISO] Rotación Externa de Hombro", "type": "hold", "val": 20, "sets": 3, "note": "3×20s por lado. Esencial antes de presionar.", "img": "stretch", "muscles": "Manguito rotador", "form": ["Codo a 90° pegado al costado", "Rota el antebrazo hacia afuera", "El codo NO se mueve"], "errors": ["Separar el codo del cuerpo para compensar", "Hacer el movimiento demasiado rápido sin el hold isométrico", "Usar demasiada resistencia — compromete la técnica"]}, {"name": "Jalón a la Cara con Banda", "type": "reps", "val": "20", "note": "Hold 1s al final. Prepara deltoides posterior.", "img": "facepull", "muscles": "Deltoides posterior · Manguito rotador", "form": ["Banda a la altura de la cara o ligeramente por encima", "Jala hacia la cara separando las manos al llegar", "Pulgares detrás de las orejas en la posición final", "Hold 1s — siente el deltoides posterior apretar"], "errors": ["Banda demasiado baja — activa trapecios en lugar de deltoides posterior", "No llegar a la posición final con las manos separadas"]}, {"name": "Y-T-W en Banco Inclinado", "type": "reps", "val": "10", "note": "Sin peso. 2s hold en cada posición.", "img": "stretch", "muscles": "Estabilizadores escapulares", "form": ["Banco inclinado a 45°, frente apoyada, brazos colgando", "Y: lleva brazos a 45° sobre la cabeza, pulgares arriba", "T: brazos perpendiculares al cuerpo, pulgares arriba", "W: codos a 90°, rotación externa — \"alas de pájaro\"", "Hold 2s en cada posición, sin peso o muy ligero"], "errors": ["Usar el trapecio para elevar — debe ser deltoides posterior y romboides", "Hacer el movimiento demasiado rápido sin el hold isométrico", "Doblar los codos en la Y — los brazos van extendidos"]}, {"name": "Serie Activación Press Hombros", "type": "activation", "note": "Al 50% de tu peso de trabajo de hoy", "img": "ohp", "activationFor": "4-1", "muscles": "Deltoides · Tríceps", "form": ["50% del peso de tu primera serie de la máquina", "15 reps enfocándote en sentir el deltoides, no los trapecios", "Mantén los trapecios relajados en cada repetición", "Confirma el rango completo de movimiento sin dolor"], "errors": ["Elevar los trapecios — señal de que el peso es demasiado o la técnica falla", "Usar este set para estimar el peso máximo del día"]}], "exercises": [{"id": "4-1", "name": "Press Hombros — Máquina", "sets": 4, "reps": "6-8", "rest": 180, "img": "ohp", "muscles": "Deltoides anterior y medio · Tríceps · Trapecios", "tip": "💡 Ejercicio principal del día. Sin arquear lumbar. No bloquear codos.", "form": ["Ajusta el asiento — agarres a la altura de las orejas", "Empuja vertical, sin inclinar el torso atrás", "No bloquear los codos en extensión", "Trapecios relajados — trabajo de deltoides"], "errors": ["Arquear la lumbar excesivamente", "Elevar los trapecios durante el movimiento", "Usar impulso del torso"]}, {"id": "4-2", "name": "Press Inclinado — Máquina", "sets": 3, "reps": "10-12", "rest": 90, "img": "bench", "muscles": "Pectoral clavicular · Deltoides anterior", "tip": "💡 Retrae las escápulas antes de empujar. Muñecas neutras.", "form": ["Retrae y deprime las escápulas antes de empujar", "Muñecas neutras (no dobladas hacia atrás)", "El movimiento debe sentirse en el pectoral superior"], "errors": ["No retraer las escápulas", "Muñecas dobladas — riesgo de lesión"]}, {"id": "4-3", "name": "Press Banca Agarre Cerrado", "sets": 3, "reps": "10-12", "rest": 90, "img": "bench", "muscles": "Tríceps cabeza lateral y medial · Pectoral interno", "tip": "💡 Codos pegados al torso. Posición 3 = tríceps fresco.", "form": ["Agarre a la anchura de los hombros o ligeramente más estrecho", "Codos pegados al torso durante toda la bajada", "Baja hasta el pecho controlado", "Empuja explosivo desde el pecho"], "errors": ["Agarre demasiado estrecho — estrés en muñecas", "Codos abiertos — se convierte en press normal", "Botar la barra en el pecho"]}, {"id": "4-4", "name": "Elevaciones Laterales — Cable", "sets": 4, "reps": "15-20", "rest": 60, "img": "lat-raise", "muscles": "Deltoides medio", "tip": "💡 Polea baja cruzando el cuerpo. Tensión constante todo el recorrido.", "form": ["Polea baja, agarre cruzando el cuerpo", "Tensión constante — ventaja sobre mancuernas", "Hasta paralelo, meñique ligeramente arriba", "Excéntrica 3 segundos"], "errors": ["Llevar demasiado alto — trapecios compensan", "Usar el cuerpo para generar impulso"]}, {"id": "4-5", "name": "Aperturas Inversas Cable — Deltoides Posterior", "sets": 3, "reps": "15-20", "rest": 60, "img": "facepull", "muscles": "Deltoides posterior · Romboides", "tip": "💡 Cables cruzados a altura de hombros. 'Muestra el pecho' al abrir.", "form": ["Cables cruzados a la altura de los hombros", "Codos ligeramente flexionados — fijos", "Abre en arco hacia atrás — piensa en 'mostrar el pecho'", "Pausa 1s — contrae deltoides posterior"], "errors": ["Cables muy altos o bajos — cambia la activación", "Doblar los codos durante el movimiento"]}, {"id": "4-6", "name": "Press Plano con Mancuernas", "sets": 3, "reps": "10-12", "rest": 90, "img": "bench", "muscles": "Pectoral mayor · Deltoides anterior · Tríceps", "tip": "💡 Más rango de movimiento que con barra. Baja hasta sentir el estiramiento.", "form": ["Retrae y deprime las escápulas antes de presionar — misma base estable", "Baja las mancuernas más profundo que con barra — aprovecha el mayor ROM", "Muñecas neutras o ligeramente supinadas", "Sube con ligero movimiento de convergencia"], "errors": ["Bajar demasiado sin control — riesgo de hombro anterior", "No retraer las escápulas"]}, {"id": "4-7", "name": "Extensión Tríceps sobre Cabeza", "sets": 3, "reps": "12-15", "rest": 60, "img": "tricep", "muscles": "Tríceps cabeza larga", "tip": "💡 Codos fijos al techo. Solo en esta posición se activa la cabeza larga.", "form": ["Polea baja o media, da la espalda", "Codos apuntando al techo — fijos", "Extiende completamente — pausa 1s"], "errors": ["Mover los codos durante el movimiento", "No alcanzar la extensión completa"]}], "cooldown": [{"name": "Estiramiento Deltoides Posterior", "type": "stretch", "secs": 30, "sides": 2, "note": "Brazo cruzado al pecho.", "img": "stretch", "muscles": "Deltoides posterior", "form": ["Brazo cruzado horizontalmente al pecho", "Presiona con el antebrazo opuesto para llevar el brazo hacia el pecho", "Hombro relajado y hacia abajo — no elevado", "Sientes el estiramiento en la parte posterior del hombro"], "errors": ["Elevar el hombro durante el estiramiento", "Usar la mano en lugar del antebrazo para la presión"]}, {"name": "Estiramiento de Hombro Cruzado", "type": "stretch", "secs": 30, "sides": 2, "note": "30 segundos por lado.", "img": "stretch", "muscles": "Hombro · Cápsula articular", "form": ["Brazo cruzado frente al cuerpo a la altura del hombro", "Usa el brazo contrario para guiar suavemente el estiramiento", "Mantén ambos hombros hacia abajo", "Respira profundo y relaja el hombro con cada exhalación"], "errors": ["Rotar el cuello o levantar los hombros", "Forzar el rango — debe sentirse cómodo"]}, {"name": "[ISO-CD] Flexión de Hombro Isométrica", "type": "hold", "val": 30, "sets": 3, "note": "3×30s. Empuja la pared con el brazo a 90°. Tendones del hombro.", "img": "stretch", "muscles": "Tendones del hombro", "form": ["Brazo extendido a 90° contra la pared", "Empuja como si quisieras mover la pared", "Contrae todo el deltoides durante el hold"], "errors": ["Doblar el codo durante el hold — pierde el estímulo tendinoso", "Tensar el trapecio en lugar del deltoides", "Empujar con poca intensidad — el isométrico necesita buena intensidad para adaptación tendinosa"]}, {"name": "Enhebrar la Aguja", "type": "stretch", "secs": 30, "sides": 2, "note": "Rotación torácica en cuadrupedia.", "img": "stretch", "muscles": "Columna torácica · Rotadores", "form": ["Cuadrupedia: muñecas bajo hombros, rodillas bajo caderas", "Desliza un brazo por debajo del cuerpo hasta que el hombro toque el suelo", "El otro brazo permanece extendido apoyado", "Mantén las caderas elevadas — no las gires", "30s por lado"], "errors": ["Girar las caderas en lugar de aislar la rotación torácica", "Tensar el cuello — manténlo relajado"]}, {"name": "Estiramiento Tríceps", "type": "stretch", "secs": 30, "sides": 2, "note": "Codo al techo, mano en la espalda.", "img": "stretch", "muscles": "Tríceps cabeza larga", "form": ["Codo apuntando al techo con el brazo doblado detrás de la cabeza", "Usa la mano opuesta para llevar el codo suavemente hacia la línea media", "Torso erguido — no te inclines", "Sientes el estiramiento en la zona posterior del brazo"], "errors": ["Tirar del codo con demasiada fuerza", "Inclinar el torso lateralmente"]}], "cardio": {"type": "🏃 Cardio", "liss": {"name": "LISS — Elíptica Zona 2 (~24 min)", "steps": [{"t": "Preparación", "d": "Elíptica resistencia 3. Pantalla en frecuencia cardíaca si está disponible."}, {"t": "Calentamiento 0-2 min", "d": "Resistencia 2, ritmo suave. Respira por la nariz."}, {"t": "Zona 2 — 2 a 22 min", "d": "Resistencia 4-6 · Cadencia cómoda · FC objetivo: 120-135 bpm. Debes poder hablar con algo de dificultad. Si FC >140, baja la resistencia."}, {"t": "Vuelta a la calma 22-24 min", "d": "Resistencia 2, ritmo suave hasta normalizar la respiración."}, {"t": "Resultado", "d": "~220-270 kcal. Zona 2 activa la lipólisis (quema de grasa) sin comprometer tu recuperación muscular. Con 6 días de fuerza, este es tu cardio ideal."}]}, "hiit": {"name": "HIIT — Solo si no hay tiempo (elíptica)", "steps": [{"t": "⚠️ ADVERTENCIA", "d": "Con 6 días de fuerza el HIIT agrega estrés innecesario. Usa solo si genuinamente no tienes los 24 min para LISS."}, {"t": "Calentamiento 0-2 min", "d": "Resistencia 3, ritmo suave."}, {"t": "5 Intervalos activos", "d": "45s a máximo esfuerzo — resistencia 8-10, cadencia alta."}, {"t": "5 Recuperaciones activas", "d": "75s a ritmo muy suave — resistencia 2-3."}, {"t": "Vuelta a la calma 2 min", "d": "Resistencia 2, respiración normalizada."}, {"t": "Total ~12 min", "d": "Opción de emergencia. LISS siempre es preferible."}]}}}, {"id": 5, "num": "DÍA 5", "name": "Jalón B", "emoji": "🏋️", "focus": "Espalda Grosor · Bíceps · Trampas", "label": "JALÓN B", "color": "#a855f7", "dayType": "pull", "warmup": [{"name": "Remo Suave en Máquina", "type": "time", "secs": 300, "note": "5 min remo ligero. Calentamiento general.", "img": "row", "muscles": "Espalda · Cardiovascular", "form": ["5 minutos a ritmo muy suave con poco peso", "Foco en la respiración y activación de la espalda", "Cada rep con retracción escapular completa al final", "Sirve como calentamiento cardiovascular y neuromuscular"], "errors": ["Usar demasiada resistencia — debe sentirse cómodo", "Omitir la retracción escapular por ir demasiado rápido"]}, {"name": "[ISO] Aperturas con Banda", "type": "hold", "val": 2, "sets": 4, "note": "4×2s hold. Isométrico en posición abierta.", "img": "stretch", "muscles": "Deltoides posterior · Romboides", "form": ["Aguanta 2s en la posición abierta", "Concéntrate en apretar el deltoides posterior"], "errors": ["No llegar a la posición de apertura completa — reduce la activación", "Doblar los codos durante el movimiento — debe ser con brazos extendidos", "No aguantar el isométrico — la pausa es lo más importante"]}, {"name": "Gato-Vaca Controlado", "type": "reps", "val": "10", "note": "Movilidad torácica y lumbar.", "img": "stretch", "muscles": "Columna vertebral", "form": ["Cuadrupedia: rodillas bajo caderas, muñecas bajo hombros", "Cat: exhala y redondea toda la columna hacia arriba — mentón al pecho", "Cow: inhala y arquea la espalda — pecho hacia adelante, cadera arriba", "Movimiento lento y coordinado con la respiración, 2s cada posición"], "errors": ["Hacer solo movimiento lumbar — debe moverse toda la columna torácica", "Ir demasiado rápido sin coordinar con la respiración"]}, {"name": "[ISO] Bicho Muerto Isométrico", "type": "hold", "val": 3, "sets": 10, "note": "10 reps × 3s hold. 3 series. Core anti-rotación.", "img": "plank", "muscles": "Core · Transverso abdominal", "form": ["Espalda pegada al suelo", "Extiende opuestos simultáneamente", "Aguanta 3s — core no rota"], "errors": ["Perder el contacto lumbar con el suelo — señal de que el core no está activado", "Apresurarse sin hacer la pausa — la pausa isométrica es lo más importante", "Extender pierna y brazo del mismo lado (ipsilateral)"]}, {"name": "[ISO] Rotación Externa Hombro", "type": "hold", "val": 15, "sets": 4, "note": "4×15s por lado. Antes del remo con barra.", "img": "stretch", "muscles": "Manguito rotador", "form": ["Codo a 90° pegado al costado", "Rota hacia afuera — movimiento lento"], "errors": ["Separar el codo del cuerpo para compensar la falta de movilidad", "Hacer el movimiento demasiado rápido sin respetar el hold"]}, {"name": "Serie Activación Remo con Barra", "type": "activation", "note": "Al 50% de tu peso de trabajo de hoy", "img": "row", "activationFor": "5-1", "muscles": "Dorsal · Trapecio · Bíceps", "form": ["50% del peso de tu primera serie en el Smith", "15 reps lentas con foco en la retracción escapular", "Confirma la posición del torso a 30-45° antes de cargar más", "Siente el dorsal trabajando, no los brazos ni la espalda baja"], "errors": ["Redondear la espalda baja incluso en la activación — señal de alerta", "Hacer el movimiento demasiado vertical"]}], "exercises": [{"id": "5-1", "name": "Remo en Smith — Inclinado", "sets": 4, "reps": "6-8", "rest": 180, "img": "row", "muscles": "Dorsal · Romboides · Trapecio · Bíceps · Erectores", "tip": "💡 Barra guiada. Torso 30-45°. Jala al ombligo. Máximo control.", "form": ["Coloca la barra del Smith a la altura baja — posición de inicio al nivel de las espinillas", "Torso paralelo o a 30-45° del suelo — espalda neutral en todo momento", "Agarra la barra con agarre prono, anchura de hombros o ligeramente más ancho", "Jala hacia el ombligo — lleva los codos hacia atrás y arriba", "Escápulas hacia adentro y abajo al máximo — pausa 1s", "Baja controlado — 3 segundos de excéntrica"], "errors": ["Redondear la espalda lumbar — riesgo real de lesión con carga", "Torso demasiado vertical — activa más trapecios que dorsal", "Jalar al pecho en lugar del ombligo — cambia completamente el músculo objetivo", "No usar la guía del Smith para estabilizar — aprovecha esa ventaja"]}, {"id": "5-2", "name": "Remo Polea Agarre Ancho", "sets": 3, "reps": "10-12", "rest": 90, "img": "row", "muscles": "Trapecio medio · Romboides · Dorsal posterior", "tip": "💡 Codos salen hacia los lados. Énfasis en grosor de espalda.", "form": ["Codos salen hacia los lados (no pegados al torso)", "Jala hacia la zona del pecho bajo/esternón", "Escápulas se juntan fuertemente en contracción"], "errors": ["Usar el torso como palanca", "No llevar los codos suficientemente atrás"]}, {"id": "5-3", "name": "Jalón Agarre Neutro / Cerrado", "sets": 3, "reps": "10-12", "rest": 90, "img": "lat-pull", "muscles": "Dorsal inferior · Bíceps · Redondo mayor", "tip": "💡 Agarre neutro permite contracción más completa del dorsal inferior.", "form": ["Agarre neutro (palmas enfrentadas) — mayor contracción dorsal inferior", "Lleva el agarre hasta la parte alta del pecho"], "errors": ["Inclinar excesivamente el torso", "Tirar con los bíceps en lugar del dorsal"]}, {"id": "5-4", "name": "Extensión de Espalda", "sets": 3, "reps": "15", "rest": 75, "img": "hyperext", "muscles": "Erectores espinales · Glúteos · Isquios", "tip": "💡 Hasta línea recta — NO hiperextender. Puedes añadir disco.", "form": ["Sube hasta que el cuerpo forme una línea recta", "Glúteos apretados en la posición alta", "Baja controlado — 3 segundos de excéntrica"], "errors": ["Hiperextender la espalda arriba — comprime las vértebras", "Subir demasiado rápido"]}, {"id": "5-5", "name": "Encogimientos con Mancuernas", "sets": 3, "reps": "12-15", "rest": 60, "img": "shrug", "muscles": "Trapecio superior · Elevador de la escápula", "tip": "💡 Sube directo, sin rotar. Pausa 2s arriba con contracción máxima.", "form": ["Sube directamente — sin rotar los hombros", "Pausa 2s arriba con contracción máxima", "Baja completamente — rango completo"], "errors": ["Rotar los hombros — no añade beneficio", "No hacer pausa arriba"]}, {"id": "5-6", "name": "Bayesian Curl — Cable Unilateral", "sets": 3, "reps": "10-12", "rest": 75, "img": "curl", "muscles": "Bíceps cabeza larga", "tip": "⚡ EMPIEZA BRAZO DERECHO SIEMPRE. Máximo estiramiento con brazo atrás.", "form": ["Polea baja detrás de ti, da un paso al frente", "Brazo completamente extendido hacia atrás", "Curl con supinación completa", "Cuerpo perpendicular a la polea"], "errors": ["No dejar el brazo completamente extendido", "Mover el codo durante el curl"]}, {"id": "5-7", "name": "Curl Invertido — Barra o Cable", "sets": 3, "reps": "12-15", "rest": 60, "img": "curl", "muscles": "Braquiorradial · Bíceps grip prono · Antebrazos", "tip": "💡 Grip prono durante todo el movimiento. Codos fijos a los lados.", "form": ["Agarre prono (nudillos arriba) durante todo el movimiento", "Codos fijos a los costados", "Muñecas neutras — no las dobles"], "errors": ["Dejar caer las muñecas — riesgo de lesión", "Peso excesivo con mala técnica"]}, {"id": "5-8", "name": "Caminata de Granjero", "sets": 3, "reps": "35 metros", "rest": 90, "img": "farmer", "muscles": "Antebrazos · Trapecios · Core · Glúteos", "tip": "💡 Camina erguido, hombros atrás, core apretado. Máxima fuerza de agarre.", "form": ["Camina erguido con hombros hacia atrás y abajo", "Core apretado — como si fueras a recibir un golpe", "Aprieta los mangos con la máxima fuerza posible", "Pasos controlados — no balancees el cuerpo"], "errors": ["Inclinarse hacia adelante con el torso", "Relajar el agarre durante el recorrido"]}], "cooldown": [{"name": "Estiramiento Dorsal en Polea", "type": "stretch", "secs": 30, "sides": 2, "note": "Agárrate y deja caer el cuerpo.", "img": "stretch", "muscles": "Dorsal ancho", "form": ["Agarra la polea o barra con una mano a la altura de la cadera", "Dobla las rodillas y deja caer el cuerpo alejándote de la polea", "El brazo permanece extendido — no lo dobles", "Sientes el estiramiento en el lateral del dorsal"], "errors": ["Doblar el codo — pierde la tensión en el dorsal", "Tensionar los hombros"]}, {"name": "Estiramiento Romboides — Abrazo", "type": "stretch", "secs": 45, "sides": 1, "note": "Abraza el torso como si te abrochases el cinturón de la espalda.", "img": "stretch", "muscles": "Romboides · Trapecio medio", "form": ["Cruza los brazos como si te abrazaras", "Las manos intentan llegar a la parte central de la espalda", "Dobla ligeramente la columna hacia adelante para mayor estiramiento", "Sientes el estiramiento entre los omóplatos"], "errors": ["No doblar ligeramente el torso — reduce el estiramiento de los romboides", "Tensar los hombros hacia arriba"]}, {"name": "[ISO-CD] Isométrico de Bíceps", "type": "hold", "val": 30, "sets": 3, "note": "3×30s. Antebrazo debajo de una mesa, empuja hacia arriba. Fortalece tendón distal.", "img": "stretch", "muscles": "Tendón distal del bíceps", "form": ["Antebrazo debajo de la mesa", "Empuja hacia arriba como si quisieras levantar la mesa", "Contracción isométrica — sin movimiento real"], "errors": ["Empujar con poca intensidad — el estímulo tendinoso requiere buena fuerza", "Hacer el movimiento real (mover el brazo) en lugar de isométrico", "Tensar el cuello o los trapecios en lugar de aislar el bíceps"]}, {"name": "Cobra / Perro hacia Arriba", "type": "stretch", "secs": 30, "sides": 1, "note": "Abre el pecho y estira los flexores de cadera.", "img": "stretch", "muscles": "Pectoral · Flexores de cadera · Columna", "form": ["Tumbado boca abajo, manos bajo los hombros", "Empuja el suelo y eleva el pecho — codos pueden quedar ligeramente flexionados (Cobra)", "Mantén los glúteos relajados — el trabajo es del dorsal y extensores", "Mira hacia adelante, no hacia arriba"], "errors": ["Comprimir el cuello al mirar demasiado arriba", "Tensar los glúteos — bloquea la extensión de la columna", "Alzar las caderas del suelo en Cobra — eso es Up Dog"]}, {"name": "Postura del Niño", "type": "time", "secs": 45, "note": "Recuperación de la columna.", "img": "stretch", "muscles": "Dorsal · Columna · Caderas", "form": ["Rodillas en el suelo, siéntate sobre los talones", "Extiende los brazos hacia adelante con las palmas en el suelo", "Frente apoyada en el suelo — o lo más cerca posible", "Respira profundo — con cada exhalación relaja más la espalda y caderas"], "errors": ["Tensionar los hombros en lugar de dejarlos caer", "No respirar profundo — la respiración es lo que produce el estiramiento"]}], "cardio": null}, {"id": 6, "num": "DÍA 6", "name": "Piernas B", "emoji": "🦵", "focus": "Cadena Posterior · Glúteos · Core", "label": "PIERNAS B", "color": "#06b6d4", "dayType": "legs", "warmup": [{"name": "Bicicleta Estática", "type": "time", "secs": 300, "note": "5 min intensidad moderada.", "img": "bike", "muscles": "Cardiovascular · Piernas", "form": ["Ajusta el asiento a la altura de la cadera antes de empezar", "Mantén la espalda erguida — no te apoyes en el manubrio con todo tu peso", "Cadencia suave 60-65 RPM, resistencia baja — es calentamiento, no cardio", "Respira por la nariz — si no puedes, baja la resistencia"], "errors": ["Apoyarte completamente en el manubrio — anula el esfuerzo del core y piernas", "Ir demasiado fuerte — agotarás energía que necesitas para el entrenamiento"]}, {"name": "[ISO] Puente de Glúteo con Pausa", "type": "hold", "val": 2, "sets": 15, "note": "15 reps, hold 2s arriba. Activa glúteos antes de cargar cadera.", "img": "hip-thrust", "muscles": "Glúteo mayor · Isquiotibiales", "form": ["Escápulas en el suelo", "Empuja con los talones — contrae el glúteo fuertemente", "Aguanta 2s en la posición alta"], "errors": ["Hiperextender la lumbar en la posición alta"]}, {"name": "Caminata Lateral con Banda", "type": "reps", "val": "15 pasos c/lado", "note": "Glúteo medio. Rodillas ligeramente dobladas.", "img": "stretch", "muscles": "Glúteo medio · Abductores", "form": ["Banda alrededor de los pies o tobillos", "Posición de semi-sentadilla: caderas atrás, pecho arriba", "Pasos laterales manteniendo tensión constante en la banda", "Rodillas alineadas con los pies — no dejes que colapsen hacia adentro", "15 pasos por lado"], "errors": ["Rodillas que colapsan hacia adentro — pierde el estímulo del glúteo medio", "Caminar erguido sin la semi-sentadilla — reduce la activación", "Perder la tensión de la banda entre pasos"]}, {"name": "[ISO] Bicho Muerto Isométrico", "type": "hold", "val": 3, "sets": 10, "note": "10 reps × 3s hold. 2 series. Core antes de cargar.", "img": "plank", "muscles": "Core · Transverso abdominal", "form": ["Espalda pegada al suelo durante todo el movimiento", "Aguanta 3s — el core no debe rotar ni arquearse"], "errors": ["Perder el contacto lumbar con el suelo — señal de que el core no está activado", "Apresurarse sin hacer la pausa — la pausa isométrica es lo más importante", "Extender pierna y brazo del mismo lado (ipsilateral)"]}, {"name": "Bisagra de Cadera con Palo", "type": "reps", "val": "10", "note": "Patrón de deadlift antes de cargar. 2 series.", "img": "rdl", "muscles": "Isquiotibiales · Glúteos", "form": ["Palo vertical en la espalda: contacto en cabeza, zona torácica y coxis", "Empuja las caderas hacia atrás manteniendo el contacto del palo", "Rodillas ligeramente flexionadas — fijas", "Siente el estiramiento en los isquiotibiales", "Regresa a la posición inicial activando los glúteos"], "errors": ["Perder el contacto del palo con la columna — indica redondeo de espalda", "Doblar demasiado las rodillas — se convierte en cuclillas", "Bajar doblando la espalda en lugar de empujar la cadera"]}, {"name": "[ISO] Sentadilla en Pared 90°", "type": "hold", "val": 30, "sets": 2, "note": "2×30s. Rodilla estable antes de cargar.", "img": "stretch", "muscles": "Cuádriceps · Rodilla", "form": ["Espalda plana en la pared", "Rodillas a 90° — muslos paralelos al suelo"], "errors": ["Rodillas que colapsan hacia adentro — trabaja más glúteo medio si ocurre", "Talones que se levantan del suelo", "No llegar a los 90° — la posición alta reduce el estímulo del cuádricep"]}, {"name": "Serie Activación Hip Thrust", "type": "activation", "note": "Al 50% de tu peso de trabajo de hoy", "img": "hip-thrust", "activationFor": "6-1", "muscles": "Glúteo mayor · Isquiotibiales", "form": ["50% del peso de tu primera serie", "12 reps con énfasis en apretar el glúteo 2s arriba", "Confirma la posición de la barra sobre los pliegues de la cadera", "Verifica que no hay hiperextensión lumbar en la posición alta"], "errors": ["Hiperextender la lumbar incluso en la activación", "No usar almohadilla aunque sea con poco peso"]}], "exercises": [{"id": "6-1", "name": "Hip Thrust con Barra", "sets": 4, "reps": "8-10", "rest": 150, "img": "hip-thrust", "muscles": "Glúteo mayor · Isquiotibiales · Cuádriceps", "tip": "💡 Aprieta glúteos 2s arriba — NO hiperextender la lumbar. Almohadilla en caderas.", "form": ["Barra sobre los pliegues de la cadera — usa almohadilla", "Escápulas apoyadas en el banco", "Al subir: cuerpo en línea recta de rodillas a hombros", "Aprieta los glúteos 2 segundos en la posición alta — contrae fuerte"], "errors": ["Hiperextender la lumbar arriba — el glúteo deja de trabajar y hay riesgo de lesión", "Pies mal posicionados — cambia el músculo que trabaja", "No hacer la pausa de 2s — pierde la contracción isométrica"]}, {"id": "6-2", "name": "RDL con Mancuernas", "sets": 3, "reps": "10-12", "rest": 120, "img": "rdl", "muscles": "Isquiotibiales · Glúteos · Erectores", "tip": "💡 Rodillas semi-flexionadas fijas. Siente el estiramiento en isquios. Usa straps si se te cansa el agarre.", "form": ["Rodillas semi-flexionadas y fijas", "El estiramiento en los isquios es la señal para subir", "Mantén las mancuernas pegadas a las piernas"], "errors": ["Redondear la espalda baja", "Doblar demasiado las rodillas — se convierte en sentadilla"]}, {"id": "6-3", "name": "Sentadilla Búlgara", "sets": 3, "reps": "8-10 c/pierna", "rest": 120, "img": "split", "muscles": "Cuádriceps · Glúteos · Isquios · Estabilizadores", "tip": "⚡ EMPIEZA PIERNA DERECHA SIEMPRE. Pie delantero suficientemente adelante.", "form": ["Pie trasero elevado en banco — empeine apoyado (no la puntera)", "Pie delantero suficientemente adelante — rodilla no sobrepasa el pie", "Baja controlado, torso ligeramente inclinado hacia adelante", "Sube empujando desde el talón delantero — activa más el glúteo"], "errors": ["Pie delantero demasiado cerca — rodilla sobrepasa el pie", "Torso demasiado vertical — más cuádriceps que glúteo", "No establecer el equilibrio antes de bajar"]}, {"id": "6-4", "name": "Curl Isquios Tumbado", "sets": 3, "reps": "12-15", "rest": 75, "img": "legcurl", "muscles": "Isquiotibiales (ángulo diferente al sentado)", "tip": "💡 Diferente ángulo al Día 3. Rango completo en ambos extremos.", "form": ["Eje alineado con la rodilla", "Flexión completa — máxima contracción al fondo", "Excéntrica controlada: 3 segundos de regreso"], "errors": ["Eje mal alineado con la rodilla", "Levantar las caderas para completar el rango"]}, {"id": "6-5", "name": "Abducción Cadera — Máquina", "sets": 3, "reps": "15-20", "rest": 60, "img": "abduction", "muscles": "Glúteo menor · Glúteo medio", "tip": "💡 Sin impulso. Pausa 1s al máximo.", "form": ["Control total — sin impulso", "Pausa 1s al máximo de apertura", "Baja controlado"], "errors": ["Usar impulso del torso", "No llegar al rango completo"]}, {"id": "6-6", "name": "Elevación de Talones de Pie", "sets": 3, "reps": "12-15", "rest": 60, "img": "calf", "muscles": "Gastrocnemio", "tip": "💡 Rango completo. Pausa arriba. Misma técnica que Día 3.", "form": ["Rango completo — talones debajo del nivel de la plataforma", "Pausa 1s arriba", "Sin rebote en la posición baja"], "errors": ["Medias repeticiones sin bajar al estiramiento", "Velocidad excesiva"]}, {"id": "6-7", "name": "Sóleo Sentado — Banco + Mancuerna", "sets": 3, "reps": "15-20", "rest": 60, "img": "calf", "muscles": "Sóleo (activo con rodilla doblada)", "tip": "💡 Peso en los muslos con rodillas a 90°. Sóleo + gastro = gemelos completos.", "form": ["Peso en los muslos — rodillas a 90°", "El sóleo se activa principalmente con la rodilla doblada", "Mismo rango y técnica que el standing calf raise"], "errors": ["Rodillas completamente extendidas — activas gastrocnemio no sóleo", "Medias repeticiones"]}, {"id": "6-8", "name": "▸ CORE: Rueda Abdominal / Crunch Declinado", "sets": 3, "reps": "12-15", "rest": 45, "img": "crunch", "muscles": "Recto abdominal · Oblicuos · Core profundo", "tip": "💡 Rueda: extensión controlada sin bajar la cadera.", "form": ["Ab Wheel: rodillas en suelo, extensión controlada", "No bajes la cadera — el core aguanta el peso del cuerpo", "Vuelve contrayendo el core — no solo con los brazos"], "errors": ["Dejar caer la cadera — la lumbar compensa y se lesiona", "Ir demasiado lejos sin el core necesario"]}, {"id": "6-9", "name": "▸ CORE: Plancha RKC", "sets": 3, "reps": "30-45s", "rest": 45, "img": "plank", "muscles": "Core completo · Glúteos · Antebrazos", "tip": "💡 RKC: aprieta TODOS los músculos al mismo tiempo. Más difícil que el plank normal.", "form": ["Aprieta simultáneamente: antebrazos hacia los pies, pies hacia antebrazos", "Glúteos apretados al máximo", "Core presurizado — como si fueras a recibir un golpe en el estómago"], "errors": ["Hacer un plank normal sin la tensión extra del RKC", "Aguantar menos de 20s — mejor hacer plank estándar primero"]}], "cooldown": [{"name": "Estiramiento Glúteo — Figura 4", "type": "stretch", "secs": 45, "sides": 2, "note": "Tumbado boca arriba, tobillo en la rodilla contraria.", "img": "stretch", "muscles": "Glúteo · Piriforme", "form": ["Tumbado boca arriba", "Tobillo derecho en la rodilla izquierda", "Jala la pierna izquierda hacia el pecho — sientes el glúteo derecho"], "errors": ["No flexionar el pie — puede crear tensión en la rodilla", "Levantar la cabeza y el cuello del suelo — tensión innecesaria"]}, {"name": "Estiramiento Isquios con Banda", "type": "stretch", "secs": 45, "sides": 2, "note": "Pierna extendida, sin redondear la espalda.", "img": "stretch", "muscles": "Isquiotibiales", "form": ["Pierna extendida sin doblar la rodilla", "La espalda permanece neutral", "El estiramiento en la parte posterior del muslo — no en la rodilla"], "errors": ["Redondear la espalda para llegar más lejos"]}, {"name": "[ISO-CD] Isométrico de Glúteo", "type": "hold", "val": 40, "sets": 3, "note": "3×40s. Glute bridge estático. Fortalece tendón proximal del isquiotibial.", "img": "hip-thrust", "muscles": "Tendón proximal isquiotibial · Glúteo mayor", "form": ["Posición de glute bridge estática", "Contrae el glúteo al máximo durante los 40s", "Respira normalmente durante el hold"], "errors": ["No apretar el glúteo lo suficiente — pierde el estímulo tendinoso"]}, {"name": "Estiramiento Flexor de Cadera en Estocada", "type": "stretch", "secs": 45, "sides": 2, "note": "Rodilla trasera en el suelo, inclínate hacia adelante.", "img": "stretch", "muscles": "Psoas · Flexores de cadera · Cuádricep proximal", "form": ["Rodilla trasera en el suelo", "Inclínate hacia adelante con el torso erguido", "Sientes el estiramiento en la parte delantera de la cadera trasera"], "errors": ["Arquear la lumbar hacia adelante — pierde el estiramiento del psoas", "Permitir que la rodilla delantera colapse hacia adentro"]}, {"name": "Respiración Profunda en Supino", "type": "time", "secs": 120, "note": "2 min. Inhala por la nariz, exhala lento por la boca.", "img": "stretch", "muscles": "Diafragma · Sistema nervioso parasimpático", "form": ["Tumbado boca arriba, piernas ligeramente separadas, palmas hacia arriba", "Inhala 4s por la nariz — abdomen se expande primero", "Exhala lento por la boca 6-8s — vaciado completo", "Deja que el cuerpo se \"derrita\" en el suelo con cada exhalación"], "errors": ["Respirar con el pecho — el abdomen debe moverse primero", "No completar la exhalación — es lo que activa el sistema parasimpático"]}], "cardio": null}];
+const NUTR={"push": [{"icon": "🥩", "title": "Proteína en los próximos 30-60 min", "text": "Consume 40-50g de proteína de alta calidad. Opciones: pechuga de pollo 200g, 6 claras + 2 enteros, shake de proteína + 500ml leche, atún 200g. El pecho y hombros necesitan aminoácidos para reparar el daño generado."}, {"icon": "🍚", "title": "Carbohidratos de rápida absorción", "text": "100-150g de carbohidratos simples post-entreno. Arroz blanco, pan blanco, fruta (plátano, mango), papa cocida. Reponen el glucógeno y elevan la insulina para facilitar la síntesis proteica."}, {"icon": "💊", "title": "Suplementos", "text": "Creatina 3-5g si aún no la tomaste hoy. Omega-3 con la comida. Hidratación: mínimo 500ml de agua en los próximos 30 min."}, {"icon": "😴", "title": "Recuperación muscular", "text": "Pecho y deltoides son músculos grandes. Prioriza 7.5-9h de sueño esta noche — la mayor parte de la síntesis proteica ocurre en las fases de sueño profundo. Evita entreno de empuje en las próximas 48h."}, {"icon": "🧘", "title": "Los próximos 30 min", "text": "Evita quedarte sentado inmediatamente. Camina 5-10 min suave para drenar el lactato. Puedes aplicar frío en el pecho o hombros si sientes inflamación excesiva."}], "pull": [{"icon": "🥩", "title": "Proteína en los próximos 30-60 min", "text": "40-50g de proteína. La espalda y el bíceps se benefician especialmente de una ventana post-entreno bien cubierta. Opciones: carne res magra 200g, pollo, shake de proteína, huevos + queso cottage."}, {"icon": "🍚", "title": "Carbohidratos", "text": "100-150g de carbohidratos. La espalda tiene gran masa muscular y consume mucho glucógeno. Arroz, pasta, papa o avena funcionan perfectamente."}, {"icon": "💊", "title": "Suplementos", "text": "Creatina 3-5g. Omega-3 con la comida. Si tomas colágeno marino, este es un buen momento — favorece la recuperación del tejido conectivo de la espalda."}, {"icon": "😴", "title": "Recuperación del dorsal", "text": "El dorsal ancho es el músculo más grande del tren superior. Necesita 48h mínimo de recuperación. Esta noche prioriza el sueño. El Omega-3 ayuda a reducir la inflamación post-entreno."}, {"icon": "🧘", "title": "Los próximos 30 min", "text": "Haz el estiramiento del dorsal si aún no lo hiciste. Hidratación: 500ml de agua. Evita cargar objetos pesados con la espalda durante las próximas horas."}], "legs": [{"icon": "🥩", "title": "Proteína — URGENTE en 30-45 min", "text": "Las piernas son el grupo muscular más grande del cuerpo. Consume 50-60g de proteína dentro de los primeros 45 min. Shake de proteína + plátano es lo más práctico. Cuádricep y glúteo están con máximo daño muscular ahora."}, {"icon": "🍚", "title": "Carbohidratos — carga mayor", "text": "150-200g de carbohidratos post-entreno de pierna. Más que en días de Push/Pull porque el volumen muscular trabajado es mayor. Arroz + frijoles, pasta o papa con huevo son opciones ideales."}, {"icon": "🧊", "title": "Inflamación y recuperación", "text": "Si sientes inflamación importante en cuádriceps o glúteos, 10-15 min de frío (bolsa de hielo o ducha fría) en las próximas 2h puede reducir el dolor. El ácido láctico se elimina mejor caminando suave que reposando."}, {"icon": "💊", "title": "Suplementos", "text": "Creatina 3-5g. Omega-3 con la comida. Magnesio (si lo tomas) esta noche — favorece la relajación muscular y el sueño profundo, cuando más se recuperan las piernas."}, {"icon": "😴", "title": "Esta noche es crítica", "text": "Los días de piernas son los que más demandan recuperación. Duerme 8h como mínimo. Glúteo, cuádriceps e isquiotibiales pueden tardar 48-72h en recuperarse con este volumen. No hagas piernas mañana."}, {"icon": "🧘", "title": "Los próximos 30 min", "text": "Camina 10 min suave antes de sentarte — el movimiento activo post-piernas acelera la recuperación. Hidratación: 600-800ml de agua en la próxima hora."}]};
+
+
+
+
+
+
+
+// ═══ PROGRESSION SYSTEM ═════════════════════════════════════════════════════
+let CYCLE_START = localStorage.getItem('b5-cycle-start') ? new Date(localStorage.getItem('b5-cycle-start')) : null;
+const ORM_DATA = {"1-1": {"orm": 113, "name": "Press Banca", "unit": "kg barra", "acc": [72.5, 80], "hyp": [85, 90], "str": [90, 97.5], "dl": [57.5, 62.5]}, "1-4": {"orm": 92, "name": "P.Hombros", "unit": "kg total maq", "acc": [60, 65], "hyp": [70, 75], "str": [75, 77.5], "dl": [45, 50]}, "2-1": {"orm": 95, "name": "Jalón Ancho", "unit": "kg", "acc": [62.5, 67.5], "hyp": [70, 75], "str": [75, 80], "dl": [47.5, 52.5]}, "3-1": {"orm": 117, "name": "Sentadilla", "unit": "kg barra", "acc": [75, 82.5], "hyp": [87.5, 92.5], "str": [92.5, 100], "dl": [57.5, 65]}, "3-5": {"orm": 40, "name": "RDL", "unit": "kg total", "acc": [25, 27.5], "hyp": [30, 32.5], "str": [32.5, 35], "dl": [20, 22.5]}, "4-1": {"orm": 92, "name": "P.Hombros B", "unit": "kg total maq", "acc": [60, 65], "hyp": [70, 75], "str": [75, 77.5], "dl": [45, 50]}, "5-1": {"orm": 58, "name": "Remo Smith", "unit": "kg barra", "acc": [37.5, 40], "hyp": [42.5, 47.5], "str": [47.5, 50], "dl": [30, 32.5]}, "6-1": {"orm": 118, "name": "Hip Thrust", "unit": "kg barra", "acc": [77.5, 82.5], "hyp": [87.5, 95], "str": [95, 100], "dl": [60, 65]}, "6-2": {"orm": 40, "name": "RDL B", "unit": "kg total", "acc": [25, 27.5], "hyp": [30, 32.5], "str": [32.5, 35], "dl": [20, 22.5]}, "6-3": {"orm": 64, "name": "BSS", "unit": "kg total", "acc": [42.5, 45], "hyp": [47.5, 52.5], "str": [52.5, 55], "dl": [32.5, 35]}, "2-7": {"orm": 38, "name": "Curl Barra", "unit": "kg", "acc": [25, 27.5], "hyp": [27.5, 30], "str": [30, 32.5], "dl": [20, 20]}, "1-6": {"orm": 51, "name": "Pushdown", "unit": "kg", "acc": [32.5, 35], "hyp": [37.5, 40], "str": [40, 42.5], "dl": [25, 27.5]}, "1-7": {"orm": 51, "name": "Ext.OH", "unit": "kg", "acc": [32.5, 35], "hyp": [37.5, 40], "str": [40, 42.5], "dl": [25, 27.5]}, "4-7": {"orm": 51, "name": "Ext.OH B", "unit": "kg", "acc": [32.5, 35], "hyp": [37.5, 40], "str": [40, 42.5], "dl": [25, 27.5]}, "5-7": {"orm": 38, "name": "C.Invertido", "unit": "kg", "acc": [25, 27.5], "hyp": [27.5, 30], "str": [30, 32.5], "dl": [20, 20]}};
+
+const PHASES = [
+  {weeks:[1,2], key:'acc',  name:'Acumulación',  color:'#3b82f6', reps:'12-15', pct:'65-70%'},
+  {weeks:[3,4], key:'hyp',  name:'Hipertrofia',  color:'#f97316', reps:'8-10',  pct:'75-80%'},
+  {weeks:[5,6], key:'str',  name:'Fuerza',        color:'#ef4444', reps:'6-8',   pct:'80-85%'},
+  {weeks:[7,7], key:'dl',   name:'Deload 🔄',      color:'#22c55e', reps:'12-15 ligero', pct:'50-55%'},
+];
+
+function getCurrentWeek(){
+  if(!CYCLE_START) return 0;
+  const now = new Date();
+  const ms = now - CYCLE_START;
+  return Math.min(7, Math.max(1, Math.floor(ms / (7*24*3600*1000)) + 1));
+}
+
+function getCurrentPhase(){
+  const w = getCurrentWeek();
+  if(w===0) return {weeks:[0,0],key:'none',name:'Sin iniciar',color:'#707070',reps:'—',pct:'—'};
+  return PHASES.find(p => w >= p.weeks[0] && w <= p.weeks[1]) || PHASES[0];
+}
+function startCycle(){
+  CYCLE_START = new Date();
+  localStorage.setItem('b5-cycle-start', CYCLE_START.toISOString());
+  renderHome();
+}
+function resetCycle(){
+  showConfirm('🔄','¿Reiniciar el ciclo?','Se perderá el progreso de semanas. Las sesiones y PRs se conservan.','Sí, reiniciar',()=>{
+    CYCLE_START=null;
+    localStorage.removeItem('b5-cycle-start');
+    renderHome();
+  });
+}
+
+function getPhaseForWeek(w){
+  return PHASES.find(p => w >= p.weeks[0] && w <= p.weeks[1]) || PHASES[0];
+}
+
+function getSuggestedWeight(exId){
+  const orm = ORM_DATA[exId];
+  if(!orm) return null;
+  const phase = getCurrentPhase();
+  const usePhase = (phase.key==='none') ? PHASES[0] : phase;
+  const range = orm[usePhase.key];
+  if(!range) return null;
+  return {lo: range[0], hi: range[1], orm: orm.orm, unit: orm.unit, phase: usePhase};
+}
+
+// Returns phase-aware reps string and default rep number for an exercise
+function getPhaseReps(exId){
+  const phase = getCurrentPhase();
+  const hasORM = !!ORM_DATA[exId];
+  if(!hasORM) return null; // Exercise has no periodization
+  // If no cycle active, fallback to accumulation
+  const usePhase = phase.key==='none' ? PHASES[0] : phase;
+  const repsStr = usePhase.reps;
+  const nums = repsStr.match(/\d+/g);
+  if(!nums || nums.length === 0) return null;
+  const lo = parseInt(nums[0]);
+  const hi = nums.length > 1 ? parseInt(nums[1]) : lo;
+  return {str: repsStr, lo, hi, def: lo, phase: usePhase};
+}
+
+function isCycleExpired(){
+  if(!CYCLE_START) return false;
+  const w = getCurrentWeek();
+  const ms = new Date() - CYCLE_START;
+  const days = ms / (24*3600*1000);
+  return days > 49; // 7 weeks = 49 days
+}
+
+function checkDoubleProgression(exId, logged, exReps){
+  // Returns true if ALL sets hit the TOP of the rep range
+  if(!logged || logged.length === 0) return false;
+  const rStr = (exReps||'').toLowerCase();
+  // Exclude time-based (seconds) and distance-based exercises — DP doesn't apply
+  if(rStr.includes('s') && /\d+s/.test(rStr)) return false; // "45-60s", "30-45s"
+  if(rStr.includes('metro')) return false; // "35 metros"
+  const orm = ORM_DATA[exId];
+  let topRep;
+  if(orm){
+    // Compound with periodization — use phase top rep
+    const phase = getCurrentPhase();
+    topRep = phase.key === 'acc' ? 15 : phase.key === 'hyp' ? 10 : phase.key === 'str' ? 8 : 15;
+  }else{
+    // Accessory with weight — parse top rep from fixed range (e.g. "12-15" → 15)
+    const nums = (exReps||'').match(/\d+/g);
+    if(!nums || nums.length === 0) return false;
+    topRep = parseInt(nums[nums.length - 1]);
+  }
+  return logged.every(s => s.reps >= topRep);
+}
+
+function getProgressionBanner(){
+  const w = getCurrentWeek();
+  const phase = getCurrentPhase();
+  const cycleEnd = new Date(CYCLE_START);
+  cycleEnd.setDate(cycleEnd.getDate() + 7*7);
+  const daysLeft = Math.max(0, Math.ceil((cycleEnd - new Date()) / (24*3600*1000)));
+  return {week:w, phase, daysLeft};
+}
+
+function renderProgressionBanner(){
+  if(!CYCLE_START){
+    return `<div style="margin:0 16px 14px;background:#22222233;border:1px solid var(--bd);border-radius:14px;padding:16px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--t3);margin-bottom:6px;">📊 CICLO DE PROGRESIÓN</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Ciclo no iniciado</div>
+      <div style="font-size:13px;color:var(--t2);margin-bottom:16px;">Entrena libremente hasta que estés listo para comenzar la periodización.</div>
+      <button onclick="startCycle()" style="background:#22c55e;color:#fff;border:none;border-radius:10px;padding:12px 20px;font-size:14px;font-weight:700;width:100%;">🚀 Iniciar Ciclo de Acumulación hoy</button>
+    </div>`;
+  }
+  if(isCycleExpired()){
+    return `<div style="margin:0 16px 14px;background:#22c55e18;border:1px solid #22c55e44;border-radius:14px;padding:14px 16px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:#22c55e;margin-bottom:3px;">🏆 CICLO COMPLETADO</div>
+      <div style="font-size:18px;font-weight:800;color:var(--t1);margin-bottom:8px;">¡7 semanas terminadas!</div>
+      <div style="font-size:13px;color:var(--t2);margin-bottom:12px;line-height:1.5;">Rota 2-3 ejercicios accesorios por día antes de iniciar el siguiente ciclo. Actualiza tus 1RMs si subiste de peso.</div>
+      <button onclick="startCycle()" style="background:#22c55e;color:#fff;border:none;border-radius:10px;padding:12px 20px;font-size:14px;font-weight:700;width:100%;">🔄 Iniciar Nuevo Ciclo</button>
+    </div>`;
+  }
+  const {week, phase, daysLeft} = getProgressionBanner();
+  const weeksInPhase = phase.weeks[1] - phase.weeks[0] + 1;
+  const weekInPhase = Math.min(week - phase.weeks[0] + 1, weeksInPhase);
+  const nextPhase = week < 7 ? getPhaseForWeek(Math.min(7, phase.weeks[1]+1)) : null;
+  return `<div style="margin:0 16px 14px;background:${phase.color}18;border:1px solid ${phase.color}44;border-radius:14px;padding:14px 16px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:${phase.color};margin-bottom:3px;">SEMANA ${week} DE 7 — ${phase.name.toUpperCase()}</div>
+        <div style="font-size:22px;font-weight:800;color:var(--t1);">📊 ${phase.reps} reps · ${phase.pct}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:11px;color:var(--t3);">quedan</div>
+        <div style="font-size:18px;font-weight:800;color:${phase.color};">${daysLeft}d</div>
+      </div>
+    </div>
+    <div style="height:6px;background:var(--bd);border-radius:6px;overflow:hidden;margin-bottom:8px;">
+      <div style="height:100%;background:${phase.color};border-radius:6px;width:${Math.round((week/7)*100)}%;transition:width .5s;"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t3);margin-top:4px;">
+      <span>Acumulación</span><span>Hipertrofia</span><span>Fuerza</span><span>Deload</span>
+    </div>
+    <div style="text-align:right;margin-top:6px;">
+      <button onclick="resetCycle()" style="background:transparent;border:none;font-size:10px;color:var(--t3);text-decoration:underline;cursor:pointer;padding:0;">reiniciar ciclo</button>
+    </div>
+    ${nextPhase && week < 7 ? `<div style="font-size:11px;color:var(--t3);margin-top:8px;border-top:1px solid ${phase.color}22;padding-top:8px;">Siguiente: Sem ${phase.weeks[1]+1} → ${nextPhase.name} (${nextPhase.reps} reps)</div>` : ''}
+    ${week === 7 ? `<div style="font-size:12px;color:#22c55e;margin-top:8px;border-top:1px solid #22c55e33;padding-top:8px;font-weight:600;">🔄 Semana Deload completa. Al terminar: rota 2-3 ejercicios por día.</div>` : ''}
+  </div>`;
+}
+// ═══ END PROGRESSION SYSTEM ══════════════════════════════════════════════════
+
+// ═══ STATE ═══════════════════════════════════════════════════════════════════
+let S={dayId:null,phase:'warmup',wuStep:0,cdStep:0,exIdx:0,logged:{},wStart:null,newPR:false,
+       restEndTs:null,workingWeights:{},easyShown:{},easyDecided:{}};
+let restTimer=null,phaseTimer=null;
+let history=[],pbs={};
+let _phaseState={timerSecs:0,timerRunning:false,timerEndTs:null,side:1,totalSides:1,setsDone:0,setsTarget:0};
+
+function load(){
+  try{history=JSON.parse(localStorage.getItem('b5-hist')||'[]');}catch{}
+  try{pbs=JSON.parse(localStorage.getItem('b5-pbs')||'{}')}catch{}
+  try{const ww=localStorage.getItem('b5-ww');if(ww)S.workingWeights=JSON.parse(ww);}catch{}
+  loadExHistory();
+}
+function checkPendingSession(){
+  try{
+    const ss=localStorage.getItem('b5-sess');
+    if(!ss)return;
+    const d=JSON.parse(ss);
+    if(!d||!d.dayId||(Date.now()-d.ts)>=240*60000){clearSession();return;}
+    const elapsed=Math.floor((Date.now()-d.ts)/60000);
+    showConfirm('▶️','Sesión en curso',
+      (d.dayNum||'Día ?')+' · '+elapsed+' min transcurridos.\n¿Continuar donde lo dejaste?',
+      'Sí, continuar',()=>{Object.assign(S,d.state);restoreSession(d.phase);});
+  }catch{clearSession();}
+}
+function save(){localStorage.setItem('b5-hist',JSON.stringify(history));localStorage.setItem('b5-pbs',JSON.stringify(pbs));localStorage.setItem('b5-ww',JSON.stringify(S.workingWeights));}
+function saveSession(phase){try{const d=day();localStorage.setItem('b5-sess',JSON.stringify({dayId:S.dayId,dayNum:d?.num,phase,ts:Date.now(),state:{dayId:S.dayId,wuStep:S.wuStep,cdStep:S.cdStep,exIdx:S.exIdx,logged:S.logged,wStart:S.wStart,workingWeights:S.workingWeights,easyShown:S.easyShown,easyDecided:S.easyDecided}}));}catch{}}
+function clearSession(){localStorage.removeItem('b5-sess');}
+function restoreSession(phase){
+  startSessionTimer();startWaterReminder();
+  if(phase==='warmup'){showScreen('warmup');renderWarmup();}
+  else if(phase==='workout'){showScreen('workout');renderWorkout();}
+  else if(phase==='cooldown'){showScreen('cooldown');renderCooldown();}
+}
+
+function fmt(s){return`${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}` ;}
+function fmtVol(v){return v>=1000?(v/1000).toFixed(1)+' ton':Math.round(v)+' kg';}
+function fmtVolShort(v){return v>=1000?Math.round(v/1000).toLocaleString('es-MX')+' kg':Math.round(v)+' kg';}
+function toLbs(kg){return Math.round(kg*2.2046*10)/10;}
+function day(){return DAYS.find(d=>d.id===S.dayId);}
+function curEx(){return day()?.exercises[S.exIdx];}
+function isTimeBased(e){return /\d+s/.test((e.reps||'').toLowerCase());}
+function getTimeTarget(e){const m=(e.reps||'').match(/(\d+)(?:\s*-\s*(\d+))?s/i);return m?{lo:parseInt(m[1]),hi:m[2]?parseInt(m[2]):parseInt(m[1])}:null;}
+
+// Beep sound using Web Audio API (works on iOS after user interaction)
+let _audioCtx=null;
+function playBeep(freq=880,duration=0.3,count=3){
+  try{
+    if(!_audioCtx) _audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    for(let i=0;i<count;i++){
+      const osc=_audioCtx.createOscillator();
+      const gain=_audioCtx.createGain();
+      osc.connect(gain);gain.connect(_audioCtx.destination);
+      osc.frequency.value=freq;osc.type='sine';
+      gain.gain.value=0.3;
+      const t=_audioCtx.currentTime+i*0.4;
+      osc.start(t);osc.stop(t+duration);
+    }
+    // Also vibrate if supported
+    if(navigator.vibrate) navigator.vibrate([200,100,200,100,200]);
+  }catch(e){}
+}
+
+// Water reminder
+let _waterTimer=null, _waterCount=0;
+function startWaterReminder(){
+  clearInterval(_waterTimer);
+  _waterCount=0;
+  _waterTimer=setInterval(()=>{
+    _waterCount++;
+    const banner=document.getElementById('water-reminder');
+    if(banner){banner.style.display='block';setTimeout(()=>{banner.style.display='none';},8000);}
+  },15*60000); // Every 15 minutes
+}
+function stopWaterReminder(){clearInterval(_waterTimer);}
+
+// Band/equipment substitution map
+const BAND_SUBS={
+  'Aperturas con Banda':'Face Pull con cable muy ligero o Y-T-W en banco',
+  'Extensión Terminal de Rodilla':'Extensión de rodilla sentado sin peso, hold 20s',
+  'Jalón a la Cara con Banda':'Face Pull con cable o Reverse Fly con mancuernas ligeras',
+  'Caminata Lateral con Banda':'Sentadilla lateral con peso corporal, 15 pasos c/lado',
+  'Estiramiento Isquios con Banda':'Estiramiento isquios con toalla o a mano',
+};
+function getBandSub(name){
+  for(const [key,val] of Object.entries(BAND_SUBS)){if(name.includes(key))return val;}
+  return null;
+}
+
+
+// ═══ FORM INLINE (always visible, no accordion) ═══════════════════════════
+function buildFormInline(form, errors, accent){
+  if((!form||!form.length)&&(!errors||!errors.length)) return '';
+  let html='<div style="margin-bottom:14px;">';
+  if(form&&form.length){
+    html+=`<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#22c55e;margin-bottom:8px;">✅ INDICACIONES DE FORMA</div>`;
+    form.forEach(f=>{html+=`<div class="form-point"><div class="form-dot" style="background:${accent||'#22c55e'};"></div><div class="form-txt">${f}</div></div>`;});
+  }
+  if(errors&&errors.length){
+    html+=`<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#ef4444;margin:12px 0 8px;">❌ ERRORES COMUNES</div>`;
+    errors.forEach(e=>{html+=`<div class="err-point"><div class="err-icon">❌</div><div class="err-txt">${e}</div></div>`;});
+  }
+  html+='</div>';
+  return html;
+}
+
+// ═══ CUSTOM CONFIRM MODAL (iOS PWA safe) ════════════════════════════════════
+let _confirmCallback=null;
+function showConfirm(icon,title,body,okLabel,cb){
+  _confirmCallback=cb;
+  document.getElementById('confirm-icon').textContent=icon;
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-body').textContent=body;
+  document.getElementById('confirm-ok').textContent=okLabel;
+  document.getElementById('confirm-modal').style.display='flex';
+}
+function confirmOK(){
+  document.getElementById('confirm-modal').style.display='none';
+  if(_confirmCallback)_confirmCallback();
+  _confirmCallback=null;
+}
+function confirmClose(){
+  document.getElementById('confirm-modal').style.display='none';
+  _confirmCallback=null;
+}
+
+// ═══ CANCEL CONFIRM ══════════════════════════════════════════════════════════
+function confirmCancel(){
+  showConfirm('⚠️','¿Cancelar entrenamiento?','El progreso de esta sesión se perderá.','Sí, cancelar',()=>{
+    clearSession();clearInterval(restTimer);clearInterval(phaseTimer);stopSessionTimer();stopWaterReminder();
+    document.getElementById('rest-inline').style.display='none';
+    S.logged={};S.wStart=null;S.newPR=false;S.restEndTs=null;S._dpAlert=null;
+    S.easyShown={};S.easyDecided={};
+    showScreen('home');
+  });
+}
+
+// ═══ BACK NAVIGATION ════════════════════════════════════════════════════════
+function wuBack(){
+  if(S.wuStep===0){confirmCancel();return;}
+  showConfirm('↩️','¿Regresar?','Volverás al paso anterior del calentamiento.','Sí, regresar',()=>{
+    clearInterval(phaseTimer);S.wuStep--;renderWarmup();
+  });
+}
+function woPrev(){
+  if(S.exIdx===0){
+    // On first exercise — offer to go back to warmup or cancel
+    showConfirm('↩️','¿Regresar al calentamiento?','Volverás al último paso del calentamiento. Tus series se conservan.','Sí, regresar',()=>{
+      clearInterval(restTimer);
+      document.getElementById('rest-inline').style.display='none';
+      const d=day();
+      S.wuStep=d.warmup.length-1;
+      showScreen('warmup');renderWarmup();
+    });
+    return;
+  }
+  showConfirm('↩️','¿Regresar al ejercicio anterior?','Irás al ejercicio anterior. Las series registradas quedan guardadas.','Sí, regresar',()=>{
+    clearInterval(restTimer);
+    document.getElementById('rest-inline').style.display='none';
+    S.exIdx--;
+    renderWorkout();
+  });
+}
+function cdBack(){
+  if(S.cdStep===0){confirmCancel();return;}
+  showConfirm('↩️','¿Regresar?','Volverás al paso anterior del enfriamiento.','Sí, regresar',()=>{
+    clearInterval(phaseTimer);S.cdStep--;renderCooldown();
+  });
+}
+
+// ═══ SKIP FUNCTIONS ══════════════════════════════════════════════════════════
+function wuSkip(){clearInterval(phaseTimer);wuAdvance();}
+function cdSkip(){clearInterval(phaseTimer);cdAdvance();}
+function woSkipExercise(){
+  const d=day();
+  const lastEx=S.exIdx>=d.exercises.length-1;
+  if(lastEx){startCooldown();return;}
+  S.exIdx++;renderWorkout();
+}
+
+// ═══ NAVIGATION ══════════════════════════════════════════════════════════════
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById('screen-'+name);if(el)el.classList.add('active');
+  if(name==='home')renderHome();
+  if(name==='history')renderHistory();
+  if(name==='prs')renderPRs();
+  if(name==='diet')renderDiet();
+  if(name==='calendar')renderCalendar();
+}
+
+// ═══ HOME ════════════════════════════════════════════════════════════════════
+function renderHome(){
+  const bannerEl=document.getElementById('prog-banner');
+  if(bannerEl)bannerEl.innerHTML=renderProgressionBanner();
+  document.getElementById('h-sess').textContent=history.length;
+  const tv=history.reduce((a,h)=>a+(h.totalVol||0),0);
+  document.getElementById('h-vol').textContent=tv>0?fmtVolShort(tv):'—';
+  document.getElementById('h-prs').textContent=Object.keys(pbs).length;
+  const last=history[0];const lb=document.getElementById('last-box');
+  if(last){lb.style.display='block';lb.innerHTML=`<div class="card" style="border-color:${last.dayColor}33;cursor:pointer;" onclick="showWorkoutDetail(0)"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:11px;color:var(--t3);margin-bottom:4px;">ÚLTIMO ENTRENO</div><div style="font-size:15px;font-weight:700;">${last.dayNum} — ${last.dayName}</div><div style="font-size:12px;color:var(--t3);margin-top:2px;">${last.date}</div></div><div style="text-align:right;"><div style="color:${last.dayColor};font-size:18px;font-weight:800;">${fmtVolShort(last.totalVol)}</div><div style="font-size:12px;color:var(--t3);">${last.elapsed} min</div></div></div></div>`;}
+  else{lb.style.display='none';}
+  // Cycle banner
+
+  const grid=document.getElementById('day-grid');grid.innerHTML='';
+  DAYS.forEach(d=>{
+    const done=history.find(h=>h.dayId===d.id);
+    const btn=document.createElement('button');
+    btn.className='day-card'+(done?' done':'');
+    btn.style.borderColor=done?d.color+'88':d.color+'44';
+    btn.onclick=()=>openDay(d.id);
+    btn.innerHTML=`<div class="dca" style="background:${d.color};"></div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:${d.color};margin-bottom:6px;">${d.num}</div>
+      <div style="font-size:15px;font-weight:800;margin-bottom:2px;">${done?`<span style="text-decoration:line-through;color:var(--t2);">${d.name}</span>`:d.name}</div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:10px;">${d.emoji} ${d.focus.split('·')[0].trim()}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        ${done?`<span style="font-size:11px;font-weight:600;color:${d.color};">✓ ${fmtVolShort(done.totalVol)}</span>`:`<span style="font-size:11px;color:var(--t3);">${d.exercises.length} ej.</span>`}
+        <span style="font-size:16px;">${done?'✅':d.emoji}</span></div>`;
+    grid.appendChild(btn);
+  });
+}
+
+// ═══ DAY DETAIL ══════════════════════════════════════════════════════════════
+function getActKg(exId){if(!exId)return'?';const ww=S.workingWeights[exId];return ww?Math.round(ww*0.5*2)/2+' kg':'? (primera sesión)';}
+
+function openDay(id){
+  S.dayId=id;const d=day();const last=history.find(h=>h.dayId===id);
+  document.getElementById('dd-num').textContent=d.num;
+  const _week=getCurrentWeek();const _phase=getCurrentPhase();
+  const ddPhaseEl=document.getElementById('dd-phase-info');
+  if(ddPhaseEl){ddPhaseEl.style.display='block';ddPhaseEl.style.borderColor=_phase.color+'44';
+    ddPhaseEl.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;">
+      <div><div style="font-size:10px;font-weight:700;letter-spacing:1px;color:${_phase.color};">SEM ${_week} — ${_phase.name.toUpperCase()}</div>
+      <div style="font-size:13px;color:var(--t2);margin-top:2px;">${_phase.reps} reps · ${_phase.pct} del 1RM</div></div>
+      <div style="font-size:22px;">${_week===7?'🔄':'📊'}</div></div>`;}document.getElementById('dd-num').style.color=d.color;
+  document.getElementById('dd-name').textContent=d.name+' — '+d.focus;
+  document.getElementById('dd-dot').style.background=d.color;
+  document.getElementById('dd-ex-lbl').textContent='EJERCICIOS — '+d.exercises.length;
+  document.getElementById('dd-start').style.background=d.color;
+  const dl=document.getElementById('dd-last');
+  if(last){dl.style.display='block';document.getElementById('dd-last-vol').textContent=fmtVolShort(last.totalVol);document.getElementById('dd-last-vol').style.color=d.color;document.getElementById('dd-last-t').textContent=last.elapsed+' min';}
+  else{dl.style.display='none';}
+  let wuH='';d.warmup.forEach(w=>{const iso=w.name.startsWith('[ISO]');const isAct=w.type==='activation';
+    const noteParsed=isAct?'Al 50%: '+getActKg(w.activationFor):w.note;
+    wuH+=`<div class="step-item"><div class="step-icon" style="background:${iso?'#f59e0b22':'var(--s2)'};">${iso?'⚡':isAct?'🎯':'·'}</div><div><div class="step-name" style="color:${iso?'#f59e0b':'var(--t2)'}">${w.name.replace('[ISO] ','')}</div><div class="step-note">${noteParsed}</div></div></div>`;});
+  document.getElementById('dd-wu').innerHTML=wuH;
+  let exH='';d.exercises.forEach((e,i)=>{const isCore=e.name.startsWith('▸');const pb=pbs[e.id];
+    const pr=getPhaseReps(e.id);const dReps=pr?pr.str:e.reps;
+    exH+=`<div class="ex-row"><div class="ex-nb" style="background:${isCore?'var(--s2)':d.color+'22'};color:${isCore?'var(--t3)':d.color};">${i+1}</div><div style="flex:1;"><div style="font-size:13px;font-weight:600;color:${isCore?'var(--t3)':'var(--t1)'}">${e.name.replace('▸ CORE: ','')}</div><div style="font-size:11px;color:var(--t3);">${e.sets}×${dReps} · ${fmt(e.rest)} desc.</div></div>${pb?`<div style="font-size:12px;color:${d.color};">★ ${pb.weight}kg</div>`:''}</div>`;});
+  document.getElementById('dd-ex-list').innerHTML=exH;
+  let cdH='';d.cooldown.forEach(c=>{const iso=c.name.startsWith('[ISO-CD]');
+    cdH+=`<div class="step-item"><div class="step-icon" style="background:${iso?'#38bdf822':'var(--s2)'};">${iso?'❄':'·'}</div><div><div class="step-name" style="color:${iso?'#38bdf8':'var(--t2)'}">${c.name.replace('[ISO-CD] ','')}</div><div class="step-note">${c.note}</div></div></div>`;});
+  document.getElementById('dd-cd').innerHTML=cdH;
+  const cb=document.getElementById('dd-cardio');
+  if(d.cardio){cb.style.display='block';cb.innerHTML=`<div class="card"><div class="sl" style="margin-bottom:8px;">CARDIO POST-ENTRENO</div><div style="font-size:14px;font-weight:700;">${d.cardio.type}</div><div style="font-size:13px;color:var(--t2);margin-top:4px;">Se te preguntará al finalizar el entreno.</div></div>`;}
+  else{cb.style.display='none';}
+  showScreen('day');
+}
+
+// ═══ WARMUP ══════════════════════════════════════════════════════════════════
+function startWorkout(){
+  S.phase='warmup';S.wuStep=0;S.cdStep=0;S.exIdx=0;S.logged={};S.wStart=Date.now();startSessionTimer();startWaterReminder();
+  S.newPR=false;S.restEndTs=null;S.easyShown={};S.easyDecided={};S.dpAlerted={};
+  renderWarmup();showScreen('warmup');saveSession('warmup');
+}
+
+function renderWarmup(){
+  clearInterval(phaseTimer);
+  const d=day(),w=d.warmup[S.wuStep],total=d.warmup.length;
+  const pct=Math.round((S.wuStep/total)*100);
+  document.getElementById('wu-prog').style.width=pct+'%';
+  document.getElementById('wu-cnt').textContent=(S.wuStep+1)+' / '+total;
+  const iso=w.name.startsWith('[ISO]');const isAct=w.type==='activation';
+  document.getElementById('wu-iso-tag').style.display=iso?'block':'none';
+  document.getElementById('wu-name').textContent=w.name.replace('[ISO] ','');
+  document.getElementById('wu-muscles').textContent='🎯 '+(w.muscles||'');
+  const noteText=isAct?'Serie de activación — al 50%: '+getActKg(w.activationFor):w.note;
+  document.getElementById('wu-note').textContent=noteText;
+  // Band substitution
+  const bandSub=getBandSub(w.name);
+  const bandEl=document.getElementById('wu-band-sub');
+  if(bandEl){if(bandSub){bandEl.style.display='block';bandEl.innerHTML='🔄 <strong>Sin banda:</strong> '+bandSub;}else{bandEl.style.display='none';}}
+  document.getElementById('wu-form-acc').innerHTML=buildFormInline(w.form,w.errors,d.color);
+  const actionEl=document.getElementById('wu-action');
+  // Reset next button state — blocked by default for timed steps
+  const nb=document.getElementById('wu-next');
+  nb.style.background='var(--s2)';nb.style.color='var(--t1)';nb.style.border='1px solid var(--bd)';
+  if(w.type==='reps'||w.type==='activation'){
+    actionEl.innerHTML=`<div class="phase-timer" style="border-color:${d.color}44;"><div class="pt-label" style="color:${d.color};">REPETICIONES</div><div class="pt-num">${w.val||'—'}</div></div>`;
+    nb.disabled=false;nb.style.opacity='1';
+  }else if(w.type==='time'||w.type==='time_secs'||(w.secs&&w.sides===undefined&&w.type!=='hold')){
+    const secs=w.secs||w.val||0;
+    renderPhaseTimer(actionEl,secs,1,1,d.color,true);
+    nb.disabled=true;nb.style.opacity='0.4';
+  }else if(w.type==='hold'){
+    _phaseState={timerSecs:0,timerRunning:false,timerEndTs:null,side:1,totalSides:1,setsDone:0,setsTarget:w.sets||1,holdSecs:w.val};
+    renderHoldTracker(actionEl,d.color,'warm');
+    nb.disabled=true;nb.style.opacity='0.4';
+  }else{
+    actionEl.innerHTML=`<div class="phase-timer" style="border-color:${d.color}44;"><div class="pt-label" style="color:${d.color};">REPS</div><div class="pt-num">${w.val||'—'}</div></div>`;
+    nb.disabled=false;nb.style.opacity='1';
+  }
+}
+
+function renderPhaseTimer(el,totalSecs,side,totalSides,accent,autoStart){
+  const sideLabel=totalSides>1?`<div class="pt-side" id="pt-side">Lado ${side} de ${totalSides}</div>`:'';
+  if(autoStart){
+    el.innerHTML=`<div class="phase-timer" style="border-color:${accent}44;"><div class="pt-label" style="color:${accent};">TIEMPO OBJETIVO</div><div class="pt-num" id="pt-num">${fmt(totalSecs)}</div>${sideLabel}<div style="font-size:12px;color:var(--t3);margin-top:8px;">Presiona SIGUIENTE cuando termines ↓</div></div>`;
+    startPhaseCountdown(totalSecs,side,totalSides,accent);
+  }else{
+    el.innerHTML=`<div class="phase-timer" style="border-color:${accent}44;"><div class="pt-label" style="color:${accent};">TIEMPO</div><div class="pt-num" id="pt-num">${fmt(totalSecs)}</div>${sideLabel}<button class="pt-btn" id="pt-btn" onclick="startPhaseCountdown(${totalSecs},${side},${totalSides},'${accent}')" style="background:${accent};color:#fff;">▶ INICIAR</button></div>`;
+  }
+}
+
+function startPhaseCountdown(totalSecs,side,totalSides,accent){
+  clearInterval(phaseTimer);
+  const endTs=Date.now()+totalSecs*1000;
+  const btn=document.getElementById('pt-btn');
+  if(btn){btn.textContent='⏸ Corriendo...';btn.style.background='#555';btn.style.color='#ccc';btn.onclick=null;}
+  phaseTimer=setInterval(()=>{
+    const rem=Math.max(0,Math.ceil((endTs-Date.now())/1000));
+    const el=document.getElementById('pt-num');if(el)el.textContent=fmt(rem);
+    if(rem<=0){
+      clearInterval(phaseTimer);
+      playBeep();
+      if(el)el.textContent='✓';
+      if(totalSides>1&&side<totalSides){
+        // Show "switch side" and restart for next side
+        const isCD=document.getElementById('screen-cooldown').classList.contains('active');
+        const ac=document.getElementById(isCD?'cd-action':'wu-action');
+        if(ac){
+          renderPhaseTimer(ac,totalSecs,side+1,totalSides,accent,false);
+          const sideDiv=ac.querySelector('.pt-side');
+          if(sideDiv)sideDiv.textContent='✅ Cambia de lado → Lado '+(side+1)+' de '+totalSides;
+        }
+      }else{
+        // All done — enable Next (warmup or cooldown)
+        const isCD=document.getElementById('screen-cooldown').classList.contains('active');
+        if(isCD&&window._cdUnlock){window._cdUnlock();}
+        else{const nb=document.getElementById('wu-next');if(nb){nb.disabled=false;nb.style.opacity='1';nb.textContent='SIGUIENTE →';nb.style.background='var(--s2)';nb.style.color='var(--t1)';nb.style.border='1px solid var(--bd)';}}
+      }
+    }
+  },500);
+}
+
+function renderHoldTracker(el,accent,mode){
+  const ps=_phaseState;
+  let doneSets='';
+  for(let i=0;i<ps.setsDone;i++){doneSets+=`<div class="set-row"><div class="set-check" style="background:${accent};">✓</div><div style="flex:1;font-size:13px;color:var(--t3);">Serie ${i+1}</div><div style="font-size:14px;font-weight:700;">${ps.holdSecs}s completados</div></div>`;}
+  el.innerHTML=`<div class="hold-tracker" style="border-color:${accent}44;">
+    <div class="hold-sets-done">${doneSets}</div>
+    <div class="hold-current">
+      <div class="hold-label">${ps.setsTarget>1?'SERIE '+(ps.setsDone+1)+' DE '+ps.setsTarget:'HOLD'} · ${ps.holdSecs}s</div>
+      <div class="hold-num" id="hold-num">${ps.holdSecs}s</div>
+      <button class="pt-btn" id="hold-btn" onclick="startHold('${accent}','${mode}')" style="background:${accent};color:#fff;">▶ INICIAR HOLD</button>
+    </div>
+  </div>`;
+}
+
+function startHold(accent,mode){
+  clearInterval(phaseTimer);
+  const ps=_phaseState;
+  const endTs=Date.now()+ps.holdSecs*1000;
+  const btn=document.getElementById('hold-btn');
+  if(btn){btn.textContent='⏸ Corriendo...';btn.style.background='#555';btn.style.color='#ccc';btn.onclick=null;}
+  phaseTimer=setInterval(()=>{
+    const rem=Math.max(0,Math.ceil((endTs-Date.now())/1000));
+    const el=document.getElementById('hold-num');if(el)el.textContent=rem+'s';
+    if(rem<=0){
+      clearInterval(phaseTimer);
+      playBeep();
+      ps.setsDone++;
+      if(ps.setsDone>=ps.setsTarget){
+        // All sets done — unlock next
+        const isCD=document.getElementById('screen-cooldown').classList.contains('active');
+        if(isCD&&window._cdUnlock){window._cdUnlock();}
+        else{const nb=document.getElementById('wu-next');if(nb){nb.disabled=false;nb.style.opacity='1';nb.textContent='SIGUIENTE →';nb.style.background='var(--s2)';nb.style.color='var(--t1)';nb.style.border='1px solid var(--bd)';}}
+        const actEl=document.getElementById(mode==='warm'?'wu-action':'cd-action');
+        if(actEl){let done='';for(let i=0;i<ps.setsDone;i++){done+=`<div class="set-row"><div class="set-check" style="background:${accent};">✓</div><div style="flex:1;font-size:13px;color:var(--t3);">Serie ${i+1}</div><div style="font-size:14px;font-weight:700;">${ps.holdSecs}s ✓</div></div>`;}actEl.innerHTML='<div class="hold-tracker" style="border-color:'+accent+'44;">'+done+'<div style="text-align:center;padding:12px;font-size:15px;font-weight:700;color:'+accent+';">¡Todas las series completas!</div></div>';}
+      }else{
+        // Rest between hold sets (30s)
+        const actEl=document.getElementById(mode==='warm'?'wu-action':'cd-action');
+        if(actEl){
+          actEl.innerHTML=`<div class="hold-tracker" style="border-color:${accent}44;">
+            <div style="text-align:center;padding:16px;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--t3);margin-bottom:6px;">DESCANSO ENTRE SERIES</div>
+              <div id="hold-rest-num" style="font-size:40px;font-weight:800;margin-bottom:8px;">30s</div>
+              <div style="font-size:12px;color:var(--t3);">Serie ${ps.setsDone+1} de ${ps.setsTarget} siguiente</div>
+            </div></div>`;
+          let restEnd=Date.now()+30000;
+          clearInterval(phaseTimer);
+          phaseTimer=setInterval(()=>{
+            const r=Math.max(0,Math.ceil((restEnd-Date.now())/1000));
+            const rEl=document.getElementById('hold-rest-num');if(rEl)rEl.textContent=r+'s';
+            if(r<=0){clearInterval(phaseTimer);playBeep();renderHoldTracker(actEl,accent,mode);}
+          },500);
+        }
+      }
+    }
+  },500);
+}
+
+function wuAdvance(){
+  clearInterval(phaseTimer);
+  const d=day();
+  if(S.wuStep<d.warmup.length-1){S.wuStep++;renderWarmup();saveSession('warmup');}
+  else{showScreen('workout');renderWorkout();}
+}
+
+// ═══ UNIT SYSTEM ═════════════════════════════════════════════════════════════
+let _unitMode = localStorage.getItem('b5-unit') || 'kg'; // 'kg' or 'lb'
+function toggleUnit(){
+  _unitMode = _unitMode==='kg' ? 'lb' : 'kg';
+  localStorage.setItem('b5-unit', _unitMode);
+  const btn=document.getElementById('unit-toggle');
+  if(btn) btn.textContent=_unitMode;
+  // Re-render set table if in workout
+  const d=day(),e=curEx();
+  if(d&&e&&document.getElementById('screen-workout').classList.contains('active')){
+    renderSetTable(d,e);
+  }
+}
+
+// ═══ PLATE CALCULATOR ═══════════════════════════════════════════════════════
+const PLATES=[20,15,10,5,2.5,1.25];
+const BAR_WEIGHT=20;
+function renderPlateCalc(totalKg){
+  const el=document.getElementById('wo-plates');if(!el) return;
+  const e=curEx();
+  if(e){
+    const n=e.name.toLowerCase();
+    const isBarbell=n.includes('barra')||n.includes('smith')||n.includes('hip thrust');
+    const isDiscMachine=n.includes('prensa')||n.includes('elevación de talones');
+    if(!isBarbell&&!isDiscMachine){el.style.display='none';return;}
+    const baseWeight=isBarbell?BAR_WEIGHT:0;
+    const label=isBarbell?'Barra 20kg':'Máquina (sin base)';
+    if(totalKg<=baseWeight||totalKg<=0){el.style.display='none';return;}
+    el.style.display='block';
+    const perSide=(totalKg-baseWeight)/2;
+    let remaining=perSide,plates=[];
+    PLATES.forEach(p=>{while(remaining>=p-0.01){plates.push(p);remaining-=p;}});
+    const colors={20:'#dc2626',15:'#ea580c',10:'#16a34a',5:'#2563eb',2.5:'#9333ea',1.25:'#ec4899'};
+    let svg='<svg viewBox="0 0 280 50" style="width:100%;max-height:50px;">';
+    svg+='<rect x="100" y="20" width="180" height="10" rx="3" fill="#555"/>';
+    let x=100;
+    plates.forEach(p=>{const w=p>=10?18:p>=5?14:10;svg+=`<rect x="${x-w}" y="${p>=10?5:10}" width="${w}" height="${p>=10?40:30}" rx="2" fill="${colors[p]||'#888'}"/>`;x-=w+2;});
+    svg+='</svg>';
+    el.innerHTML=`<div style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1px;margin-bottom:6px;">DISCOS POR LADO · ${label}</div>${svg}<div style="font-size:12px;color:var(--t2);margin-top:4px;">${plates.map(p=>p+'kg').join(' + ')}</div>`;
+    return;
+  }
+  el.style.display='none';
+}
+
+// ═══ EXERCISE HISTORY (per-exercise last session) ════════════════════════════
+let exHistory={}; // {exId: {date, sets:[{weight,reps}]}}
+function loadExHistory(){try{exHistory=JSON.parse(localStorage.getItem('b5-last')||'{}');}catch{exHistory={};}}
+function saveExHistory(){localStorage.setItem('b5-last',JSON.stringify(exHistory));}
+
+// ═══ WORKOUT ═════════════════════════════════════════════════════════════════
+function renderWorkout(){
+  clearInterval(restTimer);
+  document.getElementById('rest-inline').style.display='none';
+  S.newPR=false; // Reset PR flag for each exercise render
+
+  const d=day(),e=curEx();if(!e)return;
+  const exLogged=S.logged[e.id]||[];
+  const pct=Math.round(((S.exIdx+(exLogged.length/e.sets))/d.exercises.length)*100);
+  document.getElementById('wo-prog').style.background=d.color;
+  document.getElementById('wo-prog').style.width=pct+'%';
+  document.getElementById('wo-lbl').textContent=d.num+' — '+d.label;
+  document.getElementById('wo-cnt').textContent=(S.exIdx+1)+' / '+d.exercises.length;
+  // Name
+  document.getElementById('wo-name').textContent=e.name.replace('▸ CORE: ','');
+  document.getElementById('wo-name').style.color=d.color;
+  // Phase-aware reps display
+  const phaseReps = getPhaseReps(e.id);
+  const displayReps = phaseReps ? phaseReps.str : e.reps;
+  const timeBased = isTimeBased(e);
+  if(timeBased){
+    document.getElementById('wo-meta').textContent=e.sets+' series · '+e.reps+' · '+fmt(e.rest)+' descanso';
+  }else{
+    document.getElementById('wo-meta').textContent=e.sets+' series · '+displayReps+' reps · '+fmt(e.rest)+' descanso';
+  }
+  // PR check for current exercise in this session
+  const exLoggedForPR=S.logged[e.id]||[];
+  const currentPB=pbs[e.id];
+  const hasPRthisSession=exLoggedForPR.some(s=>currentPB&&s.weight===currentPB.weight&&s.reps===currentPB.reps);
+  document.getElementById('wo-pr-tag').style.display=hasPRthisSession?'inline-block':'none';
+  // Notes block (like Strong's yellow notes)
+  const notesBlock=document.getElementById('wo-notes-block');
+  const notesList=[];
+  if(e.tip) notesList.push(e.tip);
+  if(notesList.length>0){
+    notesBlock.style.display='block';notesBlock.style.borderLeftColor=d.color;notesBlock.style.background=d.color+'18';
+    document.getElementById('wo-notes-text').innerHTML=notesList.map(n=>'• '+n).join('<br>');
+    document.getElementById('wo-notes-text').style.color=d.color;
+  }else{notesBlock.style.display='none';}
+  // Phase suggestion (compact)
+  const sug=getSuggestedWeight(e.id);
+  const phase=getCurrentPhase();
+  const sugEl=document.getElementById('wo-suggestion');
+  if(sugEl){
+    if(sug){
+      const sp=sug.phase;
+      sugEl.style.display='block';
+      sugEl.style.background=sp.color+'12';sugEl.style.border='1px solid '+sp.color+'33';
+      sugEl.innerHTML=`<span style="font-size:12px;color:${sp.color};font-weight:700;">🎯 ${sp.name}</span> <span style="font-size:12px;color:var(--t2);">· ${sug.lo}–${sug.hi} kg · ${sp.reps} reps</span>`;
+    }else{sugEl.style.display='none';}
+  }
+  // Unit toggle
+  const unitBtn=document.getElementById('unit-toggle');
+  if(unitBtn) unitBtn.textContent=_unitMode;
+  // Rest arc color
+  document.getElementById('rest-arc').style.stroke=d.color;
+  // Render set table or hold timer
+  const holdWrap=document.getElementById('wo-hold-wrap');
+  const tableWrap=document.getElementById('wo-table-wrap');
+  if(timeBased){
+    tableWrap.style.display='none';
+    holdWrap.style.display='block';
+    renderWorkoutHold(d,e);
+  }else{
+    tableWrap.style.display='block';
+    holdWrap.style.display='none';
+    renderSetTable(d,e);
+  }
+  // Form/tips details
+  document.getElementById('wo-muscles').textContent='🎯 '+e.muscles;
+  document.getElementById('wo-form-acc').innerHTML=buildFormInline(e.form,e.errors,d.color);
+  saveSession('workout');
+}
+
+// ═══ TIME-BASED EXERCISE HOLD TIMER (Plank, RKC) ═══════════════════════════
+let _woHoldTimer=null;
+function renderWorkoutHold(d,e){
+  clearInterval(_woHoldTimer);
+  const el=document.getElementById('wo-hold-wrap');if(!el)return;
+  const exLogged=S.logged[e.id]||[];
+  const tt=getTimeTarget(e);
+  const targetSecs=tt?tt.lo:45;
+  let h='';
+  // Completed sets
+  for(let i=0;i<exLogged.length;i++){
+    h+=`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);">
+      <div style="width:32px;height:32px;border-radius:8px;background:${d.color};color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;">✓</div>
+      <div style="flex:1;font-size:13px;color:var(--t3);">Serie ${i+1}</div>
+      <div style="font-size:14px;font-weight:700;">${exLogged[i].reps}s completados</div>
+    </div>`;
+  }
+  const allDone=exLogged.length>=e.sets;
+  if(!allDone){
+    const setNum=exLogged.length+1;
+    h+=`<div style="text-align:center;padding:20px 0;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:${d.color};margin-bottom:6px;">SERIE ${setNum} DE ${e.sets} · ${e.reps}</div>
+      <div id="wo-hold-num" style="font-size:52px;font-weight:800;margin-bottom:16px;">${targetSecs}s</div>
+      <button id="wo-hold-btn" onclick="startWorkoutHold(${targetSecs})" style="display:inline-flex;align-items:center;gap:6px;border:none;border-radius:12px;padding:13px 28px;font-size:15px;font-weight:800;background:${d.color};color:#fff;cursor:pointer;">▶ INICIAR</button>
+    </div>`;
+  }
+  el.innerHTML=h;
+  // Show/hide next button
+  const nxWrap=document.getElementById('wo-next-wrap');
+  if(nxWrap){
+    if(allDone){
+      nxWrap.style.display='block';
+      const isLastEx=S.exIdx>=d.exercises.length-1;
+      const nxBtn=document.getElementById('wo-next-btn');
+      if(isLastEx){nxBtn.textContent='🏁 IR A ENFRIAMIENTO';nxBtn.style.background='#22c55e';}
+      else{const nxEx=d.exercises[S.exIdx+1];nxBtn.textContent='→ '+nxEx.name.replace('▸ CORE: ','');nxBtn.style.background=d.color;}
+    }else{nxWrap.style.display='none';}
+  }
+}
+
+function startWorkoutHold(secs){
+  clearInterval(_woHoldTimer);
+  const d=day(),e=curEx();if(!e)return;
+  const endTs=Date.now()+secs*1000;
+  const btn=document.getElementById('wo-hold-btn');
+  if(btn){btn.textContent='⏸ Corriendo...';btn.style.background='#555';btn.style.color='#ccc';btn.onclick=null;}
+  _woHoldTimer=setInterval(()=>{
+    const rem=Math.max(0,Math.ceil((endTs-Date.now())/1000));
+    const el=document.getElementById('wo-hold-num');
+    if(el) el.textContent=rem+'s';
+    if(rem<=0){
+      clearInterval(_woHoldTimer);
+      playBeep();
+      // Log the set
+      if(!S.logged[e.id])S.logged[e.id]=[];
+      S.logged[e.id].push({weight:0,reps:secs,vol:0});
+      saveSession('workout');
+      const allDone=S.logged[e.id].length>=e.sets;
+      if(allDone){
+        renderWorkoutHold(d,e);
+      }else{
+        startRestInline(e.rest,e.id);
+      }
+    }
+  },500);
+}
+
+function renderSetTable(d,e){
+  const exLogged=S.logged[e.id]||[];
+  const lastEx=exHistory[e.id];
+  let h='';
+  for(let i=0;i<e.sets;i++){
+    const done=i<exLogged.length;
+    const isNext=i===exLogged.length;
+    const logged=done?exLogged[i]:null;
+    // Previous session data
+    const prev=lastEx&&lastEx.sets&&lastEx.sets[i]?lastEx.sets[i]:null;
+    const prevStr=prev?prev.weight+'kg×'+prev.reps:'—';
+    // Default weight for unfilled
+    let defKg=0;
+    if(exLogged.length>0) defKg=exLogged[exLogged.length-1].weight;
+    else if(S.workingWeights[e.id]) defKg=S.workingWeights[e.id];
+    else if(prev) defKg=prev.weight;
+    else{const sug=getSuggestedWeight(e.id);if(sug) defKg=sug.lo;}
+    // Phase-aware default reps
+    const phaseR = getPhaseReps(e.id);
+    const defReps = phaseR ? phaseR.def : (parseInt(e.reps)||8);
+    const wVal=done?logged.weight:defKg;
+    const rVal=done?logged.reps:defReps;
+    const dispW=_unitMode==='lb'?Math.round(wVal*2.2046*10)/10:wVal;
+    h+=`<div class="st-row ${done?'done':isNext?'active':''}" id="st-row-${i}">
+      <div class="st-num" style="background:${done?d.color:isNext?d.color+'33':'var(--s2)'};color:${done?'#fff':isNext?d.color:'var(--t3)'};">${i+1}</div>
+      <div class="st-prev">${prevStr}</div>
+      <input type="number" inputmode="decimal" class="st-input ${done?'done-input':''}" id="st-w-${i}" value="${dispW}" step="${_unitMode==='lb'?5:2.5}"
+        onfocus="selInput(this);onSetFocus(${i})" onchange="onSetWeightChange(${i})">
+      <input type="number" inputmode="numeric" class="st-input ${done?'done-input':''}" id="st-r-${i}" value="${rVal}" step="1" style="width:54px;"
+        onfocus="selInput(this)">
+      <button class="st-check ${done?'checked':''}" style="${done?'background:'+d.color+';color:#fff;':'color:#ffffff22;'}" onclick="toggleSet(${i})">✓</button>
+    </div>`;
+  }
+  document.getElementById('wo-set-rows').innerHTML=h;
+  // Update plate calc for the first unlogged set
+  const nextIdx=exLogged.length;
+  if(nextIdx<e.sets){
+    const wEl=document.getElementById('st-w-'+nextIdx);
+    if(wEl) renderPlateCalc(getSetKg(nextIdx));
+  }else{
+    document.getElementById('wo-plates').style.display='none';
+  }
+  // Show/hide next exercise button
+  const nxWrap=document.getElementById('wo-next-wrap');
+  const allDone=exLogged.length>=e.sets;
+  if(nxWrap){
+    if(allDone){
+      nxWrap.style.display='block';
+      const isLastEx=S.exIdx>=d.exercises.length-1;
+      const nxBtn=document.getElementById('wo-next-btn');
+      if(isLastEx){
+        nxBtn.textContent='🏁 IR A ENFRIAMIENTO';nxBtn.style.background='#22c55e';
+      }else{
+        const nxEx=d.exercises[S.exIdx+1];
+        nxBtn.textContent='→ '+nxEx.name.replace('▸ CORE: ','');nxBtn.style.background=d.color;
+      }
+    }else{nxWrap.style.display='none';}
+  }
+}
+
+function getSetKg(idx){
+  const v=parseFloat(document.getElementById('st-w-'+idx)?.value)||0;
+  return _unitMode==='lb' ? Math.round(v/2.2046*10)/10 : v;
+}
+
+function onSetFocus(idx){
+  renderPlateCalc(getSetKg(idx));
+}
+function selInput(el){
+  el.select();
+}
+
+function onSetWeightChange(idx){
+  renderPlateCalc(getSetKg(idx));
+}
+
+let _toggleLock=false;
+function toggleSet(idx){
+  if(_toggleLock) return;
+  _toggleLock=true;setTimeout(()=>{_toggleLock=false;},300);
+  const e=curEx(),d=day();if(!e)return;
+  const exLogged=S.logged[e.id]||[];
+  if(idx<exLogged.length){
+    // Already logged — UNCHECK: remove this set and all after it
+    S.logged[e.id]=exLogged.slice(0,idx);
+    if(idx===0) delete S.logged[e.id];
+    clearInterval(restTimer);
+    document.getElementById('rest-inline').style.display='none';
+    S._dpAlert=null;
+    renderSetTable(d,e);
+    saveSession('workout');
+    return;
+  }
+  if(idx!==exLogged.length) return;
+  const kg=getSetKg(idx);
+  const reps=parseInt(document.getElementById('st-r-'+idx)?.value)||8;
+  const s={weight:kg,reps,vol:kg*reps};
+  if(!S.logged[e.id])S.logged[e.id]=[];
+  S.logged[e.id].push(s);S.newPR=false;
+  if(kg>0){
+    S.workingWeights[e.id]=kg;
+    const pb=pbs[e.id];
+    if(!pb||kg>pb.weight||(kg===pb.weight&&reps>pb.reps)){pbs[e.id]={weight:kg,reps,name:e.name};S.newPR=true;}
+    save();
+  }
+  const allLogged=S.logged[e.id];
+  const lastSetDone=allLogged.length>=e.sets;
+  if(lastSetDone&&kg>0&&checkDoubleProgression(e.id,allLogged,e.reps)){S._dpAlert=e.id;}
+  saveSession('workout');
+  startRestInline(e.rest,e.id);
+}
+
+function nextExercise(){
+  clearInterval(restTimer);
+  document.getElementById('rest-inline').style.display='none';
+  const d=day();
+  const isLastEx=S.exIdx>=d.exercises.length-1;
+  if(isLastEx){startCooldown();return;}
+  S.exIdx++;
+  renderWorkout();
+}
+
+
+// ═══ INLINE REST ═════════════════════════════════════════════════════════════
+function startRestInline(secs,exId){
+  clearInterval(restTimer);
+  S.restEndTs=Date.now()+secs*1000;
+  // Re-render table to show completed set
+  const d=day(),e=curEx();
+  if(d&&e) renderSetTable(d,e);
+  const ri=document.getElementById('rest-inline');ri.style.display='block';
+  const exLogged=S.logged[exId]||[];
+  const exDef=d?.exercises.find(x=>x.id===exId);
+  const setsLeft=(exDef?.sets||0)-exLogged.length;
+  if(setsLeft>0){
+    document.getElementById('rest-next-info').textContent='Serie '+(exLogged.length+1)+' de '+exDef.sets+' — '+(e?.name?.replace('▸ CORE: ','')||'');
+  }else{
+    document.getElementById('rest-next-info').textContent='✅ Todas las series completas';
+  }
+  document.getElementById('rest-easy-btn').style.display='block';
+  const arc=document.getElementById('rest-arc');
+  arc.dataset.start=secs;
+  updateRestInlineUI();
+  restTimer=setInterval(()=>{
+    updateRestInlineUI();
+    const rem=Math.max(0,Math.ceil((S.restEndTs-Date.now())/1000));
+    if(rem<=0){clearInterval(restTimer);playBeep();endRest();}
+  },500);
+}
+function updateRestInlineUI(){
+  const rem=Math.max(0,Math.ceil((S.restEndTs-Date.now())/1000));
+  const start=parseFloat(document.getElementById('rest-arc').dataset.start||rem)||rem;
+  const circ=2*Math.PI*30;
+  document.getElementById('rest-arc').style.strokeDashoffset=circ*(1-rem/start);
+  document.getElementById('rest-num').textContent=fmt(rem);
+}
+function endRest(){
+  clearInterval(restTimer);
+  document.getElementById('rest-inline').style.display='none';
+  if(S._dpAlert){
+    const dpId=S._dpAlert;
+    const ex=day()?.exercises?.find(x=>x.id===dpId);
+    S._dpAlert=null;
+    showDPNotification(ex);
+  } else {
+    renderWorkout();
+  }
+}
+function showDPNotification(ex){
+  if(!ex){renderWorkout();return;}
+  const d=day();
+  const isCompound=!!ORM_DATA[ex.id];
+  const phase=getCurrentPhase();
+  const name=ex.name.replace('▸ CORE: ','');
+  if(isCompound){
+    showConfirm('💪','¡Doble Progresión!',
+      `Completaste TODAS las series de ${name} en el tope del rango (${phase.reps} reps).\n\n⬆️ Próximo entreno: sube ~2.5 kg.`,
+      '✓ Entendido',()=>{renderWorkout();});
+  }else{
+    showConfirm('💪','¡Doble Progresión!',
+      `Completaste TODAS las series de ${name} al tope (${ex.reps} reps).\n\n⬆️ Próximo entreno: sube ~2.5 kg.\n\n⚠️ Este es un ejercicio de aislamiento — mantén SIEMPRE tus reps en el rango ${ex.reps}. Nunca bajes de ahí para meter más peso.`,
+      '✓ Entendido',()=>{renderWorkout();});
+  }
+}
+function skipRest(){endRest();}
+
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.restEndTs){const rem=Math.max(0,Math.ceil((S.restEndTs-Date.now())/1000));if(rem<=0){clearInterval(restTimer);endRest();}else{updateRestInlineUI();}}});
+
+// ═══ EASY / INCREASE WEIGHT ═════════════════════════════════════════════════
+function showIncreaseModal(){
+  const e=curEx(),d=day();if(!e)return;
+  S.easyShown[e.id]=true;
+  document.getElementById('rest-easy-btn').style.display='none';
+  const lastSet=S.logged[e.id]?.slice(-1)[0];
+  const lastKg=lastSet?.weight||S.workingWeights[e.id]||0;
+  const opts=[2.5,5,7.5,10];
+  let header=`<div style="font-size:11px;color:var(--t3);letter-spacing:1px;margin-bottom:4px;">ÚLTIMA SERIE</div>
+    <div style="font-size:20px;font-weight:800;color:${d.color};margin-bottom:4px;">${lastKg} kg × ${lastSet?.reps||'—'} reps</div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:20px;">${toLbs(lastKg)} lb · Elige el incremento para la siguiente serie:</div>`;
+  document.getElementById('inc-header').innerHTML=header;
+  document.getElementById('inc-opts').innerHTML=opts.map(inc=>`<button class="btn" onclick="applyIncrease(${inc})" style="background:${d.color}22;color:${d.color};border:1px solid ${d.color}44;font-size:15px;font-weight:700;flex-direction:column;gap:3px;">+${inc} kg<span style="font-size:12px;font-weight:400;">${Math.round((lastKg+inc)*2)/2} kg</span></button>`).join('');
+  document.getElementById('inc-modal').classList.add('show');
+}
+function applyIncrease(inc){
+  document.getElementById('inc-modal').classList.remove('show');
+  const e=curEx();if(e)S.easyDecided[e.id]=true;
+  if(inc>0){
+    const lastSet=S.logged[e.id]?.slice(-1)[0];
+    const lastKg=lastSet?.weight||S.workingWeights[e.id]||0;
+    const newKg=Math.round((lastKg+inc)*2)/2;
+    // Update the next unfilled set input
+    const exLogged=S.logged[e.id]||[];
+    const nextIdx=exLogged.length;
+    const wEl=document.getElementById('st-w-'+nextIdx);
+    if(wEl){
+      wEl.value=_unitMode==='lb'?Math.round(newKg*2.2046*10)/10:newKg;
+    }
+  }
+}
+
+// ═══ COOLDOWN ════════════════════════════════════════════════════════════════
+function startCooldown(){S.phase='cooldown';S.cdStep=0;renderCooldown();showScreen('cooldown');saveSession('cooldown');}
+
+function renderCooldown(){
+  clearInterval(phaseTimer);
+  const d=day(),c=d.cooldown[S.cdStep],total=d.cooldown.length;
+  document.getElementById('cd-prog').style.width=Math.round((S.cdStep/total)*100)+'%';
+  document.getElementById('cd-cnt').textContent=(S.cdStep+1)+' / '+total;
+  const iso=c.name.startsWith('[ISO-CD]');
+  document.getElementById('cd-iso-tag').style.display=iso?'block':'none';
+  document.getElementById('cd-name').textContent=c.name.replace('[ISO-CD] ','');
+  document.getElementById('cd-muscles').textContent='🎯 '+(c.muscles||'');
+  document.getElementById('cd-note').textContent=c.note;
+  // Band substitution
+  const cdBandSub=getBandSub(c.name);
+  const cdBandEl=document.getElementById('cd-band-sub');
+  if(cdBandEl){if(cdBandSub){cdBandEl.style.display='block';cdBandEl.innerHTML='🔄 <strong>Sin banda:</strong> '+cdBandSub;}else{cdBandEl.style.display='none';}}
+  document.getElementById('cd-form-acc').innerHTML=buildFormInline(c.form,c.errors,'#38bdf8');
+  const actionEl=document.getElementById('cd-action');
+  const nb=document.getElementById('cd-next');
+  const hasMore=S.cdStep<total-1;const hasCardio=!!day().cardio;
+  const nextLabel=hasMore?'SIGUIENTE →':hasCardio?'💪 CONTINUAR CON CARDIO':'🏆 FINALIZAR SESIÓN';
+  const nextBg=hasMore?'var(--s2)':hasCardio?'#f59e0b':'#22c55e';
+  const nextColor=hasMore?'var(--t1)':'#fff';
+  const nextBorder=hasMore?'1px solid var(--bd)':'';
+  // Helper to unlock the next button when step completes
+  window._cdUnlock=()=>{nb.disabled=false;nb.style.opacity='1';nb.textContent=nextLabel;nb.style.background=nextBg;nb.style.color=nextColor;nb.style.border=nextBorder;};
+  if(c.type==='hold'){
+    _phaseState={setsDone:0,setsTarget:c.sets||1,holdSecs:c.val};
+    renderHoldTracker(actionEl,'#38bdf8','cool');
+    nb.disabled=true;nb.style.opacity='0.4';nb.textContent=nextLabel;nb.style.background=nextBg;nb.style.color=nextColor;nb.style.border=nextBorder;
+  }else if(c.type==='stretch'){
+    const secs=c.secs||30;const sides=c.sides||1;
+    renderPhaseTimer(actionEl,secs,1,sides,'#38bdf8',false);
+    nb.disabled=true;nb.style.opacity='0.4';nb.textContent=nextLabel;nb.style.background=nextBg;nb.style.color=nextColor;nb.style.border=nextBorder;
+  }else if(c.type==='time'){
+    renderPhaseTimer(actionEl,c.secs||c.val,1,1,'#38bdf8',false);
+    nb.disabled=true;nb.style.opacity='0.4';nb.textContent=nextLabel;nb.style.background=nextBg;nb.style.color=nextColor;nb.style.border=nextBorder;
+  }else{
+    actionEl.innerHTML=`<div class="phase-timer" style="border-color:#38bdf844;"><div class="pt-label" style="color:#38bdf8;">REPS</div><div class="pt-num">${c.val||'—'}</div></div>`;
+    nb.disabled=false;nb.style.opacity='1';nb.textContent=nextLabel;nb.style.background=nextBg;nb.style.color=nextColor;nb.style.border=nextBorder;
+  }
+}
+
+function cdAdvance(){
+  clearInterval(phaseTimer);const d=day();
+  if(S.cdStep<d.cooldown.length-1){S.cdStep++;renderCooldown();saveSession('cooldown');}
+  else if(d.cardio){document.getElementById('cardio-modal').classList.add('show');}
+  else{finishWorkout();}
+}
+
+// ═══ CARDIO INTERVAL TIMER ══════════════════════════════════════════════════
+let _cardioTimer=null;
+let _cState={intervals:[],idx:0,endTs:null};
+
+function getCardioIntervals(type){
+  if(type==='hiit') return [
+    {name:'Calentamiento',      secs:120, rpm:'50-60',  load:'0-3',  intensity:'Fácil',        color:'#3b82f6'},
+    {name:'Intervalo 1',        secs:45,  rpm:'85-95',  load:'7-9',  intensity:'Máximo 🔥',     color:'#ef4444'},
+    {name:'Recuperación 1',     secs:75,  rpm:'55-65',  load:'2-3',  intensity:'Recuperación',  color:'#22c55e'},
+    {name:'Intervalo 2',        secs:45,  rpm:'85-95',  load:'7-9',  intensity:'Máximo 🔥',     color:'#ef4444'},
+    {name:'Recuperación 2',     secs:75,  rpm:'55-65',  load:'2-3',  intensity:'Recuperación',  color:'#22c55e'},
+    {name:'Intervalo 3',        secs:45,  rpm:'90-100', load:'8-10', intensity:'Máximo 🔥',     color:'#ef4444'},
+    {name:'Recuperación 3',     secs:75,  rpm:'55-65',  load:'2-3',  intensity:'Recuperación',  color:'#22c55e'},
+    {name:'Intervalo 4',        secs:45,  rpm:'90-100', load:'8-10', intensity:'Máximo 🔥',     color:'#ef4444'},
+    {name:'Recuperación 4',     secs:75,  rpm:'55-65',  load:'2-3',  intensity:'Recuperación',  color:'#22c55e'},
+    {name:'Intervalo 5',        secs:45,  rpm:'90-100', load:'8-10', intensity:'Máximo 🔥',     color:'#ef4444'},
+    {name:'Recuperación 5',     secs:75,  rpm:'55-65',  load:'2-3',  intensity:'Recuperación',  color:'#22c55e'},
+    {name:'Enfriamiento',       secs:120, rpm:'50-60',  load:'1-2',  intensity:'Fácil',         color:'#3b82f6'},
+  ];
+  return [
+    {name:'Calentamiento',         secs:120,  rpm:'50-60', load:'2-3', intensity:'Fácil',           color:'#3b82f6'},
+    {name:'Zona 2 — Bloque 1',     secs:300,  rpm:'65-75', load:'4-5', intensity:'FC: 120-130 bpm', color:'#22c55e'},
+    {name:'Zona 2 — Bloque 2',     secs:300,  rpm:'68-78', load:'4-6', intensity:'FC: 125-135 bpm', color:'#22c55e'},
+    {name:'Zona 2 — Bloque 3',     secs:300,  rpm:'65-75', load:'4-5', intensity:'FC: 120-130 bpm', color:'#22c55e'},
+    {name:'Zona 2 — Bloque 4',     secs:300,  rpm:'68-78', load:'4-6', intensity:'FC: 125-135 bpm', color:'#22c55e'},
+    {name:'Vuelta a la calma',     secs:120,  rpm:'50-60', load:'1-2', intensity:'Fácil',           color:'#3b82f6'},
+  ];
+}
+
+function selectCardio(type){
+  document.getElementById('cardio-modal').classList.remove('show');
+  if(type==='skip'){finishWorkout();return;}
+  clearInterval(_cardioTimer);
+  _cState={
+    intervals:getCardioIntervals(type), idx:0, endTs:null,
+    name: type==='hiit'?'HIIT — Elíptica (~14 min)':'LISS — Elíptica Zona 2 (~27 min)'
+  };
+  document.getElementById('cp-session-name').textContent=_cState.name;
+  showScreen('cardio-protocol');
+  startCardioInterval();
+}
+
+function startCardioInterval(){
+  clearInterval(_cardioTimer);
+  const ivals=_cState.intervals, idx=_cState.idx;
+  if(idx>=ivals.length){finishWorkout();return;}
+  const iv=ivals[idx];
+  _cState.endTs=Date.now()+iv.secs*1000;
+  // Arc reset
+  document.getElementById('cp-arc').dataset.start=iv.secs;
+  document.getElementById('cp-arc').style.stroke=iv.color;
+  // Phase info
+  document.getElementById('cp-phase-lbl').textContent=iv.name.toUpperCase();
+  document.getElementById('cp-phase-lbl').style.color=iv.color;
+  document.getElementById('cp-intensity').textContent=iv.intensity;
+  document.getElementById('cp-intensity').style.color=iv.color;
+  document.getElementById('cp-rpm').textContent=iv.rpm;
+  document.getElementById('cp-rpm').style.color=iv.color;
+  document.getElementById('cp-load').textContent=iv.load;
+  document.getElementById('cp-load').style.color=iv.color;
+  // Progress bar
+  const pct=Math.round((idx/ivals.length)*100);
+  document.getElementById('cp-prog').style.width=pct+'%';
+  document.getElementById('cp-prog').style.background=iv.color;
+  document.getElementById('cp-interval-cnt').textContent=(idx+1)+' / '+ivals.length;
+  // Next info
+  const nxt=ivals[idx+1];
+  document.getElementById('cp-next').textContent=nxt
+    ?'siguiente: '+nxt.name+' · '+nxt.rpm+' RPM · Carga '+nxt.load
+    :'¡Último intervalo! Buen trabajo 💪';
+  updateCardioTimer();
+  _cardioTimer=setInterval(()=>{
+    updateCardioTimer();
+    if(Math.max(0,Math.ceil((_cState.endTs-Date.now())/1000))<=0){
+      clearInterval(_cardioTimer);
+      _cState.idx++;
+      if(_cState.idx>=ivals.length){finishWorkout();}
+      else{startCardioInterval();}
+    }
+  },500);
+}
+
+function updateCardioTimer(){
+  const rem=Math.max(0,Math.ceil((_cState.endTs-Date.now())/1000));
+  const start=parseFloat(document.getElementById('cp-arc').dataset.start||rem)||rem;
+  document.getElementById('cp-arc').style.strokeDashoffset=(2*Math.PI*86)*(1-rem/start);
+  document.getElementById('cp-timer').textContent=fmt(rem);
+}
+
+function confirmFinishCardio(){
+  showConfirm('🏆','¿Finalizar el cardio?','Se registrará la sesión como completada.','Sí, finalizar',()=>{
+    clearInterval(_cardioTimer);finishWorkout();
+  });
+}
+
+// ═══ FINISH ══════════════════════════════════════════════════════════════════
+function finishWorkout(){
+  stopSessionTimer();stopWaterReminder();clearSession();const d=day();
+  const elapsed=Math.floor((Date.now()-S.wStart)/60000);
+  const totalVol=Object.values(S.logged).flat().reduce((a,s)=>a+(s.vol||0),0);
+  // Build per-exercise summary for history detail
+  const exDetail=[];
+  d.exercises.forEach(ex=>{
+    const logged=S.logged[ex.id];
+    if(logged&&logged.length>0){
+      exDetail.push({name:ex.name.replace('▸ CORE: ',''),sets:logged.map(s=>({w:s.weight,r:s.reps}))});
+    }
+  });
+  const sess={id:Date.now(),dayId:d.id,dayNum:d.num,dayName:d.name,dayColor:d.color,
+    date:new Date().toLocaleString('es-MX',{dateStyle:'medium',timeStyle:'short'}),elapsed,totalVol,exDetail};
+  history=[sess,...history].slice(0,40);
+  // Save per-exercise history
+  const dateStr=new Date().toLocaleDateString('es-MX',{day:'numeric',month:'short'});
+  d.exercises.forEach(ex=>{
+    const logged=S.logged[ex.id];
+    if(logged&&logged.length>0){
+      exHistory[ex.id]={date:dateStr,sets:logged.map(s=>({weight:s.weight,reps:s.reps}))};
+    }
+  });
+  saveExHistory();
+  save();
+  document.getElementById('done-tag').textContent=d.num+' — '+d.label;document.getElementById('done-tag').style.color=d.color;
+  document.getElementById('done-name').textContent=d.name;
+  document.getElementById('done-focus').textContent=d.focus;
+  document.getElementById('done-time').textContent=elapsed+'m';document.getElementById('done-time').style.color=d.color;
+  document.getElementById('done-vol').textContent=fmtVolShort(totalVol);document.getElementById('done-vol').style.color=d.color;
+  document.getElementById('done-exc').textContent=d.exercises.length;document.getElementById('done-exc').style.color=d.color;
+  document.getElementById('done-nutr-btn').style.background=d.color;
+  // Analyzer: weight recommendations for next session
+  let recsH='';
+  d.exercises.forEach(ex=>{
+    const logged=S.logged[ex.id];if(!logged||logged.length===0)return;
+    if(isTimeBased(ex))return; // Skip plank etc.
+    const lastWeight=logged[logged.length-1].weight;
+    if(lastWeight<=0)return;
+    // Determine target rep range
+    const phaseR=getPhaseReps(ex.id);
+    const repsStr=phaseR?phaseR.str:ex.reps;
+    const nums=repsStr.match(/\d+/g);if(!nums)return;
+    const loRep=parseInt(nums[0]),hiRep=nums.length>1?parseInt(nums[1]):loRep;
+    const avgReps=Math.round(logged.reduce((a,s)=>a+s.reps,0)/logged.length);
+    const minReps=Math.min(...logged.map(s=>s.reps));
+    const allHitTop=logged.every(s=>s.reps>=hiRep);
+    const allHitMin=logged.every(s=>s.reps>=loRep);
+    let icon='',rec='',color='var(--t2)';
+    if(allHitTop){
+      icon='⬆️';rec='Sube a '+(Math.round((lastWeight+2.5)*2)/2)+'kg';color='#22c55e';
+    }else if(allHitMin){
+      icon='✅';rec='Mantén '+lastWeight+'kg (prom. '+avgReps+' reps)';color='var(--t2)';
+    }else if(minReps<loRep){
+      icon='⬇️';rec='Baja a '+(Math.round((lastWeight-2.5)*2)/2)+'kg (min '+minReps+' reps)';color='#f59e0b';
+    }
+    if(rec){
+      recsH+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bd);">
+        <div style="font-size:12px;flex:1;">${icon} ${ex.name.replace('▸ CORE: ','')}</div>
+        <div style="font-size:12px;font-weight:600;color:${color};text-align:right;">${rec}</div></div>`;
+    }
+  });
+  const recsEl=document.getElementById('done-weight-recs');
+  if(recsH&&recsEl){
+    recsEl.style.display='block';
+    recsEl.innerHTML=`<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--t3);margin-bottom:10px;">📊 RECOMENDACIONES PRÓXIMO ENTRENO</div>`+recsH;
+  }else if(recsEl){recsEl.style.display='none';}
+  document.getElementById('done-sc').classList.add('show');
+}
+function goHome(){document.getElementById('done-sc').classList.remove('show');showScreen('home');}
+
+function showWorkoutDetail(idx){
+  const h=history[idx];if(!h)return;
+  const modal=document.getElementById('workout-detail-modal');
+  document.getElementById('wd-title').textContent=h.dayNum+' — '+h.dayName;
+  document.getElementById('wd-title').style.color=h.dayColor;
+  document.getElementById('wd-delete-btn').onclick=()=>deleteWorkout(idx);
+  let html=`<div style="margin-bottom:16px;">
+    <div style="font-size:12px;color:var(--t3);">${h.date}</div>
+    <div style="display:flex;gap:24px;margin-top:8px;">
+      <div><span style="font-size:20px;font-weight:800;color:${h.dayColor};">${h.elapsed}m</span><div style="font-size:10px;color:var(--t3);">TIEMPO</div></div>
+      <div><span style="font-size:20px;font-weight:800;color:${h.dayColor};">${fmtVolShort(h.totalVol)}</span><div style="font-size:10px;color:var(--t3);">VOLUMEN</div></div>
+    </div></div>`;
+  if(h.exDetail&&h.exDetail.length>0){
+    h.exDetail.forEach(ex=>{
+      html+=`<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:700;margin-bottom:6px;border-left:3px solid ${h.dayColor};padding-left:10px;">${ex.name}</div>`;
+      ex.sets.forEach((s,i)=>{
+        const vol=Math.round(s.w*s.r);
+        html+=`<div style="display:flex;justify-content:space-between;padding:3px 0 3px 16px;font-size:13px;color:var(--t2);">
+          <span>${i+1}. ${s.w>0?s.w+' kg × '+s.r:s.r+'s'}</span>
+          ${s.w>0?`<span style="color:var(--t3);">${vol} kg</span>`:''}
+        </div>`;
+      });
+      html+=`</div>`;
+    });
+  }else{
+    html+=`<div style="font-size:13px;color:var(--t3);text-align:center;padding:20px;">Sin detalle de ejercicios (sesión anterior a la actualización)</div>`;
+  }
+  document.getElementById('wd-body').innerHTML=html;
+  modal.style.display='block';
+}
+
+function deleteWorkout(idx){
+  const h=history[idx];if(!h)return;
+  showConfirm('🗑','¿Borrar este entreno?',h.dayNum+' — '+h.dayName+' ('+h.date+')','Sí, borrar',()=>{
+    history.splice(idx,1);save();
+    document.getElementById('workout-detail-modal').style.display='none';
+    renderHome();
+    // Also re-render history if Log screen is in the DOM
+    if(document.getElementById('screen-history')) renderHistory();
+  });
+}
+
+function backFromNutrition(){
+  // Return to done screen instead of going all the way home
+  document.getElementById('screen-nutrition').classList.remove('active');
+  document.getElementById('done-sc').classList.add('show');
+}
+
+function resetAllData(){
+  showConfirm('🗑','¿Borrar todos los datos?','Se eliminarán historial, PRs, pesos guardados y sesiones. No se puede deshacer.','Sí, borrar todo',()=>{
+    ['b5-hist','b5-pbs','b5-ww','b5-sess','b5-last','b5-unit'].forEach(k=>localStorage.removeItem(k));
+    history=[];pbs={};S.workingWeights={};exHistory={};_unitMode='kg';
+    renderHome();
+  });
+}
+
+// ═══ CALENDAR ═══════════════════════════════════════════════════════════════
+function renderCalendar(){
+  const body=document.getElementById('cal-body');if(!body)return;
+  const now=new Date();
+  const year=now.getFullYear(),month=now.getMonth();
+  // Build set of trained date strings for fast lookup
+  const trainedDates=new Set();
+  const trainedColors={};
+  history.forEach(h=>{
+    // Parse date from display string — extract actual date
+    const d=new Date(h.id); // h.id is Date.now() timestamp
+    const key=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+    trainedDates.add(key);
+    if(!trainedColors[key]) trainedColors[key]=h.dayColor||'#22c55e';
+  });
+  // Show current month + previous month
+  let html='';
+  for(let mo=month-1;mo<=month;mo++){
+    const m=mo<0?mo+12:mo;
+    const y=mo<0?year-1:year;
+    html+=buildMonthGrid(y,m,trainedDates,trainedColors,y===year&&m===month);
+  }
+  // Stats
+  const thisMonthCount=[...trainedDates].filter(k=>{const p=k.split('-');return parseInt(p[0])===year&&parseInt(p[1])===(month+1);}).length;
+  const streak=calcStreak();
+  html=`<div style="display:flex;gap:10px;margin-bottom:16px;">
+    <div class="card" style="flex:1;text-align:center;"><div style="font-size:22px;font-weight:800;color:#22c55e;">${thisMonthCount}</div><div class="slb" style="margin-top:2px;">ESTE MES</div></div>
+    <div class="card" style="flex:1;text-align:center;"><div style="font-size:22px;font-weight:800;color:#f59e0b;">${streak}</div><div class="slb" style="margin-top:2px;">RACHA (semanas)</div></div>
+    <div class="card" style="flex:1;text-align:center;"><div style="font-size:22px;font-weight:800;color:#3b82f6;">${history.length}</div><div class="slb" style="margin-top:2px;">TOTAL</div></div>
+  </div>`+html;
+  body.innerHTML=html;
+}
+
+function buildMonthGrid(year,month,trainedDates,trainedColors,isCurrent){
+  const months=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const days=['L','M','Mi','J','V','S','D'];
+  const first=new Date(year,month,1);
+  const lastDay=new Date(year,month+1,0).getDate();
+  let startDay=(first.getDay()+6)%7; // Monday=0
+  const today=new Date();const isToday=(d)=>today.getFullYear()===year&&today.getMonth()===month&&today.getDate()===d;
+  let h=`<div class="card" style="margin-bottom:12px;${isCurrent?'border-color:var(--t3);':''}">
+    <div style="font-size:14px;font-weight:700;margin-bottom:10px;${isCurrent?'color:var(--t1);':'color:var(--t3);'}">${months[month]} ${year}</div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;">`;
+  days.forEach(d=>{h+=`<div style="font-size:10px;color:var(--t3);padding:4px 0;font-weight:600;">${d}</div>`;});
+  for(let i=0;i<startDay;i++) h+='<div></div>';
+  for(let d=1;d<=lastDay;d++){
+    const key=year+'-'+(month+1)+'-'+d;
+    const trained=trainedDates.has(key);
+    const color=trainedColors[key]||'#22c55e';
+    const todayBorder=isToday(d)?'border:1.5px solid var(--t1);':'';
+    if(trained){
+      h+=`<div style="width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin:auto;font-size:12px;font-weight:700;background:${color}33;color:${color};${todayBorder}">${d}</div>`;
+    }else{
+      h+=`<div style="width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin:auto;font-size:12px;color:var(--t3);opacity:.5;${todayBorder}">${d}</div>`;
+    }
+  }
+  h+='</div></div>';
+  return h;
+}
+
+function calcStreak(){
+  if(history.length===0) return 0;
+  // Count consecutive weeks with at least 1 workout
+  const weeks=new Set();
+  history.forEach(h=>{
+    const d=new Date(h.id);
+    const weekStart=new Date(d);weekStart.setDate(d.getDate()-((d.getDay()+6)%7));
+    weeks.add(weekStart.getFullYear()+'-'+weekStart.getMonth()+'-'+weekStart.getDate());
+  });
+  // Sort weeks descending and count consecutive
+  const sorted=[...weeks].map(w=>{const p=w.split('-');return new Date(parseInt(p[0]),parseInt(p[1]),parseInt(p[2]));}).sort((a,b)=>b-a);
+  let streak=0;
+  const now=new Date();now.setDate(now.getDate()-((now.getDay()+6)%7));now.setHours(0,0,0,0);
+  for(let i=0;i<sorted.length;i++){
+    const expected=new Date(now);expected.setDate(expected.getDate()-i*7);expected.setHours(0,0,0,0);
+    const diff=Math.abs(sorted[i]-expected);
+    if(diff<2*86400000){streak++;}else break;
+  }
+  return streak;
+}
+
+function showNutrition(){
+  document.getElementById('done-sc').classList.remove('show');
+  const d=day();const recs=NUTR[d.dayType||'push']||NUTR.push;
+  const elapsed=Math.floor((Date.now()-S.wStart)/60000);
+
+  // Time feedback
+  let timeColor='#22c55e', timeMsg='', timeTip='';
+  if(elapsed<45){timeColor='#f59e0b';timeMsg='Sesión corta ('+elapsed+' min)';timeTip='Menos de 45 min puede indicar volumen insuficiente o descansos demasiado cortos. Verifica que completaste todas las series.';}
+  else if(elapsed<=80){timeColor='#22c55e';timeMsg='Tiempo óptimo ✓ ('+elapsed+' min)';timeTip='65-80 min es el rango ideal. El cortisol se mantiene bajo y la síntesis proteica es máxima. ¡Bien hecho!';}
+  else if(elapsed<=95){timeColor='#f59e0b';timeMsg='Sesión ligeramente larga ('+elapsed+' min)';timeTip='Intenta reducir los descansos de aislamiento a 45-60s. Los compuestos mantén 2-3 min.';}
+  else{timeColor='#ef4444';timeMsg='Sesión demasiado larga ('+elapsed+' min)';timeTip='Más de 90-95 min eleva el cortisol y compromete la síntesis proteica. Reduce el descanso entre ejercicios de aislamiento o elimina 1-2 ejercicios de apoyo.';}
+
+  // Weight recommendations from last logged sets
+  let weightRecs='';
+  const exs=d.exercises||[];
+  exs.forEach(ex=>{
+    const logged=S.logged[ex.id];
+    if(!logged||logged.length===0) return;
+    const lastSet=logged[logged.length-1];
+    const allTop=checkDoubleProgression(ex.id,logged,ex.reps);
+    if(allTop){
+      const isCompound=!!ORM_DATA[ex.id];
+      const incNote=isCompound?'':'<div style="font-size:10px;color:#f59e0b;margin-top:2px;">⚠ Aislamiento — mantén reps en '+ex.reps+'</div>';
+      weightRecs+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);">
+      <div style="font-size:13px;">${ex.name.replace('▸ CORE: ','')}</div>
+      <div style="text-align:right;"><div style="font-size:13px;font-weight:700;color:#22c55e;">⬆️ +2.5 kg → ${Math.round((lastSet.weight+2.5)*2)/2} kg</div><div style="font-size:11px;color:var(--t3);">Doble progresión lograda</div>${incNote}</div></div>`;}
+  });
+
+  let bH=`<div style="margin-bottom:4px;font-size:11px;color:var(--t3);letter-spacing:1px;">${d.num} — ${d.name.toUpperCase()}</div>`;
+
+  // Time card
+  bH+=`<div class="nutr-block" style="border-color:${timeColor}44;margin-bottom:12px;">
+    <div style="font-size:24px;margin-bottom:6px;">⏱</div>
+    <div style="font-size:15px;font-weight:700;color:${timeColor};margin-bottom:6px;">${timeMsg}</div>
+    <div style="font-size:13px;color:var(--t2);line-height:1.6;">${timeTip}</div>
+  </div>`;
+
+  // Weight recs card
+  if(weightRecs){bH+=`<div class="nutr-block" style="margin-bottom:12px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#22c55e;margin-bottom:12px;">⬆️ INCREMENTOS SUGERIDOS PRÓXIMA SESIÓN</div>
+    ${weightRecs}
+    <div style="font-size:11px;color:var(--t3);margin-top:10px;">Regla: si llegaste al tope del rango en TODAS las series → sube 2.5 kg la próxima vez.</div>
+  </div>`;}
+
+  recs.forEach(r=>{bH+=`<div class="nutr-block"><div style="font-size:28px;margin-bottom:8px;">${r.icon}</div><div style="font-size:15px;font-weight:700;margin-bottom:6px;">${r.title}</div><div style="font-size:13px;color:var(--t2);line-height:1.6;">${r.text}</div></div>`;});
+  document.getElementById('nutr-body').innerHTML=bH;
+  showScreen('nutrition');
+}
+
+// ═══ HISTORY & PRs ══════════════════════════════════════════════════════════
+function renderHistory(){
+  const tv=history.reduce((a,h)=>a+(h.totalVol||0),0);
+  document.getElementById('hist-stats').innerHTML=
+    `<div class="card" style="text-align:center;"><div style="font-size:24px;font-weight:800;">${history.length}</div><div class="slb" style="margin-top:4px;">SESIONES</div></div>
+     <div class="card" style="text-align:center;"><div style="font-size:24px;font-weight:800;">${(tv/1000).toFixed(0)}k</div><div class="slb" style="margin-top:4px;">KG TOTALES</div></div>`;
+  document.getElementById('hist-list').innerHTML=history.length===0
+    ?`<div style="color:var(--t3);text-align:center;padding:60px 0;font-size:15px;">Aún no hay entrenamientos</div>`
+    :history.map((h,i)=>`<div class="hist-row" style="border-left:3px solid ${h.dayColor||'#555'};cursor:pointer;" onclick="showWorkoutDetail(${i})"><div><div style="font-size:14px;font-weight:700;">${h.dayNum||''} — ${h.dayName}</div><div style="font-size:12px;color:var(--t3);margin-top:2px;">${h.date}</div></div><div style="text-align:right;"><div style="color:${h.dayColor};font-size:17px;font-weight:800;">${fmtVolShort(h.totalVol)}</div><div style="font-size:12px;color:var(--t3);">${h.elapsed} min</div></div></div>`).join('');
+}
+function renderPRs(){
+  const all=Object.values(pbs);
+  document.getElementById('prs-list').innerHTML=all.length===0
+    ?`<div style="color:var(--t3);text-align:center;padding:60px 0;font-size:15px;">Completa tu primer entreno para ver tus PRs</div>`
+    :all.map(p=>`<div class="pr-row"><div style="font-size:13px;color:var(--t2);flex:1;padding-right:12px;">${p.name}</div><div style="font-size:15px;font-weight:800;color:#ffd700;">${p.weight} kg × ${p.reps}</div></div>`).join('');
+}
+
+
+// ═══ SESSION LIVE TIMER ═════════════════════════════════════════════════════
+let _sessionTimerInterval=null;
+function startSessionTimer(){
+  clearInterval(_sessionTimerInterval);
+  _sessionTimerInterval=setInterval(updateSessionTimers,1000);
+  updateSessionTimers();
+}
+function stopSessionTimer(){clearInterval(_sessionTimerInterval);}
+function fmtElapsed(ms){
+  const m=Math.floor(ms/60000),s=Math.floor((ms%60000)/1000);
+  return m+'m '+String(s).padStart(2,'0')+'s';
+}
+function updateSessionTimers(){
+  if(!S.wStart) return;
+  const el=fmtElapsed(Date.now()-S.wStart);
+  const d=day();
+  const label=d?(d.num+' — '+d.label):'';
+  ['wu-timer','wo-timer','cd-timer'].forEach(id=>{
+    const el2=document.getElementById(id);
+    if(el2) el2.textContent='⏱ '+el;
+  });
+  ['wu-day-lbl','cd-day-lbl'].forEach(id=>{
+    const el2=document.getElementById(id);
+    if(el2) el2.textContent=label;
+  });
+}
+// ═══ END SESSION TIMER ═══════════════════════════════════════════════════════
+
+
+// ═══ DIET SYSTEM ════════════════════════════════════════════════════════════
+const DIET_MEALS=[
+  {name:'PRE-ENTRENO', emoji:'🏋️', color:'#f59e0b', note:'45-60 min antes del entreno',
+   items:[
+    {name:'2 huevos duros (100g)', cat:'proteina', prot:13, cal:148, swaps:[
+      {name:'1 sobre de atún (80g)', prot:18, cal:80, note:'Más proteína, menos calorías'},
+      {name:'100g pechuga cocida', prot:23, cal:110, note:'Máxima proteína magra'},
+      {name:'132g claras de huevo líq. (½ taza)', prot:14, cal:60, note:'Sin grasa'},
+    ]},
+    {name:'1 pan tostado (30g)', cat:'carbo', prot:2, cal:80, swaps:[
+      {name:'2 tortillas de maíz (60g)', prot:2, cal:100, note:'Equivalente en carbs'},
+      {name:'½ taza de arroz cocido (100g)', prot:2, cal:100, note:'Carbohidrato limpio'},
+      {name:'1 rebanada pan integral (30g)', prot:4, cal:70, note:'Más fibra'},
+    ]},
+    {name:'1 fruta (120g aprox.)', cat:'carbo', prot:1, cal:70, swaps:[
+      {name:'1 plátano mediano (120g)', prot:1, cal:90, note:'Más carbs — ideal pre-entreno'},
+      {name:'1 manzana mediana (180g)', prot:0, cal:70, note:'Fibra + bajo índice glucémico'},
+      {name:'½ taza de fresas (75g)', prot:1, cal:30, note:'Muy bajo en calorías'},
+    ]},
+  ]},
+  {name:'DESAYUNO', emoji:'🌅', color:'#22c55e', note:'',
+   items:[
+    {name:'2 huevos + 132g claras (230g total)', cat:'proteina', prot:26, cal:200, swaps:[
+      {name:'200g pechuga cocida', prot:46, cal:220, note:'Doble proteína — ideal si entrenas en mañana'},
+      {name:'2 latas de atún (160g)', prot:36, cal:160, note:'Rápido y alto en proteína'},
+      {name:'200g requesón + 1 huevo (250g)', prot:28, cal:190, note:'Proteína lenta + rápida'},
+    ]},
+    {name:'1 aguacate (150g)', cat:'grasa', prot:2, cal:160, swaps:[
+      {name:'½ aguacate (75g)', prot:1, cal:80, note:'Reduce calorías a la mitad'},
+      {name:'30g de nueces', prot:4, cal:180, note:'Más proteína, misma grasa saludable'},
+      {name:'24g cacahuates', prot:6, cal:135, note:'Más proteína por caloría'},
+    ]},
+    {name:'½ taza de frijoles (86g)', cat:'carbo', prot:7, cal:110, swaps:[
+      {name:'½ taza de lentejas (100g)', prot:9, cal:115, note:'Más proteína vegetal'},
+      {name:'½ taza de garbanzos (82g)', prot:7, cal:130, note:'Similar en macro'},
+      {name:'½ taza de avena cocida (120g)', prot:3, cal:75, note:'Menos proteína, más carbs complejos'},
+    ]},
+    {name:'1 manzana (180g)', cat:'fruta', prot:0, cal:70, swaps:[
+      {name:'1 pera mediana (170g)', prot:0, cal:60, note:'Menos azúcar'},
+      {name:'1 naranja mediana (150g)', prot:1, cal:65, note:'Más vitamina C'},
+      {name:'½ taza de arándanos (75g)', prot:1, cal:40, note:'Antioxidantes — muy recomendado'},
+    ]},
+    {name:'24g de cacahuates', cat:'grasa', prot:6, cal:135, swaps:[
+      {name:'20g de almendras', prot:4, cal:115, note:'Menos calorías, más vitamina E'},
+      {name:'24g nuez de la India', prot:5, cal:130, note:'Similar en macro'},
+      {name:'16g mantequilla de cacahuate (1 cdta)', prot:4, cal:90, note:'Menos volumen, misma grasa'},
+    ]},
+  ]},
+  {name:'COMIDA', emoji:'☀️', color:'#3b82f6', note:'',
+   items:[
+    {name:'210g pechuga cruda (~160g cocida)', cat:'proteina', prot:44, cal:220, swaps:[
+      {name:'210g filete de res magro', prot:44, cal:280, note:'Más hierro y zinc — bueno para entrenamiento'},
+      {name:'3 latas de atún (240g)', prot:54, cal:240, note:'Más proteína, menos grasa saturada'},
+      {name:'210g de salmón', prot:40, cal:350, note:'Omega-3 incorporado — excelente opción'},
+    ]},
+    {name:'3 tortillas de maíz (90g)', cat:'carbo', prot:6, cal:195, swaps:[
+      {name:'¾ taza de arroz cocido (150g)', prot:3, cal:195, note:'Equivalente en calorías'},
+      {name:'3 rebanadas pan integral (90g)', prot:9, cal:195, note:'Más fibra y proteína'},
+      {name:'1 taza de pasta cocida (140g)', prot:7, cal:200, note:'Similar en carbs'},
+    ]},
+    {name:'1 taza de frijoles (170g)', cat:'carbo', prot:15, cal:225, swaps:[
+      {name:'1 taza de lentejas cocidas (200g)', prot:18, cal:230, note:'Más proteína vegetal'},
+      {name:'1 taza de garbanzos (164g)', prot:15, cal:270, note:'Más calorías, mismo perfil'},
+      {name:'1 taza de edamame (155g)', prot:17, cal:190, note:'Proteína completa vegetal'},
+    ]},
+    {name:'½ aguacate (75g)', cat:'grasa', prot:1, cal:80, swaps:[
+      {name:'1 aguacate completo (150g)', prot:2, cal:160, note:'Doble de grasa saludable y saciedad'},
+      {name:'1 cdta aceite de oliva (5ml)', prot:0, cal:40, note:'Menos calorías, grasa saludable'},
+      {name:'30g de nueces', prot:4, cal:180, note:'Más proteína y omega-3'},
+    ]},
+    {name:'24g de cacahuates', cat:'grasa', prot:6, cal:135, swaps:[
+      {name:'20g de almendras', prot:4, cal:115, note:'Más vitamina E'},
+      {name:'20g de nueces', prot:3, cal:130, note:'Omega-3 vegetal'},
+      {name:'16g de tahini (1 cdta)', prot:3, cal:90, note:'Calcio + grasa saludable'},
+    ]},
+  ]},
+  {name:'CENA', emoji:'🌙', color:'#a855f7', note:'',
+   items:[
+    {name:'1 lata de atún (80g)', cat:'proteina', prot:18, cal:80, swaps:[
+      {name:'100g pechuga cocida', prot:23, cal:110, note:'Más proteína, más saciante'},
+      {name:'132g claras de huevo revueltas', prot:14, cal:65, note:'Digestión muy fácil para la noche'},
+      {name:'150g requesón', prot:18, cal:135, note:'Caseína — ideal para la noche, digestión lenta'},
+    ]},
+    {name:'120g de arroz cocido (½ taza)', cat:'carbo', prot:2, cal:155, swaps:[
+      {name:'4 tortillas de maíz (120g)', prot:4, cal:260, note:'Más carbos y fibra'},
+      {name:'120g de papa cocida', prot:2, cal:90, note:'Menos calorías'},
+      {name:'3 rebanadas pan integral (90g)', prot:9, cal:195, note:'Más proteína y fibra'},
+    ]},
+    {name:'1 plátano (120g)', cat:'fruta', prot:1, cal:90, swaps:[
+      {name:'1 manzana mediana (180g)', prot:0, cal:70, note:'Menos azúcar y menos calorías'},
+      {name:'1 pera mediana (170g)', prot:0, cal:60, note:'Bajo índice glucémico'},
+      {name:'1 naranja (150g)', prot:1, cal:65, note:'Vitamina C — ayuda a absorber proteína'},
+    ]},
+    {name:'2 tazas de leche (480ml)', cat:'proteina', prot:16, cal:290, swaps:[
+      {name:'2 tazas leche descremada (480ml)', prot:16, cal:180, note:'Misma proteína, 110 kcal menos'},
+      {name:'2 tazas leche de soya sin azúcar (480ml)', prot:14, cal:160, note:'Similar, apto intolerante lactosa'},
+      {name:'1 taza leche + 1 scoop proteína (280ml)', prot:30, cal:275, note:'Boost de proteína nocturno'},
+    ]},
+  ]},
+];
+
+let _swapItem=null, _swapMeal=null;
+
+function renderDiet(){
+  const body=document.getElementById('diet-body');
+  if(!body) return;
+  let h='<div style="font-size:11px;color:var(--t3);letter-spacing:1px;margin-bottom:16px;">PLAN NUTRICIONAL — BRAULIO · Toca un alimento para ver equivalentes</div>';
+  DIET_MEALS.forEach(meal=>{
+    h+=`<div class="card" style="margin-bottom:12px;border-color:${meal.color}44;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <div style="font-size:22px;">${meal.emoji}</div>
+        <div><div style="font-size:13px;font-weight:800;color:${meal.color};">${meal.name}</div>${meal.note?`<div style="font-size:11px;color:var(--t3);">${meal.note}</div>`:''}</div>
+      </div>`;
+    meal.items.forEach((item,idx)=>{
+      const catIcon={proteina:'🥩',carbo:'🍚',grasa:'🥑',fruta:'🍎'}[item.cat]||'🍽';
+      h+=`<div onclick="openSwap('${meal.name}',${DIET_MEALS.indexOf(meal)},${idx})"
+        style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd);cursor:pointer;-webkit-tap-highlight-color:transparent;">
+        <div style="width:28px;height:28px;border-radius:8px;background:${meal.color}22;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;">${catIcon}</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;color:var(--t1);">${item.name}</div>
+          <div style="font-size:11px;color:var(--t3);">${item.prot}g prot · ${item.cal} kcal</div>
+        </div>
+        <div style="font-size:18px;color:var(--t3);">↔</div>
+      </div>`;
+    });
+    h+='</div>';
+  });
+  h+=`<div class="card" style="background:#131320;border-color:#2e2e3e;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--t3);margin-bottom:10px;">💡 SUPLEMENTOS Y METAS</div>
+    <div style="font-size:13px;color:var(--t2);line-height:1.8;">
+      🥩 Meta proteína: <strong>190-200g/día</strong><br>
+      💧 Agua: mínimo <strong>3 litros/día</strong><br>
+      💊 Creatina: <strong>3-5g diarios</strong> (con cualquier comida)<br>
+      🐟 Omega-3: <strong>2-3g EPA+DHA</strong> con comida con grasa<br>
+      ⚡ Pre-workout: <strong>NO después de las 6pm</strong>
+    </div>
+  </div>`;
+  body.innerHTML=h;
+}
+
+function openSwap(mealName, mealIdx, itemIdx){
+  const meal=DIET_MEALS[mealIdx];
+  const item=meal.items[itemIdx];
+  _swapMeal=meal; _swapItem=item;
+  document.getElementById('swap-original').textContent=meal.name+' — '+meal.emoji;
+  document.getElementById('swap-title').textContent=item.name;
+  let opts='';
+  item.swaps.forEach((sw,i)=>{
+    const protDiff=sw.prot-item.prot;
+    const calDiff=sw.cal-item.cal;
+    const protColor=protDiff>=0?'#22c55e':'#ef4444';
+    const calColor=calDiff<=0?'#22c55e':'#f59e0b';
+    opts+=`<div onclick="closeSwap()" style="background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;">
+      <div style="font-size:15px;font-weight:700;margin-bottom:4px;">${sw.name}</div>
+      <div style="font-size:12px;color:var(--t2);margin-bottom:8px;">${sw.note}</div>
+      <div style="display:flex;gap:16px;">
+        <div style="font-size:12px;">Proteína: <strong style="color:${protColor};">${sw.prot}g</strong> <span style="color:${protColor};">(${protDiff>=0?'+':''}${protDiff}g)</span></div>
+        <div style="font-size:12px;">Kcal: <strong style="color:${calColor};">${sw.cal}</strong> <span style="color:${calColor};">(${calDiff>=0?'+':''}${calDiff})</span></div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('swap-options').innerHTML=opts;
+  document.getElementById('swap-sheet').style.display='flex';
+}
+function closeSwap(){document.getElementById('swap-sheet').style.display='none';}
+// ═══ END DIET SYSTEM ════════════════════════════════════════════════════════
+load();renderHome();checkPendingSession();
+</script>
+</body>
+</html>
