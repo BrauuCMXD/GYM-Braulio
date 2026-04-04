@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Fondo oscuro con esquinas redondeadas -->
+  <rect width="512" height="512" rx="90" fill="#0a0a0a"/>
+  
+  <!-- Barra de pesas izquierda -->
+  <rect x="30" y="228" width="60" height="56" rx="8" fill="#4fc3f7" opacity="0.85"/>
+  <rect x="68" y="244" width="120" height="24" rx="4" fill="#4fc3f7" opacity="0.5"/>
+  
+  <!-- Barra de pesas derecha -->
+  <rect x="422" y="228" width="60" height="56" rx="8" fill="#4fc3f7" opacity="0.85"/>
+  <rect x="324" y="244" width="120" height="24" rx="4" fill="#4fc3f7" opacity="0.5"/>
+
+  <!-- Barra central -->
+  <rect x="180" y="248" width="152" height="16" rx="4" fill="#4fc3f7" opacity="0.4"/>
+
+  <!-- Texto "GB" centrado -->
+  <text
+    x="256"
+    y="300"
+    font-family="'Arial Black', 'Arial', sans-serif"
+    font-weight="900"
+    font-size="168"
+    fill="#4fc3f7"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    letter-spacing="-6"
+  >GB</text>
+</svg>
