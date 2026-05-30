@@ -3,9 +3,10 @@
   "short_name": "GYM Braulio",
   "description": "App de entrenamiento PPL personalizada — Smart Fit CDMX",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
+  "background_color": "#0f0f0f",
+  "theme_color": "#0f0f0f",
   "orientation": "portrait",
   "lang": "es-MX",
   "icons": [
