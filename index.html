@@ -10,6 +10,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Gym Braulio">
   <meta name="theme-color" content="#0f0f0f">
+  <!-- CAMBIO G7-8: enlaces PWA. manifest.json → instalable en Android/Chrome y
+       fuente de iconos/display/theme. apple-touch-icon → icono de inicio en iOS.
+       Ambos archivos confirmados en el repo (manifest.json, icon-192.png). -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <title>Gym Braulio</title>
   <!-- BUILD: 2026-04-01-19:15 -->
   <style>
@@ -4046,6 +4051,11 @@
     async function requestWakeLock() {
       if (!('wakeLock' in navigator)) return;
       if (localStorage.getItem('b5-wake-lock') !== 'on') return;
+      // CAMBIO G6-4: si ya tenemos uno vivo, no apilar otro sentinel. El listener 'release' pone
+      //   _wakeLock=null cuando iOS lo suelta (cambio de app, notificaciones), así que tras una caída
+      //   este guard deja pasar y lo re-adquirimos. Permite llamar requestWakeLock() repetidamente
+      //   (al iniciar cada timer largo y al volver a visible) sin fugas.
+      if (_wakeLock) return;
       try {
         _wakeLock = await navigator.wakeLock.request('screen');
         _wakeLock.addEventListener('release', () => { _wakeLock = null; });
@@ -4920,6 +4930,7 @@ function exportarProgreso() {
       // _tawLoop ya se autocancela si _tbLoad retorna null (porque _tbClearAll borró la key),
       // pero hacemos clearInterval por defensiva para evitar el caso del próximo tick.
       try { clearInterval(_tawTimer); } catch (e) { }
+      _audioKeepAliveStop(); // CAMBIO G6-21: defensa central — al limpiar sesión no debe quedar keep-alive
       localStorage.removeItem('b5-sess');
     }
     function restoreSession(phase) {
@@ -4953,11 +4964,12 @@ function exportarProgreso() {
           _paintCardioInterval(_cState.idx);
           updateCardioTimer();
           if (!_cardioTimer) {
+            _armLongTimer(); // CAMBIO G6-10: cardio restaurado → re-armar audio/wake-lock
             _cardioTimer = setInterval(() => {
               updateCardioTimer();
               if (Math.max(0, Math.ceil((_cState.endTs - Date.now()) / 1000)) <= 0) {
                 clearInterval(_cardioTimer);
-                playBeep();
+                _playTimerEndSound(); _audioKeepAliveStop(); // CAMBIO G6-10
                 _cState.idx++;
                 if (_cState.idx >= _cState.intervals.length) { startCooldown(); }
                 else { startCardioInterval(); }
@@ -5009,6 +5021,53 @@ function exportarProgreso() {
         }
       } catch (e) { }
     }
+
+    // CAMBIO G6-1: Keep-alive del AudioContext durante timers largos.
+    //   Causa raíz del bug: en iOS, cuando el descanso (60-180s) corre y el usuario suelta el
+    //   teléfono, la pantalla se apaga e iOS SUSPENDE el AudioContext. Al vencer el timer,
+    //   _audioCtx.resume() por sí solo NO reactiva el audio sin un gesto nuevo → el beep no suena.
+    //   (El hold de Día 6 sí suena porque es corto y el usuario mira la pantalla → no se bloquea.)
+    //   Defensa: mientras corre un timer largo, mantenemos un oscilador SILENCIOSO (gain 0) conectado
+    //   al destino para que iOS no suspenda el ctx. Se desconecta al terminar el timer (no gasta batería
+    //   fuera de un timer). Es SIEMPRE inaudible; respeta igual el gate de sonido (si está apagado, ni
+    //   siquiera lo arrancamos — nada va a sonar de todos modos).
+    let _audioKeepAliveOsc = null;
+    function _audioKeepAliveStart() {
+      // Sin sonido no hay nada que mantener vivo (ahorra batería). El gate sigue siendo la verdad.
+      if (!_soundOn || _soundType === 'silent') return;
+      // Solo si el ctx ya existe (desbloqueado en un gesto previo). No creamos uno suspendido aquí.
+      if (!_audioCtx) return;
+      try { if (_audioCtx.state === 'suspended') _audioCtx.resume().catch(() => { }); } catch (e) { }
+      if (_audioKeepAliveOsc) return; // idempotente: ya hay uno corriendo
+      try {
+        const osc = _audioCtx.createOscillator();
+        const gain = _audioCtx.createGain();
+        gain.gain.value = 0;          // totalmente inaudible
+        osc.frequency.value = 30;     // sub-audible por si algún navegador ignora gain 0
+        osc.connect(gain); gain.connect(_audioCtx.destination);
+        osc.start();
+        _audioKeepAliveOsc = { osc, gain };
+      } catch (e) { }
+    }
+    function _audioKeepAliveStop() {
+      if (!_audioKeepAliveOsc) return;
+      try { _audioKeepAliveOsc.osc.stop(); } catch (e) { }
+      try { _audioKeepAliveOsc.osc.disconnect(); } catch (e) { }
+      try { _audioKeepAliveOsc.gain.disconnect(); } catch (e) { }
+      _audioKeepAliveOsc = null;
+    }
+    // CAMBIO G6-3: arranque conjunto de keep-alive + wake-lock al iniciar cualquier timer largo.
+    //   El wake-lock evita que la pantalla se apague (defensa principal); el keep-alive cubre el caso
+    //   en que el wake-lock se cae o está desactivado.
+    function _armLongTimer() {
+      _audioKeepAliveStart();
+      requestWakeLock();
+    }
+
+    // CAMBIO G6-2: sonido unificado de fin de timer. Usa el mismo playBeep() (defaults 880Hz/0.3s/3x)
+    //   que hoy emite el hold de Día 6 (que SÍ suena), para que descanso, warmup/cooldown, TAW, holds
+    //   y fin de intervalo de cardio suenen idéntico. El gate _soundOn/_soundType vive dentro de playBeep.
+    function _playTimerEndSound() { playBeep(); }
 
     function playBeep(freq = 880, duration = 0.3, count = 3) {
       try {
@@ -5123,10 +5182,17 @@ function exportarProgreso() {
       document.addEventListener(ev, _ensureAudio, { passive: true, capture: true });
     });
     // También cuando la app vuelve a visible (al desbloquear pantalla), intentar reanudar
+    // CAMBIO G6-5: al volver a visible, además de reanudar el audio, re-adquirir el wake-lock si se
+    //   había caído (cambio de app / menú de notificaciones lo sueltan) y re-armar el keep-alive si
+    //   un timer largo seguía activo. _audioKeepAliveOsc truthy ⇒ había un timer largo corriendo;
+    //   lo reciclamos (stop+start) para tener un oscilador limpio sobre el ctx ya reanudado.
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && _audioCtx && _audioCtx.state === 'suspended') {
+      if (document.hidden) return;
+      if (_audioCtx && _audioCtx.state === 'suspended') {
         _audioCtx.resume().catch(() => { });
       }
+      if (hasActiveWorkout()) requestWakeLock();
+      if (_audioKeepAliveOsc) { _audioKeepAliveStop(); _audioKeepAliveStart(); }
     });
 
     let _waterTimer = null, _waterCount = 0;
@@ -5507,7 +5573,7 @@ function exportarProgreso() {
       showConfirm('⚠️', '¿Cancelar entrenamiento?', 'El progreso de esta sesión se perderá.', 'Sí, cancelar', () => {
         // FIX timer persist: limpiar todas las claves time-based al cancelar
         _tbClearAll();
-        clearSession(); clearInterval(restTimer); clearInterval(phaseTimer); stopSessionTimer(); stopWaterReminder(); releaseWakeLock();
+        clearSession(); clearInterval(restTimer); clearInterval(phaseTimer); stopSessionTimer(); stopWaterReminder(); releaseWakeLock(); _audioKeepAliveStop();
         _clearRestBanner(); // CAMBIO G2-17: limpiar banner (corriendo o terminado) al cancelar
         S.logged = {}; S.wStart = null; S.newPR = false; S.restEndTs = null; S._dpAlert = null;
         // FIX tiempo total: reset de marcas de fase workout al cancelar
@@ -5790,11 +5856,12 @@ function _getNextPendingIdx(d, fromIdx) {
         else if (S.phase === 'cardio' && _cState && _cState.endTs) {
           if (!_cardioTimer) {
             updateCardioTimer();
+            _armLongTimer(); // CAMBIO G6-9: re-enganche de cardio al volver al tab → re-armar audio/wake-lock
             _cardioTimer = setInterval(() => {
               updateCardioTimer();
               if (Math.max(0, Math.ceil((_cState.endTs - Date.now()) / 1000)) <= 0) {
                 clearInterval(_cardioTimer);
-                playBeep();
+                _playTimerEndSound(); _audioKeepAliveStop(); // CAMBIO G6-9: el chain (siguiente intervalo / cooldown) re-arma o deja suelto
                 _cState.idx++;
                 if (_cState.idx >= _cState.intervals.length) { startCooldown(); }
                 else { startCardioInterval(); }
@@ -5810,10 +5877,11 @@ function _getNextPendingIdx(d, fromIdx) {
           const ri = document.getElementById('rest-inline');
           if (ri) ri.style.display = 'block';
           updateRestInlineUI();
+          _armLongTimer(); // CAMBIO G6-8: re-enganche de descanso al volver al tab → re-armar audio/wake-lock
           restTimer = setInterval(() => {
             updateRestInlineUI();
             const rem = Math.max(0, Math.ceil((S.restEndTs - Date.now()) / 1000));
-            if (rem <= 0) { clearInterval(restTimer); playBeep(); endRest(true); }
+            if (rem <= 0) { clearInterval(restTimer); _playTimerEndSound(); endRest(true); }
           }, 500);
         }
         // Actualizar tab activo
@@ -6358,16 +6426,17 @@ function _getNextPendingIdx(d, fromIdx) {
     // FIX timer persist: loop de countdown para warmup/cooldown (lee endTs del localStorage)
     function _phaseCountdownLoop(side, totalSides, accent) {
       clearInterval(phaseTimer);
+      _armLongTimer(); // CAMBIO G6-13: countdown de warmup/cooldown → audio vivo + wake-lock
       phaseTimer = setInterval(() => {
-        const d = day(); if (!d) { clearInterval(phaseTimer); return; }
+        const d = day(); if (!d) { clearInterval(phaseTimer); _audioKeepAliveStop(); return; }
         const { ctx, step, actionElId } = _wcContext();
         const st = _tbLoad(ctx, d.id, step, 'side-' + side);
-        if (!st || !st.started) { clearInterval(phaseTimer); return; }
+        if (!st || !st.started) { clearInterval(phaseTimer); _audioKeepAliveStop(); return; }
         const rem = Math.max(0, Math.ceil((st.endTs - Date.now()) / 1000));
         const el = document.getElementById('pt-num'); if (el) el.textContent = fmt(rem);
         if (rem <= 0) {
           clearInterval(phaseTimer);
-          playBeep();
+          _playTimerEndSound(); _audioKeepAliveStop(); // CAMBIO G6-13: fin de paso, espera tap del usuario → soltar
           if (el) el.textContent = '✓';
           _tbClear(ctx, d.id, step, 'side-' + side);
           _onPhaseCountdownEnd(document.getElementById(actionElId), st.targetSecs, side, totalSides, accent);
@@ -6528,23 +6597,25 @@ function _getNextPendingIdx(d, fromIdx) {
     // FIX timer persist: loop de countdown para hold tracker (lee endTs persistido)
     function _holdTrackerLoop(accent, mode) {
       clearInterval(phaseTimer);
+      _armLongTimer(); // CAMBIO G6-14: hold de warmup/cooldown → audio vivo + wake-lock
       phaseTimer = setInterval(() => {
-        const d = day(); if (!d) { clearInterval(phaseTimer); return; }
+        const d = day(); if (!d) { clearInterval(phaseTimer); _audioKeepAliveStop(); return; }
         const ctx = mode === 'warm' ? 'wu' : 'cd';
         const step = mode === 'warm' ? S.wuStep : S.cdStep;
         const st = _tbLoad(ctx, d.id, step, 'hold');
-        if (!st || !st.started) { clearInterval(phaseTimer); return; }
+        if (!st || !st.started) { clearInterval(phaseTimer); _audioKeepAliveStop(); return; }
         const rem = Math.max(0, Math.ceil((st.endTs - Date.now()) / 1000));
         const el = document.getElementById('hold-num'); if (el) el.textContent = rem + 's';
         if (rem <= 0) {
           clearInterval(phaseTimer);
-          playBeep();
+          _playTimerEndSound(); // CAMBIO G6-14: sonido unificado del hold
           const ps = _phaseState;
           const setsDone = (st.setsDone || 0) + 1;
           _tbClear(ctx, d.id, step, 'hold');
           ps.setsDone = setsDone;
 
           if (setsDone >= ps.setsTarget) {
+            _audioKeepAliveStop(); // CAMBIO G6-14: todas las series hechas, no hay más timer → soltar
             // Todas las series completas — desbloquear siguiente
             const isCD = mode === 'cool';
             if (isCD && window._cdUnlock) { window._cdUnlock(); }
@@ -6567,11 +6638,12 @@ function _getNextPendingIdx(d, fromIdx) {
             </div></div>`;
               let restEnd = Date.now() + 30000;
               clearInterval(phaseTimer);
+              _armLongTimer(); // CAMBIO G6-14: el rest interno entre series también es timer largo (mantener vivo)
               phaseTimer = setInterval(() => {
                 const r = Math.max(0, Math.ceil((restEnd - Date.now()) / 1000));
                 const rEl = document.getElementById('hold-rest-num'); if (rEl) rEl.textContent = r + 's';
                 if (r <= 0) {
-                  clearInterval(phaseTimer); playBeep();
+                  clearInterval(phaseTimer); _playTimerEndSound(); _audioKeepAliveStop(); // CAMBIO G6-14: fin del rest, espera tap → soltar
                   // Re-render volviendo al estado inicial del hold con ±15s — permite ajustar para la nueva serie
                   renderHoldTracker(actEl, accent, mode);
                 }
@@ -7604,15 +7676,16 @@ function _getNextPendingIdx(d, fromIdx) {
     // FIX timer persist: loop de countdown para superset/biserie (lee endTs persistido)
     function _ssHoldLoop(exId, idx, prefix) {
       clearInterval(_woHoldTimer);
+      _armLongTimer(); // CAMBIO G6-15: hold de superset/biserie (incl. Side Plank Día 6) → audio vivo + wake-lock
       _woHoldTimer = setInterval(() => {
         const st = _tbLoad('ss', exId, idx);
-        if (!st || !st.started) { clearInterval(_woHoldTimer); return; }
+        if (!st || !st.started) { clearInterval(_woHoldTimer); _audioKeepAliveStop(); return; }
         const rem = Math.max(0, Math.ceil((st.endTs - Date.now()) / 1000));
         const el = document.getElementById(prefix + '-hold-btn-' + idx);
         if (el) el.textContent = rem + 's';
         if (rem <= 0) {
           clearInterval(_woHoldTimer);
-          playBeep();
+          _playTimerEndSound(); _audioKeepAliveStop(); // CAMBIO G6-15: startRestInline re-arma si encadena descanso
           const d = day();
           if (!S.logged[exId]) S.logged[exId] = [];
           // CAMBIO 2026-04-29 G1: persistir 'side' para Side Plank receptor de biserie (6-9)
@@ -7853,15 +7926,16 @@ function _getNextPendingIdx(d, fromIdx) {
     // FIX timer persist: loop de countdown que lee endTs persistido (sobrevive a re-render)
     function _woHoldLoop(d, e) {
       clearInterval(_woHoldTimer);
+      _armLongTimer(); // CAMBIO G6-16: hold time-based en workout → audio vivo + wake-lock
       _woHoldTimer = setInterval(() => {
         const setIdx = (S.logged[e.id] || []).length;
         const st = _tbLoad('wo', e.id, setIdx);
-        if (!st || !st.started) { clearInterval(_woHoldTimer); return; }
+        if (!st || !st.started) { clearInterval(_woHoldTimer); _audioKeepAliveStop(); return; }
         const rem = Math.max(0, Math.ceil((st.endTs - Date.now()) / 1000));
         const el = document.getElementById('wo-hold-num'); if (el) el.textContent = rem + 's';
         if (rem <= 0) {
           clearInterval(_woHoldTimer);
-          playBeep();
+          _playTimerEndSound(); _audioKeepAliveStop(); // CAMBIO G6-16: startRestInline re-arma si encadena descanso
           if (!S.logged[e.id]) S.logged[e.id] = [];
           // CAMBIO 2026-04-29 G1: persistir 'side' para Side Plank (sides:2)
           const _entry = { weight: 0, reps: st.targetSecs, vol: 0 };
@@ -8107,15 +8181,16 @@ function _getNextPendingIdx(d, fromIdx) {
 
     function _tawLoop(d, e) {
       clearInterval(_tawTimer);
+      _armLongTimer(); // CAMBIO G6-17: hold time+weight (Caminata Granjero) → audio vivo + wake-lock
       _tawTimer = setInterval(() => {
         const setIdx = (S.logged[e.id] || []).length;
         const st = _tbLoad('wo', e.id, setIdx);
-        if (!st || !st.started) { clearInterval(_tawTimer); return; }
+        if (!st || !st.started) { clearInterval(_tawTimer); _audioKeepAliveStop(); return; }
         const rem = Math.max(0, Math.ceil((st.endTs - Date.now()) / 1000));
         const el = document.getElementById('taw-hold-num'); if (el) el.textContent = rem + 's';
         if (rem <= 0) {
           clearInterval(_tawTimer);
-          playBeep();
+          _playTimerEndSound(); _audioKeepAliveStop(); // CAMBIO G6-17: startRestInline re-arma si encadena descanso
           if (!S.logged[e.id]) S.logged[e.id] = [];
           // Registrar serie con kind:'timeAndWeight' — peso real + segundos como reps
           // CAMBIO P3B.1-19: exRef en logs TAW también.
@@ -8509,10 +8584,12 @@ function _getNextPendingIdx(d, fromIdx) {
       const arc = document.getElementById('rest-arc');
       arc.dataset.start = restSecs;
       updateRestInlineUI();
+      _armLongTimer(); // CAMBIO G6-6: descanso largo → mantener audio vivo + pedir wake-lock
       restTimer = setInterval(() => {
         updateRestInlineUI();
         const rem = Math.max(0, Math.ceil((S.restEndTs - Date.now()) / 1000));
-        if (rem <= 0) { clearInterval(restTimer); playBeep(); endRest(true); }
+        // CAMBIO G6-6: sonido unificado al vencer; endRest libera el keep-alive.
+        if (rem <= 0) { clearInterval(restTimer); _playTimerEndSound(); endRest(true); }
       }, 500);
     }
 
@@ -8563,6 +8640,7 @@ function _getNextPendingIdx(d, fromIdx) {
     }
     function endRest(viaTimeout) {
       clearInterval(restTimer);
+      _audioKeepAliveStop(); // CAMBIO G6-6: el descanso terminó (no encadena otro timer) → soltar keep-alive
       // CAMBIO G2-10: el descanso terminó. Dos rutas:
       //   - viaTimeout=true (llegó a 0 solo o vía visibilitychange): el banner NO desaparece.
       //     Queda en estado TERMINADO ("Continúa con [siguiente]" + check verde + sello). No avanza;
@@ -8630,8 +8708,8 @@ function _getNextPendingIdx(d, fromIdx) {
         const rem = Math.max(0, Math.ceil((S.restEndTs - Date.now()) / 1000));
         if (rem <= 0) {
           clearInterval(restTimer);
-          playBeep(); // FIX: sonar aunque la pantalla haya estado apagada
-          endRest(true); // CAMBIO G2-13: expiró estando fuera → banner terminado, no oculta
+          _playTimerEndSound(); // CAMBIO G6-7: sonido unificado aunque la pantalla haya estado apagada
+          endRest(true); // CAMBIO G2-13: expiró estando fuera → banner terminado, no oculta (endRest suelta keep-alive)
         } else {
           updateRestInlineUI();
         }
@@ -8645,6 +8723,7 @@ function _getNextPendingIdx(d, fromIdx) {
       if (!S.wkEnd) S.wkEnd = Date.now();
       _clearRestBanner(); // CAMBIO G2-18: salir a enfriamiento cierra el banner de descanso terminado
       clearInterval(restTimer); S.restEndTs = null;
+      _audioKeepAliveStop(); // CAMBIO G6-18: fin de cardio/descanso al entrar a cooldown; los holds del cooldown re-arman
       S.phase = 'cooldown'; S.cdStep = 0; renderCooldown(); showScreen('cooldown'); saveSession('cooldown');
     }
 
@@ -8829,11 +8908,12 @@ function _getNextPendingIdx(d, fromIdx) {
       _paintCardioInterval(idx);
       updateCardioTimer();
       saveSession('cardio');
+      _armLongTimer(); // CAMBIO G6-11: intervalo de cardio largo → audio vivo + wake-lock
 		_cardioTimer = setInterval(() => {
         updateCardioTimer();
         if (Math.max(0, Math.ceil((_cState.endTs - Date.now()) / 1000)) <= 0) {
           clearInterval(_cardioTimer);
-          playBeep();
+          _playTimerEndSound(); _audioKeepAliveStop(); // CAMBIO G6-11: siguiente intervalo re-arma; cooldown deja suelto
           _cState.idx++;
           // FIX: Al terminar todos los intervalos, ir a enfriamiento — NO saltar directo a finishWorkout
           if (_cState.idx >= ivals.length) { startCooldown(); }
@@ -8858,11 +8938,12 @@ function _getNextPendingIdx(d, fromIdx) {
       _cardioBackCancelCb = () => {
         _cardioBackCancelCb = null;
         // Reanudar tick sin recalcular endTs — el tiempo restante sigue siendo el correcto
+        _armLongTimer(); // CAMBIO G6-12: al reanudar el cardio tras el back → re-armar audio/wake-lock
         _cardioTimer = setInterval(() => {
           updateCardioTimer();
           if (Math.max(0, Math.ceil((_cState.endTs - Date.now()) / 1000)) <= 0) {
             clearInterval(_cardioTimer);
-            playBeep();
+            _playTimerEndSound(); _audioKeepAliveStop(); // CAMBIO G6-12
             _cState.idx++;
             if (_cState.idx >= _cState.intervals.length) { startCooldown(); }
             else { startCardioInterval(); }
@@ -8886,7 +8967,7 @@ function _getNextPendingIdx(d, fromIdx) {
     function finishWorkout() {
       // FIX timer persist: limpiar todas las claves time-based huérfanas antes de terminar
       _tbClearAll();
-      stopSessionTimer(); stopWaterReminder(); releaseWakeLock(); clearSession(); const d = day();
+      stopSessionTimer(); stopWaterReminder(); releaseWakeLock(); _audioKeepAliveStop(); clearSession(); const d = day();
       // CAMBIO P3B.1-4: limpiar swaps puntuales al finalizar. Los logs de la sesión ya quedaron
       //   guardados con su exRef correcto en S.logged y se persisten a hist más abajo.
       S.sessionSwaps = {};
@@ -11968,6 +12049,68 @@ function _getNextPendingIdx(d, fromIdx) {
     };
 
   </script>
+  <script>
+    // ---- Registro del Service Worker (PWA offline) — CAMBIO G7-4 ----
+    // El index.html no registraba el SW; este bloque lo registra y gestiona la
+    // actualización de forma controlada: avisa con showConfirm y NUNCA recarga
+    // si hay un entreno activo (hasActiveWorkout()).
+    if ('serviceWorker' in navigator) {
+      let _swUpdateConfirmed = false; // true solo si el usuario aceptó actualizar
+
+      window.addEventListener('load', () => {
+        // updateViaCache:'none' → el navegador revalida sw.js contra la red en
+        // cada check, así un deploy nuevo se detecta aunque GitHub Pages mande
+        // cabeceras de cache para el script del SW.
+        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(reg => {
+
+          // Ofrece actualizar SOLO si hay un SW nuevo listo, ya había controller
+          // (es actualización, no primera instalación) y NO se está entrenando.
+          function _ofrecerActualizar(worker) {
+            if (!worker || !navigator.serviceWorker.controller) return;
+            let entrenando = false;
+            try { entrenando = (typeof hasActiveWorkout === 'function') && hasActiveWorkout(); } catch (_) { }
+            if (entrenando) return; // se reintenta en la próxima carga/foreground
+            showConfirm('🔄', 'Nueva versión disponible',
+              'Hay una actualización lista. La app se recargará un momento.',
+              'Actualizar ahora', () => {
+                _swUpdateConfirmed = true;
+                (reg.waiting || worker).postMessage({ type: 'SKIP_WAITING' });
+              });
+          }
+
+          // Deploy ocurrido entre sesiones (ya hay uno esperando al cargar).
+          if (reg.waiting) _ofrecerActualizar(reg.waiting);
+
+          // Aparece un SW nuevo con la app abierta.
+          reg.addEventListener('updatefound', () => {
+            const nuevo = reg.installing;
+            if (!nuevo) return;
+            nuevo.addEventListener('statechange', () => {
+              if (nuevo.state === 'installed') _ofrecerActualizar(reg.waiting || nuevo);
+            });
+          });
+
+          // Chequeo proactivo al volver a primer plano, solo si NO se entrena.
+          // Permite que el aviso aparezca entre sesiones sin cerrar la app.
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState !== 'visible') return;
+            let entrenando = false;
+            try { entrenando = (typeof hasActiveWorkout === 'function') && hasActiveWorkout(); } catch (_) { }
+            if (!entrenando) { try { reg.update(); } catch (_) { } }
+          });
+        }).catch(() => { /* Sin SW: la app sigue 100% funcional, solo sin offline/PWA. */ });
+
+        // Recargar UNA sola vez cuando el SW nuevo toma control, y SOLO si el
+        // usuario lo confirmó (nunca en primera instalación ni a media sesión).
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!_swUpdateConfirmed) return;
+          _swUpdateConfirmed = false;
+          location.reload();
+        });
+      });
+    }
+  </script>
+
 </body>
 
 </html>
