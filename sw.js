@@ -129,23 +129,21 @@ self.addEventListener('fetch', event => {
   // (Se compara contra SHELL_URL y no contra req: la URL navegada puede ser
   //  "/GYM-Braulio/" sin "index.html", que no haría match directo.)
   if (req.mode === 'navigate') {
-    event.respondWith(
-      caches.match(SHELL_URL).then(cachedShell => {
-        // Caso normal: el shell está en cache → se sirve directo, sin red.
-        if (cachedShell) return cachedShell;
+  event.respondWith(
+    fetch(req)
+      .then(response => {
+        const copy = response.clone();
 
-        // Shell aún NO cacheado (primer arranque antes de completar el install):
-        // único caso en que vamos a la red, y con red de seguridad a cache.
-        return fetch(req).catch(() =>
-          // CAMBIO G7-1: si la red falla, último recurso = lo que haya de
-          // index.html en cualquier cache. Una navegación sin red NUNCA debe
-          // terminar en pantalla en blanco si el shell existe.
-          caches.match(SHELL_URL)
-        );
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(SHELL_URL, copy);
+        });
+
+        return response;
       })
-    );
-    return;
-  }
+      .catch(() => caches.match(SHELL_URL))
+  );
+  return;
+}
 
   // Resto de requests (manifest, iconos, etc.): cache-first con red de respaldo.
   event.respondWith(
