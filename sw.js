@@ -22,7 +22,7 @@
 //   G7-7  el fetch handler solo intercepta GET (la Cache API solo guarda GET).
 
 // CAMBIO G7-5: versión nueva del cache. El v1 se limpia en 'activate'.
-const CACHE_NAME = 'gym-braulio-v3';
+const CACHE_NAME = 'gym-braulio-v4';
 
 // Documento principal del app shell (GitHub Pages en subcarpeta /GYM-Braulio/,
 // rutas relativas a la ubicación del SW).
