@@ -7869,12 +7869,20 @@ function _getNextPendingIdx(d, fromIdx) {
             _txtA = `<span style="color:${sp.color};font-weight:700;">🎯 ${sp.name}</span> <span style="color:var(--t2);">· ${sugA.lo}–${sugA.hi} ${sugA.unit || 'kg'} · ${sp.reps} reps</span>`;
           }
         }
+        // FIX: el leader del superset construía _txtA pero nunca lo inyectaba al HTML (bug
+        //   reportado: el líder mostraba solo su tabla de series, sin tarjeta de peso/fase;
+        //   el receptor sí). Inyectamos aquí con el MISMO wrapper que el receptor (línea ~7959),
+        //   usando sp = sugA.phase y los datos ya resueltos (eAR vía resolveEx, sugA/displayRepsA
+        //   por slot id → respetan swaps y variantes activos). No se gatea por _isCompound: la
+        //   periodización ya está en displayRepsA (reps de fase solo en compuestos; los
+        //   aislamientos caen a reps fijas) — misma lógica que el receptor, sin forzar nada.
+        html += `<div style="border-radius:6px;padding:4px 8px;margin-bottom:6px;background:${sp.color}12;border:1px solid ${sp.color}33;font-size:11px;">${_txtA}</div>`;
       } else if (eA.needs1RM && !(isTimeBased(eA) || eA.timeAndWeight)) {
         // FIX: F1 — desacople fase/peso en supersets (futuro perfil con SS sin 1RM). Si el
         //   ejercicio DEBE tener 1RM pero aún no lo tiene, mostrar la referencia de fase + reps
         //   SIN kg. Braulio no entra aquí (sus ejercicios de superset no llevan needs1RM), así
-        //   que su render no cambia. NOTA: el _txtA del leader ya existía pero nunca se inyecta
-        //   al HTML (bug pre-existente, reportado); aquí solo añadimos el caso sin 1RM.
+        //   que su render no cambia. (El bug del _txtA del leader que nunca se inyectaba ya
+        //   quedó corregido arriba en la rama if(sugA); aquí solo cubrimos el caso sin 1RM.)
         const _phSS = getCurrentPhase();
         const sp = (_phSS.key === 'none') ? PHASES[0] : _phSS;
         html += `<div style="border-radius:6px;padding:4px 8px;margin-bottom:6px;background:${sp.color}12;border:1px solid ${sp.color}33;font-size:11px;"><span style="color:${sp.color};font-weight:700;">🎯 ${sp.name}</span> <span style="color:var(--t2);">· ${displayRepsA} reps</span></div>`;
@@ -7914,8 +7922,8 @@ function _getNextPendingIdx(d, fromIdx) {
       </div>`;
       // FIX 2026-04-21: Forma y errores DENTRO de la tarjeta del ejercicio A (antes era un bloque combinado al final)
       // CAMBIO Exec Labels v2: sección "⚡ EJECUCIÓN" del leader DENTRO de su accordion, arriba de
-      //   las indicaciones de forma (eAR resuelto → sigue swaps/variantes). El bug pre-existente de
-      //   _txtA (tarjeta de fase del leader que nunca se inyecta) NO se toca.
+      //   las indicaciones de forma (eAR resuelto → sigue swaps/variantes). (El bug del _txtA del
+      //   leader que nunca se inyectaba ya quedó corregido en la rama if(sugA) de arriba.)
       html += `<details style="margin-top:8px;background:var(--s1);border:1px solid ${d.color}33;border-radius:10px;overflow:hidden;">
         <summary style="padding:10px 12px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between;list-style:none;user-select:none;color:var(--t2);">
           <span>📋 Forma y errores</span><span style="font-size:12px;">▸</span>
