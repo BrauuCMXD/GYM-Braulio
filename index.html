@@ -3365,7 +3365,8 @@
     //   Se muestra en el home (bajo el nombre) y en Config → App. Sirve para saber a
     //   simple vista si el device cargó la versión nueva (si dice v6 → cargó lo nuevo).
     // ═══════════════════════════════════════════════════════════════════════════
-    const APP_BUILD = { version: 'v7', date: '22 jul 2026 · 20:15' };
+    // CAMBIO parcial-6: subir versión por el guardado de entrenos parciales (fuerza refresco del SW).
+    const APP_BUILD = { version: 'v8', date: '26 ago 2026 · 10:30' };
 
     // CAMBIO versión/actualización: chequeo manual desde Config (o tap en la versión del
     //   home). Fuerza reg.update() y reporta: al día / descargando / hay nueva versión.
@@ -5482,12 +5483,42 @@ function exportarProgreso() {
         }
       } catch (_) {}
     }
+    // CAMBIO parcial-3: antes de DESCARTAR una sesión pendiente, ofrecer guardarla como PARCIAL si
+    //   tiene series registradas. Reemplaza los dos descartes silenciosos de checkPendingSession
+    //   (timeout ≥240 min y "no continuar"). `d` = payload de b5-sess. Si no hay progreso
+    //   (done===0), descarta sin preguntar (como antes).
+    function _offerSavePendingSession(d) {
+      let prog = { done: 0, total: 0, pct: 0 };
+      try { prog = _workoutProgress((d && d.state && d.state.logged) || {}, d && d.dayId); } catch (_) {}
+      if (!prog.done || prog.done <= 0) { try { clearSession(); } catch (_) {} return; }
+      const fechaStr = (function () { try { return new Date(d.ts).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }); } catch (_) { return ''; } })();
+      const cuerpo = (d.dayNum || 'Día ?') + (fechaStr ? ' · ' + fechaStr : '') + '\n' +
+        'Registraste ' + prog.done + ' de ' + prog.total + ' series (' + prog.pct + '%) pero no terminaste el enfriamiento.';
+      showConfirm('💾', '¿Guardar este entreno?', cuerpo, 'Sí, guardar',
+        () => {
+          // Cargar S desde el estado persistido para que day()/resolveEx resuelvan el día y los swaps.
+          //   endTs = d.ts (último guardado real de la sesión) para acotar el elapsed del parcial.
+          try { Object.assign(S, d.state); } catch (_) {}
+          try { _persistWorkoutToHistory({ partial: true, endTs: d.ts }); } catch (_) {}
+          // Limpiar la sesión pendiente y dejar S sin residuos del entreno restaurado.
+          try { clearSession(); } catch (_) {}
+          S.logged = {}; S.sessionSwaps = {}; S.equipmentMode = {};
+          try { renderHome(); } catch (_) {}
+          try { renderCalendar(); } catch (_) {}
+        },
+        // cancelCb de ESTE modal (botón "Cancelar") SÍ descarta: el usuario eligió no guardar.
+        () => { try { clearSession(); } catch (_) {} }
+      );
+    }
     function checkPendingSession() {
       try {
         const ss = localStorage.getItem('b5-sess');
         if (!ss) return;
         const d = JSON.parse(ss);
-        if (!d || !d.dayId || (Date.now() - d.ts) >= 240 * 60000) { clearSession(); return; }
+        if (!d || !d.dayId) { clearSession(); return; }
+        // CAMBIO parcial-3: el timeout ≥240 min ya NO descarta en silencio. Si hay series
+        //   registradas, se ofrece guardar como parcial; si no, _offerSavePendingSession descarta.
+        if ((Date.now() - d.ts) >= 240 * 60000) { _offerSavePendingSession(d); return; }
         const elapsed = Math.floor((Date.now() - d.ts) / 60000);
         showConfirm('▶️', 'Sesión en curso',
           (d.dayNum || 'Día ?') + ' · ' + elapsed + ' min transcurridos.\n¿Continuar donde lo dejaste?',
@@ -5516,12 +5547,13 @@ function exportarProgreso() {
             }
             restoreSession(d.phase);
           },
-          // CAMBIO G4-13: si el usuario descarta el confirm (X / tap fuera), no dejamos
-          //   la sesión zombie. Limpiamos b5-sess Y quitamos el cardio-modal por si quedó visible.
-          //   Antes: si decía "no", la sesión seguía ahí y el modal del cardio podía reaparecer.
+          // CAMBIO parcial-3: al elegir "no continuar" (X / tap fuera / "Cancelar"), ya NO se
+          //   descarta en silencio. Se quita el cardio-modal por si quedó visible y se ofrece
+          //   guardar como parcial. _offerSavePendingSession descarta él mismo cuando no hay series
+          //   registradas o cuando el usuario rechaza guardar (evita la sesión zombie del G4-13).
           () => {
-            try { clearSession(); } catch (_) {}
             try { document.getElementById('cardio-modal').classList.remove('show'); } catch (_) {}
+            _offerSavePendingSession(d);
           });
       } catch { clearSession(); }
     }
@@ -6174,19 +6206,48 @@ function exportarProgreso() {
 
     // ═══ CANCEL CONFIRM ══════════════════════════════════════════════════════════
     function confirmCancel() {
-      showConfirm('⚠️', '¿Cancelar entrenamiento?', 'El progreso de esta sesión se perderá.', 'Sí, cancelar', () => {
-        // FIX timer persist: limpiar todas las claves time-based al cancelar
-        _tbClearAll();
-        clearSession(); clearInterval(restTimer); clearInterval(phaseTimer); stopSessionTimer(); stopWaterReminder(); releaseWakeLock(); _audioKeepAliveStop();
-        _clearRestBanner(); // CAMBIO G2-17: limpiar banner (corriendo o terminado) al cancelar
-        S.logged = {}; S.wStart = null; S.newPR = false; S.restEndTs = null; S._dpAlert = null;
-        // FIX tiempo total: reset de marcas de fase workout al cancelar
-        S.wkStart = null; S.wkEnd = null;
-        // CAMBIO P3B.1-3: limpiar swaps puntuales al cancelar sesión.
-        S.sessionSwaps = {};
-        S.equipmentMode = {}; // CAMBIO P4.1: limpiar cache de equipo (storage per-perfil persiste)
-        showScreen('home');
-      });
+      // CAMBIO parcial-4: si el entreno tiene series registradas, ofrecer GUARDARLO como parcial
+      //   antes de descartar. El descarte total pasa a un segundo confirm EXPLÍCITO. Regla dura:
+      //   cerrar cualquiera de estos modales con "Cancelar" (X / tap fuera) NUNCA descarta el
+      //   entreno — a lo sumo abre el confirm de descarte, que a su vez exige un "Sí, descartar".
+      let prog = { done: 0, total: 0, pct: 0 };
+      try { prog = _workoutProgress(S.logged || {}, S.dayId); } catch (_) {}
+
+      // Descarte real: misma limpieza de siempre (vía _teardownWorkoutSession) + volver a home.
+      const _descartar = () => { _teardownWorkoutSession(); showScreen('home'); };
+
+      if (!prog.done || prog.done <= 0) {
+        // Sin progreso → comportamiento actual tal cual (un solo confirm de descarte).
+        showConfirm('⚠️', '¿Cancelar entrenamiento?', 'El progreso de esta sesión se perderá.', 'Sí, cancelar', _descartar);
+        return;
+      }
+
+      // Con progreso → confirm de salida con opción de GUARDAR.
+      showConfirm('⚠️', '¿Salir del entrenamiento?',
+        'Llevas ' + prog.done + ' de ' + prog.total + ' series (' + prog.pct + '%).',
+        'Guardar y salir',
+        () => {
+          // Guardar parcial ANTES de limpiar (el helper lee S.logged/S.dayId), luego limpiar + home.
+          try { _persistWorkoutToHistory({ partial: true }); } catch (_) {}
+          _teardownWorkoutSession();
+          // CAMBIO parcial-6: refrescar home ANTES de mostrarlo (mismo orden que
+          //   _offerSavePendingSession) para que la tarjeta de ciclo/progreso quede al día tras el
+          //   guardado parcial, sin depender del render que showScreen('home') hace por su cuenta.
+          try { renderHome(); } catch (_) {}
+          try { renderCalendar(); } catch (_) {}
+          showScreen('home');
+        },
+        // "Cancelar" NO descarta: abre el SEGUNDO confirm explícito de descarte total.
+        () => {
+          showConfirm('🗑️', '¿Descartar el entrenamiento?',
+            'Se perderá todo el progreso de esta sesión (' + prog.done + ' series). No se puede deshacer.',
+            'Sí, descartar',
+            _descartar,
+            // Cerrar este segundo modal (Cancelar / X / tap fuera) → volver al entrenamiento.
+            () => { try { showScreen('workout'); } catch (_) {} }
+          );
+        }
+      );
     }
 
     // ═══ BACK NAVIGATION ════════════════════════════════════════════════════════
@@ -9662,6 +9723,118 @@ function _getNextPendingIdx(d, fromIdx) {
     }
 
     // ═══ FINISH ══════════════════════════════════════════════════════════════════
+    // CAMBIO parcial-1: helper reutilizable de persistencia. Extrae de finishWorkout la construcción
+    //   del objeto `sess`, su inserción en `history`, la actualización de `exHistory` y `save()`.
+    //   NO pinta la pantalla "done" ni calcula recomendaciones: eso se queda en finishWorkout. Puede
+    //   correr FUERA de la pantalla de entreno (checkPendingSession / confirmCancel) para guardar un
+    //   entreno PARCIAL sin perder lo registrado.
+    //   opts.partial (bool) → marca sess.partial + sess.completionPct (los entrenos viejos/completos
+    //     no los tienen; el render los trata como completos, sin crashear).
+    //   opts.endTs (timestamp) → final REAL de la sesión. En un parcial S.wkEnd puede ser null y
+    //     Date.now() estar horas después → clamp de elapsed a 1..240 min y uso de opts.endTs.
+    //   opts.loggedObj / opts.dayId → permiten persistir desde un `logged` restaurado de b5-sess
+    //     (default: S.logged / S.dayId).
+    function _persistWorkoutToHistory(opts) {
+      opts = opts || {};
+      const loggedObj = opts.loggedObj || S.logged || {};
+      const dayId = (opts.dayId != null) ? opts.dayId : S.dayId;
+      const d = DAYS.find(x => x && x.id === dayId);
+      if (!d) return null;
+      // elapsed: hoy S.wkEnd - S.wkStart, o Date.now() - S.wStart como fallback. Para un guardado
+      //   PARCIAL usamos opts.endTs (final real) y clampamos 1..240 min (el reloj pudo avanzar horas
+      //   con la app cerrada). El camino COMPLETO (sin opts.endTs) reproduce el cálculo original.
+      let endRef, startRef;
+      if (opts.endTs) { endRef = opts.endTs; startRef = S.wkStart || S.wStart || endRef; }
+      else if (S.wkEnd && S.wkStart) { endRef = S.wkEnd; startRef = S.wkStart; }
+      else { endRef = Date.now(); startRef = S.wStart || endRef; }
+      let elapsed = Math.max(1, Math.floor((endRef - startRef) / 60000));
+      if (opts.partial) elapsed = Math.max(1, Math.min(240, elapsed)); // clamp 1..240 solo en parcial
+      const totalVol = Object.values(loggedObj).flat().reduce((a, s) => a + (s.vol || 0), 0);
+      const exDetail = [];
+      d.exercises.forEach(ex => {
+        const logged = loggedObj[ex.id];
+        if (logged && logged.length > 0) {
+          exDetail.push({
+            slotId: ex.id,
+            name: resolveEx(ex).name.replace('▸ CORE: ', ''),
+            sets: logged.map(s => ({ w: s.weight, r: s.reps, kind: s.kind || null, ref: s.exRef || null, variant: s.variant || null }))
+          });
+        }
+      });
+      // CAMBIO parcial-6: id y date del entreno = final REAL. Con opts.endTs (parcial guardado más
+      //   tarde) usamos ese timestamp para AMBOS, no Date.now() → un entreno abandonado anoche y
+      //   guardado hoy aparece en el historial con la fecha de anoche. Sin opts.endTs (finish normal)
+      //   → Date.now(), idéntico a antes.
+      const _tsBase = opts.endTs || Date.now();
+      const sess = {
+        id: _tsBase, dayId: d.id, dayNum: d.num, dayName: d.name, dayColor: d.color,
+        date: new Date(_tsBase).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }), elapsed, totalVol, exDetail,
+        phase: (function () { try { return _currentPhaseKey(); } catch (_) { return null; } })(),
+        week: (function () { try { return getCurrentWeek(); } catch (_) { return null; } })(),
+        phaseManual: (function () { try { return !!localStorage.getItem(_pkey('user-phase')); } catch (_) { return false; } })()
+      };
+      // CAMBIO parcial-1: solo los entrenos PARCIALES llevan estos dos campos. Su ausencia = completo.
+      if (opts.partial) {
+        let prog = { pct: 0 };
+        try { prog = _workoutProgress(loggedObj, d.id); } catch (_) {}
+        sess.partial = true;
+        sess.completionPct = prog.pct;
+      }
+      // CAMBIO parcial-6: history se arma con unshift; un id más viejo (parcial de anoche) quedaría
+      //   arriba pese a ser anterior. Ordenar por id DESCENDENTE y recién ahí recortar a 40, para
+      //   que si el parcial es el más viejo se descarte el correcto (no un registro más nuevo).
+      //   Para los registros existentes (todos con Date.now() en orden de creación) el sort es no-op.
+      history = [sess, ...history];
+      history.sort((a, b) => (b.id || 0) - (a.id || 0));
+      history = history.slice(0, 40);
+      const dateStr = new Date(_tsBase).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+      d.exercises.forEach(ex => {
+        const logged = loggedObj[ex.id];
+        if (logged && logged.length > 0) {
+          exHistory[ex.id] = { date: dateStr, sets: logged.map(s => ({ weight: s.weight, reps: s.reps })) };
+        }
+      });
+      saveExHistory();
+      save();
+      return { sess, d, elapsed, totalVol };
+    }
+
+    // CAMBIO parcial-2: progreso de un entreno. done = nº de series registradas en loggedObj (suma
+    //   de longitudes); total = suma de _totalSetsFor sobre d.exercises (respeta sides:2). Funciona
+    //   con S.logged vivo o con un logged restaurado de b5-sess. pct redondeado (0..100+).
+    function _workoutProgress(loggedObj, dayId) {
+      const lg = loggedObj || {};
+      let done = 0;
+      Object.keys(lg).forEach(k => { const arr = lg[k]; if (Array.isArray(arr)) done += arr.length; });
+      let total = 0;
+      const d = DAYS.find(x => x && x.id === dayId);
+      if (d && Array.isArray(d.exercises)) d.exercises.forEach(ex => { total += _totalSetsFor(ex); });
+      const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+      return { done, total, pct };
+    }
+
+    // CAMBIO parcial-3: limpieza común al salir de un entreno (guardado como parcial o descartado).
+    //   NO persiste nada — el guardado se hace ANTES con _persistWorkoutToHistory. Reproduce
+    //   exactamente la limpieza que hacía confirmCancel al descartar.
+    function _teardownWorkoutSession() {
+      _tbClearAll();
+      clearSession(); clearInterval(restTimer); clearInterval(phaseTimer); stopSessionTimer(); stopWaterReminder(); releaseWakeLock(); _audioKeepAliveStop();
+      _clearRestBanner();
+      S.logged = {}; S.wStart = null; S.newPR = false; S.restEndTs = null; S._dpAlert = null;
+      S.wkStart = null; S.wkEnd = null;
+      S.sessionSwaps = {};
+      S.equipmentMode = {};
+    }
+
+    // CAMBIO parcial-5: píldora gris "PARCIAL · P%" para el historial y el detalle. h.partial marca
+    //   el registro, h.completionPct el %. Entrenos viejos/completos sin h.partial → '' (sin píldora).
+    //   Mismo patrón visual que el chip de fase (_phaseChipPrefix), en gris neutro.
+    function _partialChipHtml(h) {
+      if (!h || !h.partial) return '';
+      const pct = (typeof h.completionPct === 'number') ? h.completionPct : 0;
+      return `<div style="display:inline-flex;align-items:center;background:var(--s2);border:1px solid var(--bd);border-radius:999px;padding:2px 10px;font-size:10px;font-weight:800;letter-spacing:.5px;color:var(--t3);">PARCIAL · ${pct}%</div>`;
+    }
+
     function finishWorkout() {
       // FIX timer persist: limpiar todas las claves time-based huérfanas antes de terminar
       _tbClearAll();
@@ -9670,55 +9843,14 @@ function _getNextPendingIdx(d, fromIdx) {
       //   guardados con su exRef correcto en S.logged y se persisten a hist más abajo.
       S.sessionSwaps = {};
       S.equipmentMode = {}; // CAMBIO P4.1: limpiar cache de equipo (storage per-perfil persiste)
-      // FIX tiempo total: solo tiempo de la fase workout (sin warmup/cooldown/cardio)
-      const wkMs = (S.wkEnd && S.wkStart) ? (S.wkEnd - S.wkStart) : (Date.now() - S.wStart);
-      const elapsed = Math.max(1, Math.floor(wkMs / 60000));
-      const totalVol = Object.values(S.logged).flat().reduce((a, s) => a + (s.vol || 0), 0);
-      const exDetail = [];
-      d.exercises.forEach(ex => {
-        const logged = S.logged[ex.id];
-        if (logged && logged.length > 0) {
-          // CAMBIO 2026-04-29 G3: persistir s.kind para distinguir timeAndWeight (Caminata Granjero)
-          // del modelo normal en showWorkoutDetail. Sin kind = modelo clásico kg×reps.
-          // CAMBIO P1-FIX: name vive en EX_CATALOG; resolver para guardar el name correcto en historial.
-          // CAMBIO P3B.1-20: añadir slotId (id del slot del día) y ref por serie (s.exRef).
-          //   slotId permite a getSuggestedWeight/_hasLogsWithRef filtrar logs por slot.
-          //   sets[].ref preserva qué ejercicio del catálogo estaba activo en cada serie
-          //   (puntual cambia mid-session, permanente no afecta logs viejos).
-          exDetail.push({
-            slotId: ex.id,
-            name: resolveEx(ex).name.replace('▸ CORE: ', ''),
-            sets: logged.map(s => ({ w: s.weight, r: s.reps, kind: s.kind || null, ref: s.exRef || null, variant: s.variant || null }))
-          });
-        }
-      });
-      const sess = {
-        id: Date.now(), dayId: d.id, dayNum: d.num, dayName: d.name, dayColor: d.color,
-        date: new Date().toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }), elapsed, totalVol, exDetail,
-        // CAMBIO G5-3: persistir la fase activa y la semana del ciclo al momento de terminar.
-        //   phase = key ('acc'|'hyp'|'str'|'dl') leída con _currentPhaseKey() (respeta override
-        //   manual de fase). week = semana del ciclo vía getCurrentWeek() (avance por trabajo, 7A).
-        //   Solo lectura: 7B NO cambia cómo avanza el ciclo. Entrenos viejos no tienen estos
-        //   campos; el render del historial los trata como "sin fase" (—) sin crashear.
-        phase: (function () { try { return _currentPhaseKey(); } catch (_) { return null; } })(),
-        week: (function () { try { return getCurrentWeek(); } catch (_) { return null; } })(),
-        // CAMBIO G5-8: bandera de fase manual. Si el usuario forzó la fase desde Config
-        //   (_pkey('user-phase') no vacío), la semana del ciclo deja de ser representativa de
-        //   esa fase. Guardamos phaseManual:true para que el historial muestre
-        //   "SELECCIÓN MANUAL · {FASE}" en vez de "SEM N · {FASE}". Entrenos viejos sin este
-        //   campo se tratan como NO manuales (chip con semana), retrocompat.
-        phaseManual: (function () { try { return !!localStorage.getItem(_pkey('user-phase')); } catch (_) { return false; } })()
-      };
-      history = [sess, ...history].slice(0, 40);
-      const dateStr = new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
-      d.exercises.forEach(ex => {
-        const logged = S.logged[ex.id];
-        if (logged && logged.length > 0) {
-          exHistory[ex.id] = { date: dateStr, sets: logged.map(s => ({ weight: s.weight, reps: s.reps })) };
-        }
-      });
-      saveExHistory();
-      save();
+      // CAMBIO parcial-1: la persistencia (elapsed/totalVol, objeto sess, history, exHistory, save)
+      //   vive ahora en el helper reutilizable _persistWorkoutToHistory. finishWorkout guarda el
+      //   entreno COMPLETO exactamente como antes (sin opts → mismo cálculo de elapsed, sin campos
+      //   partial/completionPct) y luego pinta la pantalla "done". Las lógicas de kind/slotId/ref/
+      //   variant, fase/semana y phaseManual se conservan íntegras dentro del helper.
+      const _persist = _persistWorkoutToHistory();
+      const elapsed = _persist ? _persist.elapsed : 1;
+      const totalVol = _persist ? _persist.totalVol : 0;
       document.getElementById('done-tag').textContent = d.num + ' — ' + d.label; document.getElementById('done-tag').style.color = d.color;
       document.getElementById('done-name').textContent = d.name;
       document.getElementById('done-focus').textContent = d.focus;
@@ -9785,12 +9917,19 @@ function _getNextPendingIdx(d, fromIdx) {
     <div style="font-size:12px;color:var(--t3);">${h.date}</div>`;
       // CAMBIO G5-6: chip de fase + semana en el detalle del entreno. Nombre completo en
       //   español derivado de PHASES vía _phaseInfoForKey. Entrenos viejos sin h.phase: sin chip.
+      // CAMBIO parcial-5: chip de fase + píldora "PARCIAL · P%" en la misma fila (margin-top en el
+      //   wrapper). Sin partial, el resultado visual es idéntico al de antes (solo el chip de fase).
       const _pinfoDetail = _phaseInfoForKey(h.phase);
+      let _chipsDetail = '';
       if (_pinfoDetail) {
         // CAMBIO G5-9: mismo criterio que la lista. Prefijo "SELECCIÓN MANUAL" o "Semana N".
         const _pref = _phaseChipPrefix(h);
         const _txt = (_pref ? _pref + ' · ' : '') + _pinfoDetail.name;
-        html += `<div style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;background:${_pinfoDetail.color}1f;border:1px solid ${_pinfoDetail.color}44;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;color:${_pinfoDetail.color};">${_txt}</div>`;
+        _chipsDetail += `<div style="display:inline-flex;align-items:center;gap:6px;background:${_pinfoDetail.color}1f;border:1px solid ${_pinfoDetail.color}44;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;color:${_pinfoDetail.color};">${_txt}</div>`;
+      }
+      _chipsDetail += _partialChipHtml(h);
+      if (_chipsDetail) {
+        html += `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px;">${_chipsDetail}</div>`;
       }
       html += `
     <div style="display:flex;gap:24px;margin-top:8px;">
@@ -10431,13 +10570,20 @@ function _getNextPendingIdx(d, fromIdx) {
         if (pinfo) {
           const prefix = _phaseChipPrefix(h);
           const txt = (prefix ? prefix + ' · ' : '') + pinfo.name.toUpperCase();
-          chipHtml = `<div style="display:inline-flex;align-items:center;align-self:flex-start;margin-bottom:6px;background:${pinfo.color}1f;border:1px solid ${pinfo.color}44;border-radius:999px;padding:2px 10px;font-size:10px;font-weight:800;letter-spacing:.5px;color:${pinfo.color};">${txt}</div>`;
+          // CAMBIO parcial-5: la separación (margin-bottom) y el alineado pasan al wrapper de chips
+          //   de abajo, para que el chip de fase y la píldora PARCIAL convivan en la misma fila.
+          chipHtml = `<div style="display:inline-flex;align-items:center;background:${pinfo.color}1f;border:1px solid ${pinfo.color}44;border-radius:999px;padding:2px 10px;font-size:10px;font-weight:800;letter-spacing:.5px;color:${pinfo.color};">${txt}</div>`;
         }
+        // CAMBIO parcial-5: píldora "PARCIAL · P%" junto al chip de fase (gris, mismo patrón).
+        const partialHtml = _partialChipHtml(h);
+        const chipsHtml = (chipHtml || partialHtml)
+          ? `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">${chipHtml}${partialHtml}</div>`
+          : '';
         const rowHtml = `<div class="hist-row" style="border-left:3px solid ${h.dayColor || '#555'};cursor:pointer;" onclick="${_histSelectMode ? 'toggleHistoryItem(' + i + ')' : 'showWorkoutDetail(' + i + ')'}">
       ${checkHtml}<div style="flex:1;"><div style="font-size:14px;font-weight:700;">${h.dayNum || ''} — ${h.dayName}</div><div style="font-size:12px;color:var(--t3);margin-top:2px;">${h.date}</div></div>
       <div style="text-align:right;"><div style="color:${h.dayColor};font-size:17px;font-weight:800;">${fmtVolShort(h.totalVol)}</div><div style="font-size:12px;color:var(--t3);">${h.elapsed} min</div></div></div>`;
-        // CAMBIO G5-9: .hist-item ahora apila vertical: chip arriba + fila abajo.
-        return `<div class="hist-item">${chipHtml}${rowHtml}</div>`;
+        // CAMBIO G5-9: .hist-item ahora apila vertical: chips arriba + fila abajo.
+        return `<div class="hist-item">${chipsHtml}${rowHtml}</div>`;
       }).join('');
     }
     function renderPRs() {
