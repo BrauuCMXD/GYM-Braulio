@@ -24,7 +24,8 @@
 // CAMBIO G7-5: versión nueva del cache. El v1 se limpia en 'activate'.
 // CAMBIO parcial-6: sube a v8 por el guardado de entrenos parciales (index.html cambió).
 // CAMBIO peso-real: sube a v10 junto con APP_BUILD (peso según tu 1RM real + discos por variante).
-const CACHE_NAME = 'gym-braulio-v10';
+// CAMBIO swap-peso/equipo: sube a v11 junto con APP_BUILD (peso por ejercicio, máquinas/barras, catálogo).
+const CACHE_NAME = 'gym-braulio-v11';
 
 // Documento principal del app shell (GitHub Pages en subcarpeta /GYM-Braulio/,
 // rutas relativas a la ubicación del SW).
