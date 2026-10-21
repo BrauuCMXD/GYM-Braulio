@@ -1468,8 +1468,6 @@
         agua en los próximos 30 min.</div>
       <div style="font-size:13px;color:var(--t1);margin-bottom:8px;">🚶 <strong>Caminata</strong> — 10 min de caminata
         suave para bajar la FC y activar la recuperación.</div>
-      <div style="font-size:13px;color:var(--t1);margin-bottom:8px;">🍗 <strong>Comida post-entreno</strong> — Come
-        dentro de los siguientes 60 min. Proteína + carbos.</div>
       <div style="font-size:13px;color:var(--t1);">💤 <strong>Descanso</strong> — Si entrenas de noche, duerme mínimo 7
         horas para recuperar.</div>
     </div>
@@ -1477,8 +1475,8 @@
     <div id="done-weight-recs"
       style="display:none;background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;margin-bottom:16px;max-width:320px;width:100%;text-align:left;">
     </div>
-    <button id="done-nutr-btn" onclick="showNutrition()" class="btn" style="max-width:320px;margin-bottom:12px;">🥗
-      Recomendaciones post-entreno</button>
+    <button id="done-nutr-btn" onclick="showNutrition()" class="btn" style="max-width:320px;margin-bottom:12px;">📊
+      Análisis de la sesión</button>
     <button onclick="goHome()" class="btn-outline" style="max-width:320px;">Volver al inicio</button>
   </div>
 
@@ -1497,63 +1495,6 @@
     <div id="wd-body" style="padding:16px;"></div>
   </div>
 
-  <!-- DIET -->
-  <div id="screen-diet" class="screen">
-    <div style="padding:20px 16px 8px;">
-      <div style="font-size:22px;font-weight:800;">🥗 Mi Dieta Diaria</div>
-    </div>
-    <!-- CAMBIO C2: Barra de macros del día (se actualiza en tiempo real desde dietSession) -->
-    <div id="diet-macro-bars" style="padding:0 16px 8px;flex-shrink:0;"></div>
-    <div id="diet-body" style="flex:1;overflow-y:auto;padding:8px 16px 80px;"></div>
-  </div>
-
-  <!-- CAMBIO C2: DIET EDIT SHEET — editor de cantidad/alimento por ítem -->
-  <!-- Reutiliza la misma estructura visual que swap-sheet. NO toca swap-sheet ni su lógica. -->
-  <div id="edit-sheet"
-    style="display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.88);flex-direction:column;align-items:center;justify-content:flex-end;">
-    <div
-      style="background:var(--s1);border-radius:20px 20px 0 0;width:100%;max-width:430px;display:flex;flex-direction:column;max-height:88vh;">
-      <!-- Header con fondo accent -->
-      <div id="edit-header"
-        style="background:var(--acc);border-radius:20px 20px 0 0;padding:16px 16px 14px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px;">
-        <button onclick="cancelEditItem()"
-          style="background:rgba(255,255,255,.18);border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;color:#fff;">CANCELAR</button>
-        <div id="edit-header-name" style="font-size:14px;font-weight:800;color:#fff;text-align:center;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
-        <button onclick="confirmEditItem()"
-          style="background:rgba(255,255,255,.18);border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;color:#fff;">CONFIRMAR</button>
-      </div>
-      <!-- Buscador -->
-      <div style="padding:14px 16px 10px;flex-shrink:0;">
-        <div style="position:relative;">
-          <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none;">🔍</span>
-          <input id="edit-search" type="text" placeholder="Buscar alimento"
-            oninput="filterFoodDB(this.value)"
-            style="width:100%;background:var(--s2);border:1.5px solid var(--bd);border-radius:10px;padding:10px 12px 10px 38px;font-size:14px;color:var(--t1);outline:none;-webkit-appearance:none;" />
-        </div>
-      </div>
-      <!-- Resultados + controles (scroll) -->
-      <div id="edit-results" style="flex:1;overflow-y:auto;padding:0 16px 24px;-webkit-overflow-scrolling:touch;"></div>
-    </div>
-  </div>
-
-  <!-- DIET SWAP SHEET -->
-  <div id="swap-sheet"
-    style="display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.88);flex-direction:column;align-items:center;justify-content:flex-end;">
-    <div
-      style="background:var(--s1);border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:24px 20px 44px;max-height:75vh;overflow-y:auto;">
-      <div id="swap-original"
-        style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--t3);margin-bottom:6px;"></div>
-      <div id="swap-title" style="font-size:18px;font-weight:800;margin-bottom:4px;"></div>
-      <!-- CAMBIO: macros del ítem original debajo del nombre en el header del swap -->
-      <div id="swap-title-macros" style="font-size:0.82em;color:var(--t3);margin-bottom:8px;"></div>
-      <div style="font-size:13px;color:var(--t2);margin-bottom:20px;">Desliza para ver equivalentes en proteína y
-        calorías</div>
-      <div id="swap-options"></div>
-      <button onclick="closeSwap()"
-        style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px;font-size:14px;font-weight:600;color:var(--t1);margin-top:12px;">Mantener
-        actual</button>
-    </div>
-  </div>
 
   <!-- EXERCISE EDIT SHEET — CAMBIO P3A-1: sheet unificado para editar ejercicio durante entreno. -->
   <!--   Reemplaza al antiguo note-edit-sheet. Contiene 3 secciones:                              -->
@@ -2007,7 +1948,7 @@
   <div id="screen-nutrition" class="screen">
     <div class="hbar">
       <button class="back-btn" onclick="backFromNutrition()">‹</button>
-      <div style="font-size:17px;font-weight:700;">🥗 Post-Entreno</div>
+      <div style="font-size:17px;font-weight:700;">📊 Post-Entreno</div>
     </div>
     <div class="ss" id="nutr-body"></div>
     <div class="sf"><button onclick="goHome()" class="btn" style="background:#22c55e;">✓ Volver al inicio</button></div>
@@ -2468,8 +2409,7 @@
     <button id="bnav-history" onclick="switchTab('history')"><span class="bnav-icon">📋</span>Historial</button>
     <button id="bnav-train" class="bnav-active" onclick="switchTab('home')"><span
         class="bnav-icon">💪</span>Entrenar</button>
-    <button id="bnav-diet" onclick="switchTab('diet')"><span class="bnav-icon">🥗</span>Dieta</button>
-    <!-- CAMBIO: Homologar ícono ⚙️ Config al mismo estilo que los otros 3 tabs — sin borde, sin padding extra, mismo tamaño de ícono -->
+    <!-- CAMBIO: Homologar ícono ⚙️ Config al mismo estilo que los otros tabs — sin borde, sin padding extra, mismo tamaño de ícono -->
     <button id="bnav-config" onclick="switchTab('config')" title="Configuración"><span class="bnav-icon">⚙️</span>Config</button>
   </div>
 
@@ -3386,7 +3326,7 @@
     // ║  Necesarios antes de cualquier lectura de localStorage prefijada       ║
     // ║  (CYCLE_START, _userPhase, _daysWeek, etc.). Las definiciones de datos ║
     // ║  PROFILES_DEFAULT y _reloadProfileData() están más abajo (después de   ║
-    // ║  DAYS, ORM_DATA, EX_SIBLINGS, BARBELL_EX, DIET_MEALS).                 ║
+    // ║  DAYS, ORM_DATA, EX_SIBLINGS, BARBELL_EX).                             ║
     // ╚════════════════════════════════════════════════════════════════════════╝
 
     // getActiveProfileId() — atajo. Default 'braulio' si nunca se ha seteado.
@@ -3406,7 +3346,7 @@
       const legacyKeys = [
         'b5-hist', 'b5-pbs', 'b5-ww', 'b5-recs', 'b5-last',
         'b5-cycle-start', 'b5-user-phase', 'b5-user-weight', 'b5-user-fat',
-        'b5-user-goal', 'b5-days-week', 'b5-active-days', 'b5-diet-meals'
+        'b5-user-goal', 'b5-days-week', 'b5-active-days'
       ];
       legacyKeys.forEach(oldKey => {
         const v = localStorage.getItem(oldKey);
@@ -3434,6 +3374,25 @@
       } catch (_) { /* si falla el parseo, dejar al getActiveProfile cubrirlo con default */ }
     })();
 
+    // CAMBIO dieta-fuera (v13): el módulo de Dieta se eliminó (Braulio no lo usa). Limpieza idempotente al
+    //   arrancar, FUERA de _migrateLegacyKeys (ese IIFE sale temprano en equipos ya migrados): borra las claves
+    //   de comidas (b5-diet-meals legacy y b5-{perfil}-diet-meals) y quita dietMeals/dietRefWeight de los perfiles
+    //   guardados en b5-profiles (applySwapPermanente guarda el perfil completo). No toca nada más.
+    (function _purgeDietData() {
+      try {
+        const del = [];
+        for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && /^b5-(?:[^-]+-)?diet-meals$/.test(k)) del.push(k); }
+        del.forEach(k => localStorage.removeItem(k));
+        const raw = localStorage.getItem('b5-profiles');
+        const ps = raw ? JSON.parse(raw) : null;
+        if (ps && typeof ps === 'object') {
+          let ch = false;
+          Object.keys(ps).forEach(id => { const pr = ps[id]; if (pr && typeof pr === 'object') { if ('dietMeals' in pr) { delete pr.dietMeals; ch = true; } if ('dietRefWeight' in pr) { delete pr.dietRefWeight; ch = true; } } });
+          if (ch) localStorage.setItem('b5-profiles', JSON.stringify(ps));
+        }
+      } catch (_) { }
+    })();
+
     // CAMBIO P1-4: DAYS migrado a estructura {_ref, id, ...overrides}. Las fichas viven
     //   en EX_CATALOG. Los IDs cortos ('1-1', 'wu-1-N', 'cd-1-N') NO cambian — son las
     //   keys estables de ORM_DATA, notas, historial. Activaciones dinámicas usan
@@ -3448,7 +3407,7 @@
     //   simple vista si el device cargó la versión nueva (si dice v6 → cargó lo nuevo).
     // ═══════════════════════════════════════════════════════════════════════════
     // CAMBIO parcial-6: subir versión por el guardado de entrenos parciales (fuerza refresco del SW).
-    const APP_BUILD = { version: 'v12', date: '21 oct 2026 · 14:15' };
+    const APP_BUILD = { version: 'v13', date: '21 oct 2026 · 14:38' };
 
     // CAMBIO versión/actualización: chequeo manual desde Config (o tap en la versión del
     //   home). Fuerza reg.update() y reporta: al día / descargando / hay nueva versión.
@@ -3478,7 +3437,6 @@
       }, 1200);
     }
 
-    const NUTR = { "push": [{ "icon": "🥩", "title": "Proteína en los próximos 30-60 min", "text": "Consume 40-50g de proteína de alta calidad. Opciones: pechuga de pollo 200g, 6 claras + 2 enteros, shake de proteína + 500ml leche, atún 200g. El pecho y hombros necesitan aminoácidos para reparar el daño generado." }, { "icon": "🍚", "title": "Carbohidratos de rápida absorción", "text": "100-150g de carbohidratos simples post-entreno. Arroz blanco, pan blanco, fruta (plátano, mango), papa cocida. Reponen el glucógeno y elevan la insulina para facilitar la síntesis proteica." }, { "icon": "💊", "title": "Suplementos", "text": "Creatina 3-5g si aún no la tomaste hoy. Omega-3 con la comida. Hidratación: mínimo 500ml de agua en los próximos 30 min." }, { "icon": "😴", "title": "Recuperación muscular", "text": "Pecho y deltoides son músculos grandes. Prioriza 7.5-9h de sueño esta noche — la mayor parte de la síntesis proteica ocurre en las fases de sueño profundo. Evita entreno de empuje en las próximas 48h." }, { "icon": "🧘", "title": "Los próximos 30 min", "text": "Evita quedarte sentado inmediatamente. Camina 5-10 min suave para drenar el lactato. Puedes aplicar frío en el pecho o hombros si sientes inflamación excesiva." }], "pull": [{ "icon": "🥩", "title": "Proteína en los próximos 30-60 min", "text": "40-50g de proteína. La espalda y el bíceps se benefician especialmente de una ventana post-entreno bien cubierta. Opciones: carne res magra 200g, pollo, shake de proteína, huevos + queso cottage." }, { "icon": "🍚", "title": "Carbohidratos", "text": "100-150g de carbohidratos. La espalda tiene gran masa muscular y consume mucho glucógeno. Arroz, pasta, papa o avena funcionan perfectamente." }, { "icon": "💊", "title": "Suplementos", "text": "Creatina 3-5g. Omega-3 con la comida. Si tomas colágeno marino, este es un buen momento — favorece la recuperación del tejido conectivo de la espalda." }, { "icon": "😴", "title": "Recuperación del dorsal", "text": "El dorsal ancho es el músculo más grande del tren superior. Necesita 48h mínimo de recuperación. Esta noche prioriza el sueño. El Omega-3 ayuda a reducir la inflamación post-entreno." }, { "icon": "🧘", "title": "Los próximos 30 min", "text": "Haz el estiramiento del dorsal si aún no lo hiciste. Hidratación: 500ml de agua. Evita cargar objetos pesados con la espalda durante las próximas horas." }], "legs": [{ "icon": "🥩", "title": "Proteína — URGENTE en 30-45 min", "text": "Las piernas son el grupo muscular más grande del cuerpo. Consume 50-60g de proteína dentro de los primeros 45 min. Shake de proteína + plátano es lo más práctico. Cuádricep y glúteo están con máximo daño muscular ahora." }, { "icon": "🍚", "title": "Carbohidratos — carga mayor", "text": "150-200g de carbohidratos post-entreno de pierna. Más que en días de Push/Pull porque el volumen muscular trabajado es mayor. Arroz + frijoles, pasta o papa con huevo son opciones ideales." }, { "icon": "🧊", "title": "Inflamación y recuperación", "text": "Si sientes inflamación importante en cuádriceps o glúteos, 10-15 min de frío (bolsa de hielo o ducha fría) en las próximas 2h puede reducir el dolor. El ácido láctico se elimina mejor caminando suave que reposando." }, { "icon": "💊", "title": "Suplementos", "text": "Creatina 3-5g. Omega-3 con la comida. Magnesio (si lo tomas) esta noche — favorece la relajación muscular y el sueño profundo, cuando más se recuperan las piernas." }, { "icon": "😴", "title": "Esta noche es crítica", "text": "Los días de piernas son los que más demandan recuperación. Duerme 8h como mínimo. Glúteo, cuádriceps e isquiotibiales pueden tardar 48-72h en recuperarse con este volumen. No hagas piernas mañana." }, { "icon": "🧘", "title": "Los próximos 30 min", "text": "Camina 10 min suave antes de sentarte — el movimiento activo post-piernas acelera la recuperación. Hidratación: 600-800ml de agua en la próxima hora." }] };
 
 
 
@@ -6723,14 +6681,14 @@ function _getPrevIdxFrom(d, fromIdx) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       const el = document.getElementById('screen-' + name); if (el) el.classList.add('active');
       const bnav = document.getElementById('bottom-nav');
-      // Esto permite a Braulio consultar Dieta/Historial/Config a mitad de una sesión sin perder estado.
-      const mainTabs = ['home', 'history', 'diet', 'calendar', 'prs', 'day', 'config', 'warmup', 'workout', 'cooldown', 'cardio-protocol'];
+      // Esto permite a Braulio consultar Historial/Config a mitad de una sesión sin perder estado.
+      const mainTabs = ['home', 'history', 'calendar', 'prs', 'day', 'config', 'warmup', 'workout', 'cooldown', 'cardio-protocol'];
       // (icono más chico, sin label de texto) para liberar espacio al contenido del entreno.
       const trainingScreens = ['warmup', 'workout', 'cooldown', 'cardio-protocol'];
       const isTraining = trainingScreens.includes(name);
       // Pantallas que scrollean por sí mismas (header/footer sticky): entreno + día + config.
       //   En estas, el body se bloquea para que no haya doble scroll. El resto (home/historial/
-      //   dieta) scrollean por el body normalmente.
+      //   config de perfil) scrollean por el body normalmente.
       const selfScrollScreens = ['warmup', 'workout', 'cooldown', 'cardio-protocol', 'day', 'config'];
       const isSelfScroll = selfScrollScreens.includes(name);
       if (bnav) {
@@ -6738,7 +6696,7 @@ function _getPrevIdxFrom(d, fromIdx) {
         bnav.classList.toggle('bnav-compact', isTraining);
       }
       // FIX scroll/sticky (Grupo 1): bloquear el scroll del body en pantallas que scrollean solas,
-      //   para que no haya un "contenedor de scroll fantasma". Home/historial/dieta no se bloquean.
+      //   para que no haya un "contenedor de scroll fantasma". Home/historial no se bloquean.
       document.body.classList.toggle('training-lock', isSelfScroll);
       // FIX scroll/sticky (Grupo 1): medir la altura REAL de la bottom-nav y publicarla en --nav-h.
       //   Se hace tras togglear .bnav-compact (cambia el alto) y en el frame siguiente para que
@@ -6747,7 +6705,6 @@ function _getPrevIdxFrom(d, fromIdx) {
       if (name === 'home') renderHome();
       if (name === 'history') renderHistory();
       if (name === 'prs') renderPRs();
-      if (name === 'diet') renderDiet();
       if (name === 'calendar') renderCalendar();
     }
 
@@ -6804,7 +6761,7 @@ function _getPrevIdxFrom(d, fromIdx) {
     window.addEventListener('orientationchange', _syncNavHeight);
 
     function switchTab(name) {
-      // Esto permite navegar a Historial/Dieta/Config a mitad de sesión y volver sin perder progreso.
+      // Esto permite navegar a Historial/Config a mitad de sesión y volver sin perder progreso.
       if (name === 'home' && hasActiveWorkout()) {
         // FIX restaurar sesión (Grupo 1): reconciliar S.phase con la fase persistida en b5-sess
         //   ANTES de enrutar. saveSession(phase) escribe la fase en cada transición real, así que
@@ -10803,7 +10760,7 @@ function _getPrevIdxFrom(d, fromIdx) {
 
     function showNutrition() {
       document.getElementById('done-sc').classList.remove('show');
-      const d = day(); const recs = NUTR[d.dayType || 'push'] || NUTR.push;
+      const d = day(); // CAMBIO dieta-fuera (v13): sin tips de comida (NUTR)
       // FIX tiempo total: mismo cálculo que finishWorkout (solo fase workout)
       const wkMs = (S.wkEnd && S.wkStart) ? (S.wkEnd - S.wkStart) : (Date.now() - S.wStart);
       const elapsed = Math.max(1, Math.floor(wkMs / 60000));
@@ -10850,7 +10807,6 @@ function _getPrevIdxFrom(d, fromIdx) {
   </div>`;
       }
 
-      recs.forEach(r => { bH += `<div class="nutr-block"><div style="font-size:28px;margin-bottom:8px;">${r.icon}</div><div style="font-size:15px;font-weight:700;margin-bottom:6px;">${r.title}</div><div style="font-size:13px;color:var(--t2);line-height:1.6;">${r.text}</div></div>`; });
       document.getElementById('nutr-body').innerHTML = bH;
       showScreen('nutrition');
     }
@@ -10933,282 +10889,6 @@ function _getPrevIdxFrom(d, fromIdx) {
     // ═══ END SESSION TIMER ═══════════════════════════════════════════════════════
 
 
-    // ═══ DIET SYSTEM ════════════════════════════════════════════════════════════
-    const FOOD_DB = [
-      // PROTEÍNAS
-      { id:"fd-01", name:"Pechuga de pollo cocida", category:"Proteínas", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:165, prot:31, carbs:0, fat:3.6 }},
-      { id:"fd-31", name:"Pechuga de pollo cruda", category:"Proteínas", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:101, prot:23, carbs:0, fat:1 }},
-      // Huevo entero: mantiene Pieza (no es de los 6 afectados — pieza de huevo sí es estándar)
-      { id:"fd-03", name:"Huevo entero", category:"Proteínas", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:50, per100:{ kcal:150, prot:14, carbs:0, fat:10 }},
-      { id:"fd-04", name:"Claras de huevo", category:"Proteínas", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:48, prot:11, carbs:0.7, fat:0.2 }},
-      { id:"fd-05", name:"Carne molida 90/10", category:"Proteínas", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:176, prot:20, carbs:0, fat:10 }},
-      { id:"fd-06", name:"Salmón", category:"Proteínas", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:208, prot:20, carbs:0, fat:13 }},
-      { id:"fd-07", name:"Yogur griego", category:"Proteínas", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:97, prot:9, carbs:3.6, fat:5 }},
-      // y defaultAmount=120 (gramos por lata) para que calcFactorGramos funcione: 2 latas × 120g = 240g.
-      { id:"fd-29", name:"Atún en agua (lata)", category:"Proteínas", units:["Gramos","Lata"], defaultUnit:"Lata", defaultAmount:120, per100:{ kcal:108, prot:26, carbs:0, fat:1 }},
-      { id:"fd-32", name:"Filete de pescado crudo", category:"Proteínas", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:98, prot:20, carbs:0, fat:2 }},
-      { id:"fd-33", name:"Camarón crudo", category:"Proteínas", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:100, prot:24, carbs:0.2, fat:0.3 }},
-      // CARBOHIDRATOS
-      { id:"fd-08", name:"Arroz cocido", category:"Carbohidratos", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:140, prot:4, carbs:30, fat:0.3 }},
-      { id:"fd-09", name:"Avena", category:"Carbohidratos", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:389, prot:17, carbs:66, fat:7 }},
-      { id:"fd-10", name:"Camote cocido", category:"Carbohidratos", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:86, prot:1.6, carbs:20, fat:0.1 }},
-      { id:"fd-11", name:"Tortilla de maíz", category:"Carbohidratos", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:30, per100:{ kcal:218, prot:5.7, carbs:46, fat:2.5 }},
-      { id:"fd-12", name:"Pan integral", category:"Carbohidratos", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:35, per100:{ kcal:247, prot:13, carbs:41, fat:3.4 }},
-      { id:"fd-13", name:"Plátano", category:"Carbohidratos", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:120, per100:{ kcal:89, prot:1.1, carbs:23, fat:0.3 }},
-      { id:"fd-30", name:"Manzana", category:"Carbohidratos", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:130, per100:{ kcal:46, prot:0.3, carbs:11.5, fat:0.2 }},
-      { id:"fd-28", name:"Pan tostado", category:"Carbohidratos", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:30, per100:{ kcal:233, prot:6.7, carbs:50, fat:3.5 }},
-      // GRASAS
-      { id:"fd-14", name:"Almendra", category:"Grasas", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:1, per100:{ kcal:579, prot:21, carbs:22, fat:50 }},
-      { id:"fd-15", name:"Aceite de oliva", category:"Grasas", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:10, per100:{ kcal:884, prot:0, carbs:0, fat:100 }},
-      { id:"fd-16", name:"Aguacate", category:"Grasas", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:150, per100:{ kcal:160, prot:2, carbs:8.5, fat:14.7 }},
-      { id:"fd-17", name:"Mantequilla de maní", category:"Grasas", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:32, per100:{ kcal:588, prot:25, carbs:20, fat:50 }},
-      { id:"fd-18", name:"Brócoli", category:"Vegetales", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:34, prot:2.8, carbs:7, fat:0.4 }},
-      { id:"fd-19", name:"Espinaca", category:"Vegetales", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:23, prot:2.9, carbs:3.6, fat:0.4 }},
-      { id:"fd-20", name:"Jitomate", category:"Vegetales", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:113, per100:{ kcal:22, prot:1.8, carbs:3.5, fat:0.2 }},
-      { id:"fd-21", name:"Pepino", category:"Vegetales", units:["Gramos","Taza"], defaultUnit:"Taza", defaultAmount:104, per100:{ kcal:24, prot:1.9, carbs:3.8, fat:0 }},
-      { id:"fd-22", name:"Zanahoria", category:"Vegetales", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:41, prot:0.9, carbs:10, fat:0.2 }},
-      { id:"fd-26", name:"Nopal cocido", category:"Vegetales", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:100, per100:{ kcal:17, prot:1.3, carbs:2.7, fat:0 }},
-      // "1 Taza = 86g" lo cual era incorrecto (eso es ½ taza).
-      { id:"fd-27", name:"Frijoles", category:"Otros", units:["Gramos","Taza"], defaultUnit:"Taza", defaultAmount:172, per100:{ kcal:140, prot:9.3, carbs:23.3, fat:1.2 }},
-      { id:"fd-23", name:"Leche entera", category:"Otros", units:["ml","Taza"], defaultUnit:"Taza", defaultAmount:240, per100:{ kcal:61, prot:3.2, carbs:4.8, fat:3.3 }},
-      { id:"fd-24", name:"Queso cottage", category:"Otros", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:98, prot:11, carbs:3.4, fat:4.3 }},
-      { id:"fd-25", name:"Proteína en polvo", category:"Otros", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:30, per100:{ kcal:370, prot:80, carbs:5, fat:3 }},
-
-      // ═══ NUEVOS ALIMENTOS SMAE 5a ed — Sesión 2026-04-06 (26 entradas) ═══
-
-      { id:"fd-34", name:"Filete de res magro", category:"Proteínas", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:150, prot:26, carbs:0, fat:5 }},
-      { id:"fd-35", name:"Pechuga de pavo", category:"Proteínas", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:135, prot:24, carbs:0, fat:4 }},
-      { id:"fd-36", name:"Sardina en salsa de tomate", category:"Proteínas", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:50, per100:{ kcal:185, prot:21, carbs:1, fat:11 }},
-      { id:"fd-37", name:"Queso panela", category:"Proteínas", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:40, per100:{ kcal:206, prot:20, carbs:3, fat:13 }},
-      { id:"fd-38", name:"Requesón", category:"Proteínas", units:["Gramos","Taza"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:98, prot:11, carbs:3, fat:4.5 }},
-
-      { id:"fd-39", name:"Lenteja cocida", category:"Otros", units:["Gramos","Taza"], defaultUnit:"Taza", defaultAmount:200, per100:{ kcal:116, prot:9, carbs:20, fat:0.4 }},
-      { id:"fd-40", name:"Garbanzo cocido", category:"Otros", units:["Gramos","Taza"], defaultUnit:"Taza", defaultAmount:200, per100:{ kcal:164, prot:8.9, carbs:27, fat:2.6 }},
-      { id:"fd-41", name:"Haba cocida", category:"Otros", units:["Gramos","Taza"], defaultUnit:"Taza", defaultAmount:200, per100:{ kcal:110, prot:7.6, carbs:19, fat:0.4 }},
-      { id:"fd-42", name:"Soya texturizada", category:"Otros", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:327, prot:50, carbs:33, fat:1 }},
-
-      { id:"fd-43", name:"Tortilla de harina integral", category:"Carbohidratos", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:40, per100:{ kcal:265, prot:8, carbs:43, fat:7 }},
-      { id:"fd-44", name:"Papa cocida", category:"Carbohidratos", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:150, per100:{ kcal:86, prot:1.7, carbs:20, fat:0.1 }},
-      { id:"fd-45", name:"Pasta cocida", category:"Carbohidratos", units:["Gramos","Taza"], defaultUnit:"Taza", defaultAmount:140, per100:{ kcal:131, prot:5, carbs:25, fat:1.1 }},
-      { id:"fd-46", name:"Galletas saladas", category:"Carbohidratos", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:24, per100:{ kcal:433, prot:9, carbs:72, fat:13 }},
-
-      { id:"fd-47", name:"Nuez", category:"Grasas", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:4, per100:{ kcal:654, prot:15, carbs:14, fat:65 }},
-      { id:"fd-48", name:"Cacahuate", category:"Grasas", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:1, per100:{ kcal:567, prot:26, carbs:16, fat:49 }},
-      { id:"fd-49", name:"Semillas de girasol", category:"Grasas", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:100, per100:{ kcal:584, prot:21, carbs:20, fat:51 }},
-      { id:"fd-50", name:"Crema de cacahuate", category:"Grasas", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:16, per100:{ kcal:588, prot:25, carbs:20, fat:50 }},
-      { id:"fd-51", name:"Mayonesa", category:"Grasas", units:["Gramos"], defaultUnit:"Gramos", defaultAmount:15, per100:{ kcal:680, prot:1, carbs:0.6, fat:75 }},
-
-      { id:"fd-52", name:"Calabaza", category:"Vegetales", units:["Gramos","Taza"], defaultUnit:"Taza", defaultAmount:113, per100:{ kcal:17, prot:1.2, carbs:3.4, fat:0.2 }},
-      { id:"fd-53", name:"Lechuga", category:"Vegetales", units:["Gramos","Taza"], defaultUnit:"Taza", defaultAmount:30, per100:{ kcal:15, prot:1.4, carbs:2.9, fat:0.2 }},
-
-      { id:"fd-54", name:"Naranja", category:"Carbohidratos", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:150, per100:{ kcal:47, prot:0.9, carbs:12, fat:0.1 }},
-      { id:"fd-55", name:"Papaya", category:"Carbohidratos", units:["Gramos","Taza"], defaultUnit:"Taza", defaultAmount:140, per100:{ kcal:43, prot:0.5, carbs:11, fat:0.3 }},
-      { id:"fd-56", name:"Fresa", category:"Carbohidratos", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:12, per100:{ kcal:32, prot:0.7, carbs:7.7, fat:0.3 }},
-      { id:"fd-57", name:"Mango", category:"Carbohidratos", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:200, per100:{ kcal:60, prot:0.8, carbs:15, fat:0.4 }},
-      { id:"fd-58", name:"Piña", category:"Carbohidratos", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:100, per100:{ kcal:50, prot:0.5, carbs:13, fat:0.1 }},
-
-      { id:"fd-59", name:"Leche descremada", category:"Otros", units:["ml","Taza"], defaultUnit:"Taza", defaultAmount:240, per100:{ kcal:35, prot:3.4, carbs:5, fat:0.1 }},
-      { id:"fd-60", name:"Yogurt natural", category:"Otros", units:["Gramos","Taza"], defaultUnit:"Taza", defaultAmount:240, per100:{ kcal:63, prot:5, carbs:7, fat:1.6 }},
-      { id:"fd-61", name:"Edamame", category:"Proteínas", units:["Gramos","Taza"], defaultUnit:"Taza", defaultAmount:155, per100:{ kcal:122, prot:12, carbs:9, fat:5 }},
-      { id:"fd-62", name:"Pera", category:"Carbohidratos", units:["Gramos","Pieza"], defaultUnit:"Pieza", defaultAmount:150, per100:{ kcal:57, prot:0.4, carbs:15, fat:0.1 }},
-      { id:"fd-63", name:"Leche de soya sin azúcar", category:"Otros", units:["ml","Taza"], defaultUnit:"Taza", defaultAmount:240, per100:{ kcal:33, prot:2.9, carbs:1.7, fat:1.6 }}
-    ];
-
-    // FIX: F5 — NUTR_META deja de ser la meta absoluta hardcodeada a Braulio.
-    //   Ahora es SEMILLA: define la proporción de macros (carbs/grasa/kcal respecto a
-    //   proteína). La meta real se DERIVA del peso del perfil activo en calcDietGoals()
-    //   (peso × 2.2 g/kg proteína; el resto escalado por la proporción de la semilla).
-    //   Multiusuario: cualquier perfil con dieta obtiene su propia meta según SU peso.
-    const NUTR_META = { prot: 210, carbs: 340, fat: 82, kcal: 2938 };
-    // FIX: F5 — factor de proteína documentado por la app (g por kg de peso corporal).
-    //   Única fuente del número de proteína; elimina los literales 195/210 desperdigados.
-    const PROT_G_PER_KG = 2.2;
-
-    let DIET_MEALS = [
-      {
-        name: 'PRE-ENTRENO', emoji: '🏋️', color: '#f59e0b', note: '45-60 min antes del entreno',
-        items: [
-          {
-            foodId: 'fd-03', grams: 100,
-            name: '2 huevos enteros (100g)', cat: 'proteina',
-            swaps: [
-              { foodId: 'fd-01',  name: '100g pechuga cocida', prot: 31, cal: 165, note: 'Más proteína magra' },
-              { foodId: 'fd-29',  name: '1 lata atún en agua (120g)', prot: 31, cal: 130, note: 'Rápido, alta proteína' },
-              { foodId: 'fd-04',  name: '6 claras de huevo (198g)', prot: 21, cal: 121, note: 'Sin grasa, digestión fácil' },
-            ]
-          },
-          {
-            foodId: 'fd-28', grams: 30,
-            name: '1 pan tostado (30g)', cat: 'carbo',
-            swaps: [
-              { foodId: 'fd-11',  name: '2 tortillas de maíz (60g)', prot: 3, cal: 131, note: 'Equivalente en carbs' },
-              { foodId: 'fd-08',  name: '½ taza arroz cocido (50g)', prot: 2, cal: 70, note: 'Carbohidrato limpio' },
-              { foodId: 'fd-12',  name: '1 rebanada pan integral (35g)', prot: 5, cal: 86, note: 'Más fibra y proteína' },
-            ]
-          },
-        ]
-      },
-      {
-        name: 'DESAYUNO', emoji: '🌅', color: '#22c55e', note: '',
-        items: [
-          {
-            foodId: 'fd-20', grams: 226,
-            name: '2 jitomates (226g)', cat: 'verdura',
-            swaps: [
-              { foodId: 'fd-19',  name: '2 tazas espinaca (60g)', prot: 2, cal: 14, note: 'Menos calorías, más hierro' },
-              { foodId: 'fd-26',  name: '2 tazas nopal cocido (200g)', prot: 3, cal: 34, note: 'Fibra alta — muy mexicano' },
-              { foodId: 'fd-21',  name: '1 taza pepino (104g)', prot: 2, cal: 25, note: 'Muy bajo en calorías' },
-            ]
-          },
-          {
-            foodId: 'fd-03', grams: 200,
-            name: '4 huevos enteros (200g)', cat: 'proteina',
-            swaps: [
-              { foodId: 'fd-01',  name: '200g pechuga cocida', prot: 62, cal: 330, note: 'Doble proteína, sin grasa' },
-              { foodId: 'fd-29',  name: '2 latas atún en agua (240g)', prot: 62, cal: 259, note: 'Rápido y alto en proteína' },
-              { foodId: 'fd-04',  name: '2 huevos + 4 claras (232g)', prot: 38, cal: 175, note: 'Mezcla proteína completa' },
-            ]
-          },
-          {
-            foodId: 'fd-27', grams: 86,
-            name: '½ taza frijoles (86g)', cat: 'leguminosa',
-            swaps: [
-              { name: '½ taza lentejas cocidas (100g)', prot: 9, cal: 116, note: 'Más proteína vegetal' },
-              { name: '½ taza garbanzos (82g)', prot: 7, cal: 135, note: 'Similar en macros' },
-              { foodId: 'fd-61', name: '½ taza edamame (78g)', prot: 7, cal: 98, note: 'Proteína completa vegetal' },
-            ]
-          },
-          {
-            foodId: 'fd-28', grams: 90,
-            name: '3 panes tostados (90g)', cat: 'carbo',
-            swaps: [
-              { foodId: 'fd-11',  name: '3 tortillas de maíz (90g)', prot: 5, cal: 196, note: 'Equivalente en calorías' },
-              { foodId: 'fd-08',  name: '¾ taza arroz cocido (75g)', prot: 3, cal: 105, note: 'Menos proteína, más limpio' },
-              { foodId: 'fd-12',  name: '3 rebanadas pan integral (105g)', prot: 14, cal: 259, note: 'Más fibra y proteína' },
-            ]
-          },
-          {
-            foodId: 'fd-13', grams: 120,
-            name: '1 plátano (120g)', cat: 'fruta',
-            swaps: [
-              { foodId: 'fd-30',  name: '1 manzana (130g)', prot: 0, cal: 60, note: 'Menos azúcar, más fibra' },
-              { foodId: 'fd-62', name: '1 pera mediana (150g)', prot: 0, cal: 60, note: 'Bajo índice glucémico' },
-              { foodId: 'fd-54', name: '1 naranja (150g)', prot: 1, cal: 65, note: 'Vitamina C — mejora absorción de hierro' },
-            ]
-          },
-          {
-            foodId: 'fd-16', grams: 150,
-            name: '1 aguacate (150g)', cat: 'grasa',
-            swaps: [
-              { foodId: 'fd-16',  name: '½ aguacate (75g)', prot: 2, cal: 120, note: 'Reduce calorías a la mitad' },
-              { foodId: 'fd-14',  name: '20g almendras', prot: 4, cal: 116, note: 'Más proteína, menos volumen' },
-              { foodId: 'fd-15',  name: '1 cdta aceite de oliva (10g)', prot: 0, cal: 88, note: 'Menos calorías, misma grasa sana' },
-            ]
-          },
-        ]
-      },
-      {
-        name: 'COMIDA', emoji: '☀️', color: '#3b82f6', note: '',
-        items: [
-          {
-            foodId: 'fd-01', grams: 210,
-            name: '210g pechuga de pollo cocida', cat: 'proteina',
-            swaps: [
-              { name: '210g filete de res magro', prot: 44, cal: 280, note: 'Más hierro y zinc' },
-              { foodId: 'fd-29',  name: '2 latas atún en agua (240g)', prot: 62, cal: 259, note: 'Más proteína, menos grasa saturada' },
-              { foodId: 'fd-06',  name: '210g salmón', prot: 42, cal: 437, note: 'Omega-3 incorporado' },
-            ]
-          },
-          {
-            foodId: 'fd-21', grams: 208,
-            name: '2 tazas pepino (208g)', cat: 'verdura',
-            swaps: [
-              { foodId: 'fd-20',  name: '2 jitomates bola (226g)', prot: 4, cal: 50, note: 'Mismo perfil macro' },
-              { foodId: 'fd-26',  name: '2 tazas nopal cocido (200g)', prot: 3, cal: 34, note: 'Más fibra prebiótica' },
-              { foodId: 'fd-19',  name: '2 tazas lechuga (60g)', prot: 1, cal: 10, note: 'Muy bajo en calorías' },
-            ]
-          },
-          {
-            foodId: 'fd-26', grams: 200,
-            name: '2 nopales cocidos (200g)', cat: 'verdura',
-            swaps: [
-              { foodId: 'fd-18',  name: '200g brócoli cocido', prot: 6, cal: 68, note: 'Más proteína vegetal' },
-              { foodId: 'fd-19',  name: '200g espinaca cocida', prot: 6, cal: 46, note: 'Más hierro' },
-              { foodId: 'fd-20',  name: '2 jitomates (226g)', prot: 4, cal: 50, note: 'Equivalente en calorías' },
-            ]
-          },
-          {
-            foodId: 'fd-08', grams: 141,
-            name: '141g arroz cocido', cat: 'carbo',
-            swaps: [
-              { foodId: 'fd-11',  name: '3 tortillas de maíz (90g)', prot: 5, cal: 196, note: 'Equivalente en calorías' },
-              { foodId: 'fd-12',  name: '3 rebanadas pan integral (105g)', prot: 14, cal: 259, note: 'Más fibra y proteína' },
-              { name: '1 taza pasta cocida (140g)', prot: 7, cal: 200, note: 'Similar en carbs' },
-            ]
-          },
-          {
-            foodId: 'fd-30', grams: 130,
-            name: '1 manzana (130g)', cat: 'fruta',
-            swaps: [
-              { foodId: 'fd-13',  name: '1 plátano (120g)', prot: 1, cal: 107, note: 'Más carbs — ideal post-entreno' },
-              { foodId: 'fd-62', name: '1 pera mediana (150g)', prot: 0, cal: 60, note: 'Bajo índice glucémico' },
-              { foodId: 'fd-54', name: '1 naranja (150g)', prot: 1, cal: 65, note: 'Vitamina C — mejora absorción de hierro' },
-            ]
-          },
-        ]
-      },
-      {
-        name: 'CENA', emoji: '🌙', color: '#a855f7', note: '',
-        items: [
-          {
-            // prot = 240/100×26 = 62.4g, kcal = 240/100×108 = 259
-            foodId: 'fd-29', grams: 240,
-            name: '2 latas atún en agua (240g)', cat: 'proteina',
-            swaps: [
-              { foodId: 'fd-01',  name: '200g pechuga cocida', prot: 62, cal: 330, note: 'Más saciante que el atún' },
-              { foodId: 'fd-04',  name: '6 claras de huevo (198g)', prot: 21, cal: 121, note: 'Digestión muy fácil — ideal nocturna' },
-              { name: '200g requesón', prot: 22, cal: 196, note: 'Caseína — ideal para noche, digestión lenta' },
-            ]
-          },
-          {
-            foodId: 'fd-28', grams: 90,
-            name: '3 panes tostados (90g)', cat: 'carbo',
-            swaps: [
-              { foodId: 'fd-11',  name: '4 tortillas de maíz (120g)', prot: 7, cal: 262, note: 'Más carbs y fibra' },
-              { foodId: 'fd-08',  name: '120g arroz cocido', prot: 5, cal: 168, note: 'Menos calorías' },
-              { foodId: 'fd-12',  name: '3 rebanadas pan integral (105g)', prot: 14, cal: 259, note: 'Más fibra y proteína' },
-            ]
-          },
-          {
-            foodId: 'fd-13', grams: 120,
-            name: '1 plátano (120g)', cat: 'fruta',
-            swaps: [
-              { foodId: 'fd-30',  name: '1 manzana (130g)', prot: 0, cal: 60, note: 'Menos azúcar y calorías' },
-              { foodId: 'fd-62', name: '1 pera mediana (150g)', prot: 0, cal: 60, note: 'Bajo índice glucémico' },
-              { foodId: 'fd-54', name: '1 naranja (150g)', prot: 1, cal: 65, note: 'Vitamina C — ayuda a absorber proteína' },
-            ]
-          },
-          {
-            foodId: 'fd-23', grams: 480,
-            name: '2 tazas leche entera (480ml)', cat: 'otro',
-            swaps: [
-              { foodId: 'fd-59', name: '2 tazas leche descremada (480ml)', prot: 16, cal: 180, note: 'Misma proteína, 113 kcal menos' },
-              { foodId: 'fd-63', name: '2 tazas leche de soya s/azúcar (480ml)', prot: 14, cal: 160, note: 'Apto intolerante lactosa' },
-              { foodId: 'fd-25',  name: '1 taza leche + 1 scoop proteína', prot: 30, cal: 275, note: 'Boost nocturno de proteína' },
-            ]
-          },
-          {
-            foodId: 'fd-21', grams: 104,
-            name: '1 taza pepino (104g)', cat: 'verdura',
-            swaps: [
-              { foodId: 'fd-20',  name: '1 jitomate bola (113g)', prot: 2, cal: 25, note: 'Mismo perfil macro' },
-              { foodId: 'fd-26',  name: '1 taza nopal cocido (100g)', prot: 1, cal: 17, note: 'Fibra prebiótica nocturna' },
-              { foodId: 'fd-19',  name: '1 taza lechuga (30g)', prot: 0, cal: 5, note: 'Mínimas calorías' },
-            ]
-          },
-        ]
-      },
-    ];
 
     // ╔════════════════════════════════════════════════════════════════════════╗
     // ║  CAMBIO: SISTEMA DE PERFILES — definiciones que dependen de los datos. ║
@@ -11235,14 +10915,9 @@ function _getPrevIdxFrom(d, fromIdx) {
         ormData: ORM_DATA,
         exSiblings: EX_SIBLINGS,
         barbellEx: BARBELL_EX,
-        dietMeals: DIET_MEALS,
         // CAMBIO P4.2-1: condiciones médicas del perfil. Filtran variantes de equipo
         //   (unsafeFor ∩ conditions) y a futuro swaps. Braulio: escoliosis (carga axial limitada).
         conditions: ['scoliosis'],
-        // FIX: F5 — peso de referencia para derivar la meta de dieta cuando el usuario aún
-        //   no guardó su peso. 86.7 kg es el valor ya mostrado en su perfil (no es nuevo).
-        //   Cualquier perfil futuro con dieta define el suyo; si no, cae al fallback de _dietWeight().
-        dietRefWeight: 86.7
       },
       jimena: {
         id: "jimena",
@@ -11253,7 +10928,6 @@ function _getPrevIdxFrom(d, fromIdx) {
         ormData: {},        // sin periodización — todos needs1RM:true
         exSiblings: {},     // sin pares de hermanos por ahora
         barbellEx: {},      // sin toggle libre/smith
-        dietMeals: [],      // dieta vacía — UI mostrará estado vacío
         conditions: []      // CAMBIO P4.2-1: sin restricciones — ve todas las variantes
       }
     };
@@ -11272,7 +10946,6 @@ function _getPrevIdxFrom(d, fromIdx) {
       merged.ormData = merged.ormData || {};
       merged.exSiblings = merged.exSiblings || {};
       merged.barbellEx = merged.barbellEx || {};
-      merged.dietMeals = merged.dietMeals || [];
       // CAMBIO P4.2-1: conditions siempre array (default []). Filtro de variantes por restricción.
       if (!Array.isArray(merged.conditions)) merged.conditions = [];
       // CAMBIO P1-7: garantiza que merged.level siempre exista (default 'I' si nada lo tiene seteado).
@@ -11403,7 +11076,6 @@ function _getPrevIdxFrom(d, fromIdx) {
       } catch { }
       EX_SIBLINGS = p.exSiblings;
       BARBELL_EX = p.barbellEx;
-      DIET_MEALS = p.dietMeals;
       // CAMBIO G3-7: aplicar el 1RM vivo per-perfil (orm-current) sobre la semilla ORM_DATA
       //   y regenerar los rangos por fase desde el 1RM. Multiusuario: cada perfil lee su propia
       //   key b5-{p}-orm-current. Si no hay current, los rangos se regeneran desde la semilla
@@ -11459,963 +11131,6 @@ function _getPrevIdxFrom(d, fromIdx) {
         switchTab('home');
       });
     }
-
-    let _swapItem = null, _swapMeal = null;
-
-    // ── CAMBIO C2: Estado de sesión de dieta ──────────────────────────────────
-    // Clave: "mealIdx-itemIdx" → { foodId, name, unit, amount, prot, carbs, fat, cal }
-    function _loadDietSession() {
-      const raw = localStorage.getItem(_pkey('diet-meals'));
-      if (!raw) return {};
-      try {
-        const saved = JSON.parse(raw);
-        const validado = {};
-        for (const key of Object.keys(saved)) {
-          const entry = saved[key];
-          // Validar que el foodId guardado sigue en FOOD_DB — si no existe, ignorar
-          if (entry && entry.foodId && FOOD_DB.find(f => f.id === entry.foodId)) {
-            validado[key] = entry;
-          }
-        }
-        return validado;
-      } catch (e) {
-        return {};
-      }
-    }
-    function _saveDietSession() {
-      localStorage.setItem(_pkey('diet-meals'), JSON.stringify(dietSession));
-    }
-    let dietSession = _loadDietSession();
-
-    let _editMealIdx = -1, _editItemIdx = -1;
-    let _editSelectedFoodId = null, _editSelectedUnit = null, _editAmount = 0;
-    let _editCategory = null;
-    let _editOriginalKcal = 0;
-    let _editOriginalProt = 0;
-    let _editOriginalCarbs = 0;
-
-    // ── CAMBIO C2: Calcular totales del día considerando dietSession ──────────
-    function calcDietTotals() {
-      let prot = 0, carbs = 0, fat = 0, kcal = 0;
-      DIET_MEALS.forEach((meal, mi) => {
-        meal.items.forEach((item, ii) => {
-          const key = mi + '-' + ii;
-          const override = dietSession[key];
-          if (override) {
-            if (override.amount > 0) {
-              prot  += override.prot  || 0;
-              carbs += override.carbs || 0;
-              fat   += override.fat   || 0;
-              kcal  += override.cal   || 0;
-            }
-          } else {
-            const fd = FOOD_DB.find(f => f.id === item.foodId);
-            if (fd) {
-              const g = item.grams || fd.defaultAmount;
-              prot  += (g / 100) * fd.per100.prot;
-              carbs += (g / 100) * fd.per100.carbs;
-              fat   += (g / 100) * fd.per100.fat;
-              kcal  += (g / 100) * fd.per100.kcal;
-            }
-          }
-        });
-      });
-      return { prot: Math.round(prot), carbs: Math.round(carbs), fat: Math.round(fat), kcal: Math.round(kcal) };
-    }
-
-    // FIX: F5 — peso del perfil activo para derivar la meta de dieta.
-    //   Prioridad: peso guardado por el usuario (per-perfil) > peso semilla del perfil
-    //   > peso implícito en la semilla NUTR_META (210/2.2 ≈ 95.5 kg) como último fallback
-    //   defensivo. Nunca devuelve 0 (evita metas en 0 y divisiones inválidas en las barras).
-    function _dietWeight() {
-      const stored = parseFloat(localStorage.getItem(_pkey('user-weight')));
-      if (!isNaN(stored) && stored > 0) return stored;
-      const seed = getActiveProfile().dietRefWeight;
-      if (typeof seed === 'number' && seed > 0) return seed;
-      return NUTR_META.prot / PROT_G_PER_KG; // fallback derivado de la semilla, sin literales
-    }
-
-    // ── CAMBIO C2 / FIX F5: Metas del día derivadas del perfil activo ──
-    //   Proteína = 2.2 g/kg × peso del perfil. Carbs/grasa/kcal escalados por la
-    //   proporción de la semilla NUTR_META (no se inventan factores nuevos). Una sola
-    //   fuente de verdad para TODA la pantalla de dieta; reemplaza el literal 195 y el
-    //   NUTR_META hardcodeado. Se recalcula en cada llamada leyendo getActiveProfile(),
-    //   así que no requiere reasignación en _reloadProfileData (siempre lee el perfil vivo).
-    function calcDietGoals() {
-      const w = _dietWeight();
-      const prot = Math.round(PROT_G_PER_KG * w);
-      const ratio = NUTR_META.prot > 0 ? (prot / NUTR_META.prot) : 1;
-      return {
-        prot,
-        carbs: Math.round(NUTR_META.carbs * ratio),
-        fat:   Math.round(NUTR_META.fat   * ratio),
-        kcal:  Math.round(NUTR_META.kcal  * ratio),
-      };
-    }
-
-    // ── CAMBIO C2: Renderiza las 3 barras horizontales de macros ─────────────
-    function renderMacroBars() {
-      const el = document.getElementById('diet-macro-bars');
-      if (!el) return;
-      const actual = calcDietTotals();
-      const meta   = calcDietGoals();
-      const macros = [
-        { label: 'Proteínas',     key: 'prot',  color: '#f43f5e' },
-        { label: 'Carbohidratos', key: 'carbs', color: '#f59e0b' },
-        { label: 'Lípidos',       key: 'fat',   color: '#22c55e' },
-      ];
-      let h = '<div style="background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;">';
-      macros.forEach(m => {
-        const x = actual[m.key];
-        const y = meta[m.key];
-        const pct = y > 0 ? Math.min(Math.round(x / y * 100), 100) : 0;
-        const barColor = x > y ? '#e53935' : m.color;
-        h += `<div style="margin-bottom:10px;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-            <span style="font-size:12px;font-weight:700;color:var(--t2);">${m.label}</span>
-            <span style="font-size:12px;font-weight:700;color:${barColor};">${x}g <span style="color:var(--t3);font-weight:400;">/ ${y}g</span></span>
-          </div>
-          <div style="height:6px;background:var(--s2);border-radius:4px;overflow:hidden;">
-            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px;transition:width .3s ease;"></div>
-          </div>
-        </div>`;
-      });
-      h += '</div>';
-      el.innerHTML = h;
-    }
-
-    function buildDietDisplayName(fd, grams, unit, amount) {
-      if (!fd) return '???';
-      const u = unit || fd.defaultUnit;
-      let gramosReales = grams;
-      if (typeof amount === 'number' && amount > 0) {
-        gramosReales = Math.round(calcFactorGramos(amount, u, fd) * 100);
-      }
-      let amt = amount;
-      if (typeof amt !== 'number') {
-        if (u === 'Gramos' || u === 'ml') {
-          amt = gramosReales;
-        } else if (fd.defaultAmount > 0) {
-          if (u === 'Taza') {
-            amt = Math.max(0.5, Math.round((gramosReales / fd.defaultAmount) * 2) / 2);
-          } else {
-            amt = Math.max(1, Math.round(gramosReales / fd.defaultAmount));
-          }
-        } else {
-          amt = 1;
-        }
-      }
-      // que son contexto de FOOD_DB pero redundan cuando ya se muestra la unidad.
-      // (ej: atún en agua (lata) mostrado en gramos → "Atún en agua").
-      let nombreBase = fd.name;
-      if (u !== fd.defaultUnit && /\s*\([^)]+\)\s*$/.test(nombreBase)) {
-        nombreBase = nombreBase.replace(/\s*\([^)]+\)\s*$/, '').trim();
-      }
-      if (u === 'Gramos') {
-        return `${nombreBase} — ${amt}g`;
-      }
-      if (u === 'ml') {
-        return `${nombreBase} — ${amt}ml`;
-      }
-      const nb = nombreBase.toLowerCase();
-      let prefix;
-      if (u === 'Pieza') {
-        prefix = `${amt} ${amt === 1 ? 'pieza' : 'piezas'} de ${nb}`;
-      } else if (u === 'Lata') {
-        prefix = `${amt} ${amt === 1 ? 'lata' : 'latas'} de ${nb}`;
-      } else if (u === 'Taza') {
-        const tazaLabel = amt === 0.5 ? '½ taza' : amt === 1 ? '1 taza' : `${amt} tazas`;
-        prefix = `${tazaLabel} de ${nb}`;
-      } else {
-        prefix = `${amt} ${u} de ${nb}`;
-      }
-      return `${prefix} (${gramosReales}g)`;
-    }
-
-    function renderDiet() {
-      const body = document.getElementById('diet-body');
-      if (!body) return;
-      if (!DIET_MEALS || DIET_MEALS.length === 0) {
-        body.innerHTML = `<div style="padding:40px 20px;text-align:center;color:var(--t3);">
-          <div style="font-size:48px;margin-bottom:14px;">🥗</div>
-          <div style="font-size:15px;font-weight:700;color:var(--t2);margin-bottom:6px;">Aún no hay comidas configuradas para este perfil</div>
-          <div style="font-size:13px;line-height:1.5;">Cuando tu plan de alimentación esté listo, lo verás aquí.</div>
-        </div>`;
-        return;
-      }
-      const totalesConSession = calcDietTotals();
-      const tp       = totalesConSession.prot;
-      const tg       = totalesConSession.fat;
-      const tc_carbs = totalesConSession.carbs;
-      const tc       = totalesConSession.kcal;
-      const mealSummary = [];
-      DIET_MEALS.forEach((m, mi) => {
-        let mp = 0, mg = 0, mcarbs = 0, mc = 0;
-        m.items.forEach((item, ii) => {
-          const key = mi + '-' + ii;
-          const override = dietSession[key];
-          if (override) {
-            if (override.amount > 0) {
-              mp     += override.prot  || 0;
-              mg     += override.fat   || 0;
-              mcarbs += override.carbs || 0;
-              mc     += override.cal   || 0;
-            }
-          } else {
-            const fd = FOOD_DB.find(f => f.id === item.foodId);
-            if (fd) {
-              const g = item.grams || fd.defaultAmount;
-              mp     += (g / 100) * fd.per100.prot;
-              mg     += (g / 100) * fd.per100.fat;
-              mcarbs += (g / 100) * fd.per100.carbs;
-              mc     += (g / 100) * fd.per100.kcal;
-            }
-          }
-        });
-        mealSummary.push({ name: m.name, emoji: m.emoji, color: m.color,
-          prot: Math.round(mp), fat: Math.round(mg), carbs: Math.round(mcarbs), cal: Math.round(mc) });
-      });
-      // FIX: F5 — meta derivada del perfil activo (misma fuente que renderMacroBars y
-      //   la barra de edición). Elimina el literal 195 y la incoherencia 195≠210.
-      const metaDia  = calcDietGoals();
-      const protMeta = metaDia.prot;
-      const protPct  = protMeta > 0 ? Math.round(tp / protMeta * 100) : 0;
-      const protGap  = protMeta - tp;
-      const protColor = protPct >= 90 ? '#22c55e' : protPct >= 75 ? '#f59e0b' : '#ef4444';
-      let h = `<div class="card" style="margin-bottom:14px;border-color:var(--acc)44;cursor:pointer;" onclick="document.getElementById('macro-detail').style.display=document.getElementById('macro-detail').style.display==='none'?'block':'none'">
-    <div style="display:flex;justify-content:space-around;text-align:center;">
-      <div><div style="font-size:19px;font-weight:800;color:var(--acc);">${tp}<span style="font-size:12px;font-weight:600;color:var(--t3);"> / ${protMeta}g</span></div><div style="font-size:10px;color:var(--t3);">PROT · META</div></div>
-      <div><div style="font-size:19px;font-weight:800;color:#22c55e;">${tg}g</div><div style="font-size:10px;color:var(--t3);">GRASAS</div></div>
-      <div><div style="font-size:19px;font-weight:800;color:#f59e0b;">${tc_carbs}g</div><div style="font-size:10px;color:var(--t3);">CARBS</div></div>
-      <div><div style="font-size:19px;font-weight:800;">${tc}</div><div style="font-size:10px;color:var(--t3);">KCAL</div></div>
-    </div>
-    <div style="margin-top:8px;height:4px;background:var(--s2);border-radius:2px;overflow:hidden;">
-      <div style="height:100%;width:${Math.min(protPct, 100)}%;background:${protColor};border-radius:2px;"></div>
-    </div>
-    <div style="font-size:10px;color:var(--t3);text-align:center;margin-top:4px;">Toca para ver desglose · Meta: ${protMeta}g prot/día</div>
-    <div id="macro-detail" style="display:none;margin-top:12px;border-top:1px solid var(--bd);padding-top:12px;" onclick="event.stopPropagation()">
-      <div style="font-size:11px;font-weight:700;color:var(--t3);letter-spacing:1px;margin-bottom:8px;">DESGLOSE POR COMIDA</div>
-      ${mealSummary.map(m => {
-        const pBar = tp > 0 ? Math.round(m.prot / tp * 100) : 0;
-        return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <span style="font-size:14px;">${m.emoji}</span>
-          <div style="flex:1;">
-            <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
-              <span style="font-size:12px;font-weight:600;">${m.name}</span>
-              <span style="font-size:11px;color:var(--t2);">P${m.prot}·G${m.fat}·C${m.carbs} · ${m.cal}kcal</span>
-            </div>
-            <div style="height:3px;background:var(--s2);border-radius:2px;overflow:hidden;">
-              <div style="height:100%;width:${pBar}%;background:${m.color};border-radius:2px;"></div>
-            </div>
-          </div>
-        </div>`;
-      }).join('')}
-      <div style="margin-top:10px;padding:10px;background:var(--s2);border-radius:8px;font-size:12px;color:var(--t2);line-height:1.6;">
-        <strong style="color:var(--t1);">¿Qué significan estos números?</strong><br>
-        🥩 <strong>${tp}g proteína</strong> = lo que sumas con todas las comidas del plan. Tu meta es <strong>${protMeta}g</strong> (2.2g × tu peso).<br>
-        🔥 <strong>${tc} kcal</strong> = calorías totales del día. Para recomposición con tu nivel de actividad está en rango.<br>
-        📊 <strong>${protPct}%</strong> = ${protPct >= 90 ? 'estás dentro de la meta ✓' : protGap > 0 ? 'te faltan ~' + protGap + 'g — puedes agregar un scoop de proteína o más claras' : 'estás en la meta ✓'}
-      </div>
-    </div>
-  </div>`;
-      h += '<div style="font-size:11px;color:var(--t3);letter-spacing:1px;margin-bottom:12px;">↔ intercambiar · ✏️ editar cantidad</div>';
-      DIET_MEALS.forEach((meal, mi) => {
-        h += `<div class="card" style="margin-bottom:12px;border-color:${meal.color}44;">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-        <div style="font-size:22px;">${meal.emoji}</div>
-        <div><div style="font-size:13px;font-weight:800;color:${meal.color};">${meal.name}</div>${meal.note ? `<div style="font-size:11px;color:var(--t3);">${meal.note}</div>` : ''}</div>
-      </div>`;
-        meal.items.forEach((item, idx) => {
-          const catIcon = { proteina: '🥩', carbo: '🍚', grasa: '🥑', fruta: '🍎' }[item.cat] || '🍽';
-          const key = mi + '-' + idx;
-          const override = dietSession[key];
-          const tachado = override && override.amount === 0;
-          let displayName;
-          if (override && override.foodId) {
-            const fdOv = FOOD_DB.find(f => f.id === override.foodId);
-            displayName = fdOv
-              ? buildDietDisplayName(fdOv, null, override.unit, override.amount)
-              : (override.name || '???');
-          } else {
-            const fdName = FOOD_DB.find(f => f.id === item.foodId);
-            displayName = fdName ? buildDietDisplayName(fdName, item.grams || fdName.defaultAmount) : item.name;
-          }
-          let displayProt, displayFat, displayCarbs, displayCal;
-          if (override) {
-            displayProt  = (override.prot  || 0).toFixed(1);
-            displayFat   = (override.fat   || 0).toFixed(1);
-            displayCarbs = (override.carbs || 0).toFixed(1);
-            displayCal   = (override.cal   || 0).toFixed(0);
-          } else {
-            const fdItem = FOOD_DB.find(f => f.id === item.foodId);
-            if (fdItem) {
-              const g = item.grams || fdItem.defaultAmount;
-              displayProt  = ((g / 100) * fdItem.per100.prot).toFixed(1);
-              displayFat   = ((g / 100) * fdItem.per100.fat).toFixed(1);
-              displayCarbs = ((g / 100) * fdItem.per100.carbs).toFixed(1);
-              displayCal   = Math.round((g / 100) * fdItem.per100.kcal).toString();
-            } else {
-              displayProt  = (item.prot || 0).toFixed(1);
-              displayFat   = '0.0';
-              displayCarbs = '0.0';
-              displayCal   = (item.cal  || 0).toString();
-            }
-          }
-          h += `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd);${tachado ? 'opacity:0.45;' : ''}">
-        <div style="width:28px;height:28px;border-radius:8px;background:${meal.color}22;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;">${catIcon}</div>
-        <div style="flex:1;cursor:pointer;-webkit-tap-highlight-color:transparent;" onclick="openSwap('${meal.name}',${mi},${idx})">
-          <div style="font-size:14px;color:var(--t1);${tachado ? 'text-decoration:line-through;color:var(--t3);' : ''}">${displayName}</div>
-          <div style="font-size:0.82em;color:var(--t3);">P ${displayProt}g · G ${displayFat}g · C ${displayCarbs}g · ${displayCal} kcal</div>
-        </div>
-        <button onclick="openEditItem(${mi},${idx})" style="background:transparent;border:none;font-size:18px;color:var(--t3);padding:4px 6px;flex-shrink:0;-webkit-tap-highlight-color:transparent;">✏️</button>
-        <div style="font-size:18px;color:var(--t3);cursor:pointer;padding:4px;" onclick="openSwap('${meal.name}',${mi},${idx})">↔</div>
-      </div>`;
-        });
-        h += '</div>';
-      });
-      h += `<div class="card" style="background:#131320;border-color:#2e2e3e;">
-    <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--t3);margin-bottom:10px;">💡 SUPLEMENTOS Y METAS</div>
-    <div style="font-size:13px;color:var(--t2);line-height:1.8;">
-      🥩 Meta proteína: <strong>190-200g/día</strong><br>
-      💧 Agua: mínimo <strong>3 litros/día</strong><br>
-      💊 Creatina: <strong>3-5g diarios</strong> (con cualquier comida)<br>
-      🐟 Omega-3: <strong>2-3g EPA+DHA</strong> con comida con grasa<br>
-      ⚡ Pre-workout: <strong>NO después de las 6pm</strong>
-    </div>
-  </div>`;
-      body.innerHTML = h;
-      renderMacroBars();
-    }
-
-    function openSwap(mealName, mealIdx, itemIdx) {
-      const meal = DIET_MEALS[mealIdx];
-      const item = meal.items[itemIdx];
-      _swapMeal = meal; _swapItem = item;
-      document.getElementById('swap-original').textContent = meal.name + ' — ' + meal.emoji;
-
-      // (no desde item.prot/item.cal hardcodeados que ya no existen en la nueva estructura)
-      const key = mealIdx + '-' + itemIdx;
-      const override = dietSession[key];
-      const currentFoodId = override ? (override.foodId || item.foodId) : item.foodId;
-      const currentFd = FOOD_DB.find(f => f.id === currentFoodId);
-      let currentGrams;
-      if (override && currentFd) {
-        currentGrams = calcFactorGramos(override.amount, override.unit || currentFd.defaultUnit, currentFd) * 100;
-      } else if (item.grams) {
-        currentGrams = item.grams;
-      } else if (currentFd) {
-        currentGrams = currentFd.defaultAmount;
-      } else {
-        currentGrams = 0;
-      }
-      const currentProt  = currentFd ? (currentGrams / 100) * currentFd.per100.prot  : 0;
-      const currentKcal  = currentFd ? (currentGrams / 100) * currentFd.per100.kcal  : 0;
-      const currentCarbs = currentFd ? (currentGrams / 100) * currentFd.per100.carbs : 0;
-      let currentName;
-      if (override && currentFd) {
-        currentName = buildDietDisplayName(currentFd, null, override.unit, override.amount);
-      } else if (currentFd) {
-        currentName = buildDietDisplayName(currentFd, currentGrams);
-      } else {
-        currentName = item.name;
-      }
-      document.getElementById('swap-title').textContent = currentName;
-      const currentFatDisp  = currentFd ? (currentGrams / 100) * currentFd.per100.fat   : 0;
-      const currentCarbsDisp = currentFd ? (currentGrams / 100) * currentFd.per100.carbs : 0;
-      document.getElementById('swap-title-macros').textContent =
-        `P ${currentProt.toFixed(1)}g · G ${currentFatDisp.toFixed(1)}g · C ${currentCarbsDisp.toFixed(1)}g · ${Math.round(currentKcal)} kcal`;
-
-      let opts = '';
-
-      if (override) {
-        const origFd = FOOD_DB.find(f => f.id === item.foodId);
-        if (origFd) {
-          const origName = buildDietDisplayName(origFd, item.grams);
-          const origProt  = (item.grams / 100) * origFd.per100.prot;
-          const origFat   = (item.grams / 100) * origFd.per100.fat;
-          const origCarbs = (item.grams / 100) * origFd.per100.carbs;
-          const origKcal  = (item.grams / 100) * origFd.per100.kcal;
-          const currentFat   = currentFd ? (currentGrams / 100) * currentFd.per100.fat   : 0;
-          const currentCarbs2 = currentFd ? (currentGrams / 100) * currentFd.per100.carbs : 0;
-          const origProtDiff  = Math.round(origProt  - currentProt);
-          const origFatDiff   = Math.round(origFat   - currentFat);
-          const origCarbsDiff = Math.round(origCarbs - currentCarbs2);
-          const origCalDiff   = Math.round(origKcal  - currentKcal);
-          const origProtColor  = origProtDiff  >= 0 ? '#22c55e' : '#ef4444';
-          const origFatColor   = origFatDiff   <= 0 ? '#22c55e' : '#f59e0b';
-          const origCarbsColor = origCarbsDiff >= 0 ? '#22c55e' : '#ef4444';
-          const origCalColor   = origCalDiff   <= 0 ? '#22c55e' : '#f59e0b';
-          opts += `<div onclick="revertSwap(${mealIdx},${itemIdx})"
-            style="background:var(--s2);border:2px solid var(--acc);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;">
-            <div style="font-size:15px;font-weight:700;margin-bottom:4px;">↩️ ${origName}</div>
-            <div style="font-size:12px;color:var(--acc);margin-bottom:6px;">Regresar al plan original</div>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;">
-              <div style="font-size:11px;">P: <strong style="color:${origProtColor};">${origProt.toFixed(1)}g</strong> <span style="color:${origProtColor};">(${origProtDiff >= 0 ? '+' : ''}${origProtDiff}g)</span></div>
-              <div style="font-size:11px;">G: <strong style="color:${origFatColor};">${origFat.toFixed(1)}g</strong> <span style="color:${origFatColor};">(${origFatDiff >= 0 ? '+' : ''}${origFatDiff}g)</span></div>
-              <div style="font-size:11px;">C: <strong style="color:${origCarbsColor};">${origCarbs.toFixed(1)}g</strong> <span style="color:${origCarbsColor};">(${origCarbsDiff >= 0 ? '+' : ''}${origCarbsDiff}g)</span></div>
-              <div style="font-size:11px;">Kcal: <strong style="color:${origCalColor};">${Math.round(origKcal)}</strong> <span style="color:${origCalColor};">(${origCalDiff >= 0 ? '+' : ''}${origCalDiff})</span></div>
-            </div>
-          </div>`;
-        }
-      }
-
-      item.swaps.forEach((sw) => {
-        const swResolvedId = sw.foodId || '';
-        if (override && override.foodId && swResolvedId === override.foodId) return;
-
-        const swFd = sw.foodId
-          ? FOOD_DB.find(f => f.id === sw.foodId)
-          : FOOD_DB.find(f => f.name.toLowerCase() === sw.name.toLowerCase());
-
-        let swProt, swFat, swCarbs, swKcal, swGrams, swDisplayName;
-        if (swFd) {
-          const usarProt  = item.cat === 'proteina' && currentProt > 0 && swFd.per100.prot > 0;
-          const usarCarbs = !usarProt && item.cat === 'carbo' && currentCarbs > 0 && swFd.per100.carbs > 0;
-          if (usarProt) {
-            swGrams = (currentProt / swFd.per100.prot) * 100;
-          } else if (usarCarbs) {
-            swGrams = (currentCarbs / swFd.per100.carbs) * 100;
-          } else if (swFd.per100.kcal > 0 && currentKcal > 0) {
-            swGrams = (currentKcal / swFd.per100.kcal) * 100;
-          } else {
-            swGrams = swFd.defaultAmount;
-          }
-          swProt  = (swGrams / 100) * swFd.per100.prot;
-          swFat   = (swGrams / 100) * swFd.per100.fat;
-          swCarbs = (swGrams / 100) * swFd.per100.carbs;
-          swKcal  = (swGrams / 100) * swFd.per100.kcal;
-          const swUnit = swFd.defaultUnit;
-          if (swUnit === 'Gramos' || swUnit === 'ml') {
-            const swAmt = Math.round(swGrams);
-            swDisplayName = `${swAmt}${swUnit === 'ml' ? 'ml' : 'g'} de ${swFd.name.toLowerCase()}`;
-          } else if ((swUnit === 'Pieza' || swUnit === 'Lata' || swUnit === 'Taza') && swFd.defaultAmount > 0) {
-            let swAmt = swGrams / swFd.defaultAmount;
-            swAmt = swUnit === 'Taza' ? Math.round(swAmt * 2) / 2 : Math.max(1, Math.round(swAmt));
-            const label = swUnit === 'Pieza' ? (swAmt === 1 ? 'pieza' : 'piezas')
-                        : swUnit === 'Lata'  ? (swAmt === 1 ? 'lata'  : 'latas')
-                        : (swAmt === 1 ? 'taza' : 'tazas');
-            const amtLabel = swUnit === 'Taza' && swAmt === 0.5 ? '½' : swAmt;
-            swDisplayName = `${amtLabel} ${label} de ${swFd.name.toLowerCase()}`;
-          } else {
-            swDisplayName = sw.name;
-          }
-        } else {
-          // (evita NaN — los valores hardcodeados son números válidos en los swaps del plan)
-          swProt  = typeof sw.prot === 'number' ? sw.prot : 0;
-          swFat   = 0;
-          swCarbs = 0;
-          swKcal  = typeof sw.cal  === 'number' ? sw.cal  : 0;
-          swDisplayName = sw.name;
-        }
-
-        const currentFatSw   = currentFd ? (currentGrams / 100) * currentFd.per100.fat   : 0;
-        const currentCarbsSw = currentFd ? (currentGrams / 100) * currentFd.per100.carbs : 0;
-        const protDiff  = Math.round(swProt  - currentProt);
-        const fatDiff   = Math.round(swFat   - currentFatSw);
-        const carbsDiff = Math.round(swCarbs - currentCarbsSw);
-        const calDiff   = Math.round(swKcal  - currentKcal);
-        const protColor  = protDiff  >= 0 ? '#22c55e' : '#ef4444';
-        const fatColor   = fatDiff   <= 0 ? '#22c55e' : '#f59e0b';
-        const carbsColor = carbsDiff >= 0 ? '#22c55e' : '#ef4444';
-        const calColor   = calDiff   <= 0 ? '#22c55e' : '#f59e0b';
-
-        opts += `<div onclick="applySwap(${mealIdx},${itemIdx},'${sw.foodId || ''}','${swFd ? swFd.id : ''}',${swGrams || 0})"
-          style="background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;">
-          <div style="font-size:15px;font-weight:700;margin-bottom:4px;">${swDisplayName}</div>
-          <div style="font-size:12px;color:var(--t2);margin-bottom:6px;">${sw.note}</div>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;">
-            <div style="font-size:11px;">P: <strong style="color:${protColor};">${swProt.toFixed(1)}g</strong> <span style="color:${protColor};">(${protDiff >= 0 ? '+' : ''}${protDiff}g)</span></div>
-            <div style="font-size:11px;">G: <strong style="color:${fatColor};">${(swFat||0).toFixed(1)}g</strong> <span style="color:${fatColor};">(${fatDiff >= 0 ? '+' : ''}${fatDiff}g)</span></div>
-            <div style="font-size:11px;">C: <strong style="color:${carbsColor};">${(swCarbs||0).toFixed(1)}g</strong> <span style="color:${carbsColor};">(${carbsDiff >= 0 ? '+' : ''}${carbsDiff}g)</span></div>
-            <div style="font-size:11px;">Kcal: <strong style="color:${calColor};">${Math.round(swKcal)}</strong> <span style="color:${calColor};">(${calDiff >= 0 ? '+' : ''}${calDiff})</span></div>
-          </div>
-        </div>`;
-      });
-      document.getElementById('swap-options').innerHTML = opts;
-      document.getElementById('swap-sheet').style.display = 'flex';
-    }
-    function closeSwap() { document.getElementById('swap-sheet').style.display = 'none'; }
-
-    function revertSwap(mealIdx, itemIdx) {
-      const key = mealIdx + '-' + itemIdx;
-      delete dietSession[key];
-      _saveDietSession();
-      closeSwap();
-      renderDiet();
-    }
-
-    function applySwap(mealIdx, itemIdx, swFoodIdLegacy, swFoodId, swGrams) {
-      const fdId = swFoodId || swFoodIdLegacy;
-      const fd   = fdId ? FOOD_DB.find(f => f.id === fdId) : null;
-      if (!fd || swGrams <= 0) {
-        closeSwap();
-        return;
-      }
-      const unit   = fd.defaultUnit;
-      const factor = swGrams / 100; // factor ya está en gramos
-      let amt;
-      if (unit === 'Gramos' || unit === 'ml') {
-        amt = Math.round(swGrams);
-      } else if (fd.defaultAmount > 0) {
-        amt = unit === 'Taza' ? Math.round(swGrams / fd.defaultAmount * 2) / 2
-                              : Math.max(1, Math.round(swGrams / fd.defaultAmount));
-      } else {
-        amt = 1;
-      }
-      const displayName = buildDietDisplayName(fd, null, unit, amt);
-      const key = mealIdx + '-' + itemIdx;
-      dietSession[key] = {
-        foodId: fd.id,
-        name:   displayName,
-        unit:   unit,
-        amount: amt,
-        prot:   Math.round(factor * fd.per100.prot  * 10) / 10,
-        carbs:  Math.round(factor * fd.per100.carbs * 10) / 10,
-        fat:    Math.round(factor * fd.per100.fat   * 10) / 10,
-        cal:    Math.round(factor * fd.per100.kcal),
-      };
-      _saveDietSession();
-      closeSwap();
-      renderDiet();
-    }
-
-
-    function openEditItem(mealIdx, itemIdx) {
-      _editMealIdx = mealIdx;
-      _editItemIdx = itemIdx;
-      const item = DIET_MEALS[mealIdx].items[itemIdx];
-      const key  = mealIdx + '-' + itemIdx;
-      const override = dietSession[key];
-      const foodIdActivo = override ? (override.foodId || item.foodId) : item.foodId;
-      if (override) {
-        _editSelectedFoodId = override.foodId || item.foodId;
-        _editSelectedUnit   = override.unit;
-        _editAmount         = override.amount;
-      } else {
-        _editSelectedFoodId = item.foodId;
-        const fd = FOOD_DB.find(f => f.id === item.foodId);
-        _editSelectedUnit = fd ? fd.defaultUnit : null;
-        if (fd && item.grams) {
-          const unit = fd.defaultUnit;
-          if (unit === 'Gramos' || unit === 'ml') {
-            _editAmount = item.grams;
-          } else if ((unit === 'Pieza' || unit === 'Lata' || unit === 'Taza') && fd.defaultAmount > 0) {
-            if (unit === 'Taza') {
-              _editAmount = Math.max(0.5, Math.round((item.grams / fd.defaultAmount) * 2) / 2);
-            } else {
-              _editAmount = Math.max(1, Math.round(item.grams / fd.defaultAmount));
-            }
-          } else {
-            _editAmount = cantidadInicial(fd, unit);
-          }
-        } else {
-          _editAmount = fd ? cantidadInicial(fd, fd.defaultUnit) : 0;
-        }
-      }
-      const fdActivo = FOOD_DB.find(f => f.id === foodIdActivo);
-      _editCategory = fdActivo ? fdActivo.category : null;
-      if (fdActivo && _editAmount > 0) {
-        const unitActual = _editSelectedUnit || fdActivo.defaultUnit;
-        const gramosActuales = calcFactorGramos(_editAmount, unitActual, fdActivo) * 100;
-        _editOriginalKcal = (gramosActuales / 100) * fdActivo.per100.kcal;
-        _editOriginalProt = (gramosActuales / 100) * fdActivo.per100.prot;
-        _editOriginalCarbs = (gramosActuales / 100) * fdActivo.per100.carbs;
-      } else {
-        _editOriginalKcal = 0;
-        _editOriginalProt = 0;
-        _editOriginalCarbs = 0;
-      }
-      let nombreHeader;
-      if (override && fdActivo) {
-        nombreHeader = buildDietDisplayName(fdActivo, null, override.unit || fdActivo.defaultUnit, override.amount);
-      } else if (fdActivo) {
-        nombreHeader = buildDietDisplayName(fdActivo, item.grams || fdActivo.defaultAmount);
-      } else {
-        nombreHeader = item.name;
-      }
-      document.getElementById('edit-header-name').textContent = nombreHeader;
-      document.getElementById('edit-search').value = '';
-      renderEditResults('');
-      document.getElementById('edit-sheet').style.display = 'flex';
-    }
-
-    function cancelEditItem() {
-      document.getElementById('edit-sheet').style.display = 'none';
-      _editMealIdx = -1; _editItemIdx = -1;
-      _editSelectedFoodId = null; _editSelectedUnit = null; _editAmount = 0;
-      _editOriginalKcal = 0;
-      _editOriginalProt = 0;
-      _editOriginalCarbs = 0;
-      _editCategory = null;
-    }
-
-    // ── CORRECCIÓN BUG pesoXpieza: convierte la cantidad a gramos antes de dividir entre 100 ──
-    function calcFactorGramos(amt, unit, fd) {
-      if (unit === 'Gramos') {
-        // Ya está en gramos: factor directo
-        return amt / 100;
-      }
-      const gramosXUnidad = (fd.defaultUnit === unit) ? fd.defaultAmount : 1;
-      return (amt * gramosXUnidad) / 100;
-    }
-
-    function confirmEditItem() {
-      if (_editMealIdx < 0 || _editItemIdx < 0) return;
-      const fd = FOOD_DB.find(f => f.id === _editSelectedFoodId);
-      if (!fd) { cancelEditItem(); return; }
-      const amt    = _editAmount;
-      const unit   = _editSelectedUnit || fd.defaultUnit;
-      const factor = calcFactorGramos(amt, unit, fd);
-      const key    = _editMealIdx + '-' + _editItemIdx;
-      const displayName = buildDietDisplayName(fd, null, unit, amt);
-      dietSession[key] = {
-        foodId: fd.id,
-        name:   displayName,
-        unit:   unit,
-        amount: amt,
-        prot:   Math.round(factor * fd.per100.prot  * 10) / 10,
-        carbs:  Math.round(factor * fd.per100.carbs * 10) / 10,
-        fat:    Math.round(factor * fd.per100.fat   * 10) / 10,
-        cal:    Math.round(factor * fd.per100.kcal),
-      };
-      document.getElementById('edit-sheet').style.display = 'none';
-      _editCategory = null;
-      _saveDietSession();
-      renderDiet();
-    }
-
-    function filterFoodDB(texto) {
-      renderEditResults(texto);
-    }
-
-    function normalizarTexto(t) {
-      return t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-    }
-
-    function toggleVerTodos() {
-      const list = document.getElementById('ver-todos-list');
-      const btn  = document.getElementById('ver-todos-btn');
-      if (!list) return;
-      const abierto = list.style.display !== 'none';
-      list.style.display = abierto ? 'none' : 'block';
-      if (btn) {
-        const b = btn.querySelector('button');
-        if (b) b.textContent = abierto ? 'Ver todos los alimentos ▾' : 'Ocultar lista ▴';
-      }
-    }
-
-    function renderEditResults(query) {
-      const el = document.getElementById('edit-results');
-      if (!el) return;
-      const q = normalizarTexto(query.trim());
-
-      const CAT_EMOJI = {
-        'Proteínas':     '🥩',
-        'Carbohidratos': '🌾',
-        'Grasas':        '🥑',
-        'Vegetales':     '🥦',
-        'Otros':         '🫘',
-      };
-
-      function previewMacros(fd) {
-        const usarProt  = _editCategory === 'Proteínas'     && _editOriginalProt  > 0 && fd.per100.prot  > 0;
-        const usarCarbs = !usarProt && _editCategory === 'Carbohidratos' && _editOriginalCarbs > 0 && fd.per100.carbs > 0;
-        const usarKcal  = !usarProt && !usarCarbs && _editOriginalKcal > 0 && fd.per100.kcal > 0;
-        if (usarProt || usarCarbs || usarKcal) {
-          const gramosEquiv = usarProt
-            ? (_editOriginalProt  / fd.per100.prot)  * 100
-            : usarCarbs
-            ? (_editOriginalCarbs / fd.per100.carbs) * 100
-            : (_editOriginalKcal  / fd.per100.kcal)  * 100;
-          const factorEquiv = gramosEquiv / 100;
-          const pE = (factorEquiv * fd.per100.prot).toFixed(1);
-          const gE = (factorEquiv * fd.per100.fat).toFixed(1);
-          const cE = (factorEquiv * fd.per100.carbs).toFixed(1);
-          const kE = Math.round(factorEquiv * fd.per100.kcal);
-          let etiqueta;
-          if (fd.defaultUnit === 'Gramos' || fd.defaultUnit === 'ml') {
-            etiqueta = `≈ ${Math.round(gramosEquiv)}${fd.defaultUnit === 'ml' ? 'ml' : 'g'}`;
-          } else if (fd.defaultAmount > 0) {
-            const unidades = Math.round(gramosEquiv / fd.defaultAmount * 10) / 10;
-            const unitLabel = fd.defaultUnit === 'Lata' ? (unidades === 1 ? 'lata' : 'latas')
-              : fd.defaultUnit === 'Taza' ? (unidades === 1 ? 'taza' : 'tazas')
-              : (unidades === 1 ? 'pieza' : 'piezas');
-            const unidadesLabel = fd.defaultUnit === 'Taza' && unidades === 0.5 ? '½' : unidades;
-            etiqueta = `≈ ${unidadesLabel} ${unitLabel}`;
-          } else {
-            etiqueta = `≈ ${Math.round(gramosEquiv)}g`;
-          }
-          return `${etiqueta} · P ${pE}g · G ${gE}g · C ${cE}g · ${kE} kcal`;
-        }
-        const f = fd.defaultAmount / 100;
-        const etiqueta = fd.defaultUnit === 'Gramos' ? `por ${fd.defaultAmount}g`
-          : fd.defaultUnit === 'Lata'  ? 'por lata'
-          : fd.defaultUnit === 'Pieza' ? 'por pieza'
-          : fd.defaultUnit === 'Taza'  ? 'por taza'
-          : 'por porción';
-        return `${etiqueta} · P ${(f * fd.per100.prot).toFixed(1)}g · G ${(f * fd.per100.fat).toFixed(1)}g · C ${(f * fd.per100.carbs).toFixed(1)}g · ${Math.round(f * fd.per100.kcal)} kcal`;
-      }
-
-      function foodCard(fd) {
-        const seleccionado = fd.id === _editSelectedFoodId;
-        const info = previewMacros(fd);
-        return `<div onclick="selectFoodFromDB('${fd.id}')"
-          style="background:${seleccionado ? 'var(--acc)22' : 'var(--s2)'};border:1.5px solid ${seleccionado ? 'var(--acc)' : 'var(--bd)'};border-radius:12px;padding:12px 14px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;">
-          <div style="font-size:14px;font-weight:${seleccionado ? '800' : '600'};color:${seleccionado ? 'var(--acc)' : 'var(--t1)'};">${fd.name}</div>
-          <div style="font-size:0.82em;color:var(--t3);margin-top:2px;">${fd.category} · ${info}</div>
-        </div>`;
-      }
-
-      let h = '';
-
-      if (!q) {
-        const current = FOOD_DB.find(f => f.id === _editSelectedFoodId);
-        if (current) {
-          h += foodCard(current);
-        } else if (_editCategory) {
-          FOOD_DB.filter(f => f.category === _editCategory).slice(0, 8).forEach(fd => { h += foodCard(fd); });
-        } else {
-          FOOD_DB.slice(0, 8).forEach(fd => { h += foodCard(fd); });
-        }
-
-        h += `<div id="ver-todos-btn" style="text-align:center;margin:8px 0 4px;">
-          <button onclick="toggleVerTodos()" style="background:transparent;border:1px solid var(--bd);border-radius:20px;padding:7px 18px;font-size:12px;color:var(--t3);cursor:pointer;-webkit-tap-highlight-color:transparent;">
-            Ver todos los alimentos ▾
-          </button>
-        </div>`;
-        h += `<div id="ver-todos-list" style="display:none;">`;
-        const cats = [];
-        FOOD_DB.forEach(fd => { if (!cats.includes(fd.category)) cats.push(fd.category); });
-        cats.forEach(cat => {
-          const emoji = CAT_EMOJI[cat] || '🍽';
-          h += `<div style="font-size:1.15em;font-weight:700;color:var(--t1);margin-top:18px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--bd);">${emoji} ${cat}</div>`;
-          FOOD_DB.filter(fd => fd.category === cat).forEach(fd => { h += foodCard(fd); });
-        });
-        h += `</div>`;
-
-      } else {
-        const pool = _editCategory ? FOOD_DB.filter(f => f.category === _editCategory) : FOOD_DB;
-        const resultados = pool.filter(f => normalizarTexto(f.name).includes(q));
-        if (resultados.length === 0) {
-          h += '<div style="text-align:center;color:var(--t3);padding:24px;font-size:14px;">Sin resultados</div>';
-        } else {
-          resultados.forEach(fd => { h += foodCard(fd); });
-        }
-      }
-
-      h += renderCantidadControls();
-      el.innerHTML = h;
-    }
-
-    // ── MEJORA 1: Calcula los macros totales del día incluyendo el ítem en edición ──
-    function calcMacrosDiaConItemEnEdicion() {
-      let prot = 0, carbs = 0, fat = 0, kcal = 0;
-      DIET_MEALS.forEach((meal, mi) => {
-        meal.items.forEach((item, ii) => {
-          const key = mi + '-' + ii;
-          const esItemEnEdicion = (mi === _editMealIdx && ii === _editItemIdx);
-
-          if (esItemEnEdicion) {
-            const fd = FOOD_DB.find(f => f.id === _editSelectedFoodId);
-            if (fd && _editAmount > 0) {
-              const factor = calcFactorGramos(_editAmount, _editSelectedUnit || fd.defaultUnit, fd);
-              prot  += factor * fd.per100.prot;
-              carbs += factor * fd.per100.carbs;
-              fat   += factor * fd.per100.fat;
-              kcal  += factor * fd.per100.kcal;
-            }
-          } else {
-            const override = dietSession[key];
-            if (override) {
-              if (override.amount > 0) {
-                prot  += override.prot  || 0;
-                carbs += override.carbs || 0;
-                fat   += override.fat   || 0;
-                kcal  += override.cal   || 0;
-              }
-            } else {
-              const fd = FOOD_DB.find(f => f.id === item.foodId);
-              if (fd) {
-                const g = item.grams || fd.defaultAmount;
-                prot  += (g / 100) * fd.per100.prot;
-                carbs += (g / 100) * fd.per100.carbs;
-                fat   += (g / 100) * fd.per100.fat;
-                kcal  += (g / 100) * fd.per100.kcal;
-              }
-            }
-          }
-        });
-      });
-      return {
-        prot:  Math.round(prot),
-        carbs: Math.round(carbs),
-        fat:   Math.round(fat),
-        kcal:  Math.round(kcal),
-      };
-    }
-
-    function renderCantidadControls() {
-      if (!_editSelectedFoodId) return '';
-      const fd = FOOD_DB.find(f => f.id === _editSelectedFoodId);
-      if (!fd) return '';
-      const unit   = _editSelectedUnit || fd.defaultUnit;
-      const paso   = unit === 'Gramos' ? 5 : unit === 'Taza' ? 0.5 : 1;
-      const factor = calcFactorGramos(_editAmount, unit, fd);
-      const macroStr = _editAmount > 0
-        ? `${(factor * fd.per100.prot).toFixed(1)}g prot · ${(factor * fd.per100.carbs).toFixed(1)}g carbs · ${(factor * fd.per100.fat).toFixed(1)}g grasas · ${(factor * fd.per100.kcal).toFixed(0)} kcal`
-        : '— sin consumo (ítem se mostrará tachado)';
-
-      const unidadSelector = fd.units.length > 1
-        ? `<select onchange="cambiarUnidadEdit(this.value)" style="background:var(--s2);border:1.5px solid var(--bd);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--t1);outline:none;-webkit-appearance:none;">
-            ${fd.units.map(u => `<option value="${u}" ${u === unit ? 'selected' : ''}>${u}</option>`).join('')}
-          </select>`
-        : `<div style="background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--t3);">${unit}</div>`;
-
-      // ── MEJORA 1: Barra de macros del día con colores verde/rojo en tiempo real ──
-      const diaActual = calcMacrosDiaConItemEnEdicion();
-      const diaMeta   = calcDietGoals();
-      const macrosBarra = [
-        { label: 'Prot',   key: 'prot',  color: '#f43f5e' },
-        { label: 'Carbs',  key: 'carbs', color: '#f59e0b' },
-        { label: 'Grasas', key: 'fat',   color: '#22c55e' },
-      ];
-      let barrasHtml = '';
-      macrosBarra.forEach(m => {
-        const actual = diaActual[m.key];
-        const meta   = diaMeta[m.key];
-        const pct    = meta > 0 ? Math.min(Math.round(actual / meta * 100), 100) : 0;
-        const cubierto  = actual >= meta;
-        const colorBarra = cubierto ? '#22c55e' : '#ef4444';
-        barrasHtml += `<div style="margin-bottom:6px;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
-            <span style="font-size:10px;color:var(--t3);">${m.label}</span>
-            <span style="font-size:10px;font-weight:700;color:${colorBarra};">${actual}g <span style="color:var(--t3);font-weight:400;">/ ${meta}g</span></span>
-          </div>
-          <div style="height:4px;background:var(--s2);border-radius:3px;overflow:hidden;">
-            <div style="height:100%;width:${pct}%;background:${colorBarra};border-radius:3px;transition:width .25s ease;"></div>
-          </div>
-        </div>`;
-      });
-
-      return `<div style="margin-top:14px;background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:16px;">
-        <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--t3);margin-bottom:12px;">AJUSTAR CANTIDAD</div>
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-          <span style="font-size:13px;color:var(--t2);">Unidad:</span>
-          ${unidadSelector}
-        </div>
-        <div style="display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
-          <button onclick="ajustarCantidadEdit(-${paso})"
-            style="background:var(--s2);border:1.5px solid var(--bd);border-radius:12px 0 0 12px;padding:12px 20px;font-size:22px;font-weight:800;color:var(--t1);border-right:none;">—</button>
-          <div style="background:var(--s2);border-top:1.5px solid var(--bd);border-bottom:1.5px solid var(--bd);padding:12px 20px;font-size:20px;font-weight:800;min-width:80px;text-align:center;color:var(--acc);">${unit === 'Taza' && _editAmount === 0.5 ? '½' : _editAmount}</div>
-          <button onclick="ajustarCantidadEdit(${paso})"
-            style="background:var(--s2);border:1.5px solid var(--bd);border-radius:0 12px 12px 0;padding:12px 20px;font-size:22px;font-weight:800;color:var(--t1);border-left:none;">+</button>
-        </div>
-        <div style="font-size:11px;color:var(--t3);text-align:center;background:var(--s2);border-radius:8px;padding:8px;margin-bottom:12px;">${macroStr}</div>
-        <!-- MEJORA 1: Barras de macros del día (verde = cubre meta, rojo = falta) -->
-        <div style="border-top:1px solid var(--bd);padding-top:12px;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--t3);margin-bottom:8px;">MACROS DEL DÍA (incluyendo este cambio)</div>
-          ${barrasHtml}
-        </div>
-      </div>`;
-    }
-
-    // ── Cantidad inicial correcta según la unidad del alimento ───────────────────
-    function cantidadInicial(fd, unit) {
-      return unit === 'Gramos' ? fd.defaultAmount : 1;
-    }
-
-    // ── Límite máximo en unidades correctas ──────────────────────────────────────
-    function cantidadMaxima(fd, unit) {
-      if (unit === 'Gramos' || unit === 'ml') return fd.defaultAmount * 10;
-      if (unit === 'Taza') return 10;
-      if (fd.defaultAmount <= 2) return 100;
-      return 20; // Pieza, Lata normal
-    }
-
-    function selectFoodFromDB(foodId) {
-      const fd = FOOD_DB.find(f => f.id === foodId);
-      if (!fd) return;
-      _editSelectedFoodId = foodId;
-      _editSelectedUnit   = fd.defaultUnit;
-      const usarProt = _editCategory === 'Proteínas' && _editOriginalProt > 0 && fd.per100.prot > 0;
-      const usarCarbs = !usarProt && _editCategory === 'Carbohidratos' && _editOriginalCarbs > 0 && fd.per100.carbs > 0;
-      const usarKcal = !usarProt && !usarCarbs && _editOriginalKcal > 0 && fd.per100.kcal > 0;
-      if (usarProt || usarCarbs || usarKcal) {
-        const gramosEquivalentes = usarProt
-          ? (_editOriginalProt / fd.per100.prot) * 100
-          : usarCarbs
-          ? (_editOriginalCarbs / fd.per100.carbs) * 100
-          : (_editOriginalKcal / fd.per100.kcal) * 100;
-        const unit = fd.defaultUnit;
-        if (unit === 'Gramos' || unit === 'ml') {
-          _editAmount = Math.max(1, Math.round(gramosEquivalentes));
-        } else if (unit === 'Taza') {
-          _editAmount = Math.max(0.5, Math.round((gramosEquivalentes / fd.defaultAmount) * 2) / 2);
-        } else {
-          _editAmount = Math.max(1, Math.round(gramosEquivalentes / fd.defaultAmount));
-        }
-      } else {
-        _editAmount = cantidadInicial(fd, fd.defaultUnit);
-      }
-      renderEditResults(document.getElementById('edit-search').value || '');
-    }
-
-    // ── CAMBIO-CONV: Conversión universal entre cualquier par de unidades ─────────
-    // luego de gramos a la nueva unidad usando fd.defaultAmount como factor.
-    //     2 Latas → Gramos: gramosActuales = 2 * 120 = 240g → muestra 240 ✅
-    //     2 Tazas → Gramos: gramosActuales = 2 * 104 = 208g → muestra 208 ✅
-    //     150 Gramos → Pieza: gramosActuales = 150g → 150/50 = 3 piezas ✅
-    function cambiarUnidadEdit(nuevaUnidad) {
-      const fd = FOOD_DB.find(f => f.id === _editSelectedFoodId);
-      if (!fd) return;
-
-      const unidadAnterior = _editSelectedUnit || fd.defaultUnit;
-
-      if (unidadAnterior === nuevaUnidad) {
-        _editSelectedUnit = nuevaUnidad;
-        renderEditResults(document.getElementById('edit-search').value || '');
-        return;
-      }
-
-      // 'Gramos' y 'ml' tienen factor 1 (1g=1g, 1ml≈1g).
-      function factorGramosPorUnidad(unit) {
-        if (unit === 'Gramos' || unit === 'ml') return 1;
-        if (unit === fd.defaultUnit) return fd.defaultAmount;
-        return 1; // fallback
-      }
-
-      if (!_editAmount || isNaN(_editAmount) || _editAmount <= 0) {
-        _editAmount = 1;
-      }
-
-      const factorAnterior  = factorGramosPorUnidad(unidadAnterior);
-      const gramosActuales  = _editAmount * factorAnterior;
-
-      const factorNueva = factorGramosPorUnidad(nuevaUnidad);
-      let nuevaCantidad;
-      if (factorNueva <= 0) {
-        nuevaCantidad = _editAmount;
-      } else if (nuevaUnidad === 'Gramos' || nuevaUnidad === 'ml') {
-        nuevaCantidad = Math.max(1, Math.round(gramosActuales));
-      } else if (nuevaUnidad === 'Taza') {
-        nuevaCantidad = Math.max(0.5, Math.round((gramosActuales / factorNueva) * 2) / 2);
-      } else {
-        nuevaCantidad = Math.max(1, Math.round(gramosActuales / factorNueva));
-      }
-
-      _editSelectedUnit = nuevaUnidad;
-      _editAmount       = nuevaCantidad;
-      renderEditResults(document.getElementById('edit-search').value || '');
-    }
-
-    function ajustarCantidadEdit(delta) {
-      const fd = FOOD_DB.find(f => f.id === _editSelectedFoodId);
-      if (!fd) return;
-      const unit = _editSelectedUnit || fd.defaultUnit;
-      _editAmount = Math.max(0, Math.min(cantidadMaxima(fd, unit), _editAmount + delta));
-      renderEditResults(document.getElementById('edit-search').value || '');
-    }
-    // ═══ END DIET SYSTEM ════════════════════════════════════════════════════════
 
     // están ocultos. Usa MutationObserver para reaccionar automáticamente a cualquier cambio de display,
     // sin necesidad de llamar a un helper desde los ~13 lugares que mutan esos elementos.
@@ -12579,7 +11294,6 @@ function _getPrevIdxFrom(d, fromIdx) {
     // - Soporte de supersets en openNoteEditorFor (alias retrocompatible).
     // - Activación dinámica del paso 4 del warmup (Prompt 2) — no se toca _resolveDynamicActivation.
     // - Flujo warmup → workout → cooldown → finalizar.
-    // - Sheets edit-sheet (Dieta) y swap-sheet (Dieta) — son sheets distintos.
     //
     // ╔════════════════════════════════════════════════════════════════════════╗
     // ║  CAMBIO P3B.2: HELPERS DE UI PARA SWAPS                                ║
