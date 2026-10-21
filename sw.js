@@ -23,7 +23,7 @@
 
 // CAMBIO G7-5: versión nueva del cache. El v1 se limpia en 'activate'.
 // CAMBIO parcial-6: sube a v8 por el guardado de entrenos parciales (index.html cambió).
-const CACHE_NAME = 'gym-braulio-v8';
+const CACHE_NAME = 'gym-braulio-v9';
 
 // Documento principal del app shell (GitHub Pages en subcarpeta /GYM-Braulio/,
 // rutas relativas a la ubicación del SW).

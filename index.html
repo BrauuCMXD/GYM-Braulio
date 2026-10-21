@@ -3366,7 +3366,7 @@
     //   simple vista si el device cargó la versión nueva (si dice v6 → cargó lo nuevo).
     // ═══════════════════════════════════════════════════════════════════════════
     // CAMBIO parcial-6: subir versión por el guardado de entrenos parciales (fuerza refresco del SW).
-    const APP_BUILD = { version: 'v8', date: '26 ago 2026 · 10:30' };
+    const APP_BUILD = { version: 'v9', date: '28 ago 2026 · 12:00' };
 
     // CAMBIO versión/actualización: chequeo manual desde Config (o tap en la versión del
     //   home). Fuerza reg.update() y reporta: al día / descargando / hay nueva versión.
@@ -6280,19 +6280,12 @@ function exportarProgreso() {
           clearInterval(restTimer);
           _clearRestBanner(); // CAMBIO G2-16: limpia banner TERMINADO al navegar/descheckar; preserva descanso corriendo
         }
-        // retroceder al leader (regla de diseño: receptores nunca se ven solos).
+        // CAMBIO 2026-08-28 G2-B2: usar _getPrevIdxFrom (espejo de _getNextIdxAfterSuperset).
+        // Antes: prevIdx = S.exIdx-1 y, si era receptor, saltaba directo al líder — se brincaba
+        // los pendientes intermedios de supersets NO adyacentes (3-4↔3-7, 6-5↔6-7).
+        // Ahora el helper busca el pendiente más cercano hacia atrás y solo va al líder si no queda.
         const d = day();
-        let prevIdx = S.exIdx - 1;
-        const prevEx = d.exercises[prevIdx];
-        if (prevEx) {
-          const leaderIdx = d.exercises.findIndex(ex => {
-            const c = getSupersetConfig(ex);
-            return c && c.with === prevEx.id;
-          });
-          if (leaderIdx >= 0) {
-            prevIdx = leaderIdx; // Ir al leader del superset (receptor nunca se muestra solo)
-          }
-        }
+        const prevIdx = _getPrevIdxFrom(d, S.exIdx);
         S.exIdx = prevIdx;
         _restoreNormalWorkoutUI();
         renderWorkout();
@@ -6407,6 +6400,37 @@ function _getNextPendingIdx(d, fromIdx) {
     if (logged < _totalSetsFor(ex)) return i; // pendiente
   }
   return -1; // todos completos o receptores
+}
+
+// CAMBIO 2026-08-28 G2-B2: espejo hacia atrás de _getNextIdxAfterSuperset.
+// Dado fromIdx (S.exIdx actual), calcula a qué índice retroceder respetando la
+// regla de diseño (un receptor de superset nunca se muestra solo) SIN brincarse
+// los ejercicios pendientes que quedan entre el líder y el receptor cuando el par
+// NO es adyacente (p.ej. 3-4↔3-7 con 3-5/3-6 en medio, o 6-5↔6-7).
+// Regla: si el candidato anterior (fromIdx-1) es receptor, busca en el intervalo
+// (leaderIdx, receiverIdx) el pendiente MÁS CERCANO hacia atrás (empezando por el
+// más próximo al receptor). Si no queda ninguno pendiente, entonces sí va al líder.
+function _getPrevIdxFrom(d, fromIdx) {
+  const prevIdx = fromIdx - 1;
+  if (prevIdx < 0) return prevIdx; // el caller (woPrev) maneja el caso < 0 (warmup)
+  const prevEx = d.exercises[prevIdx];
+  if (!prevEx) return prevIdx;
+  // ¿El candidato anterior es receptor de algún superset?
+  const leaderIdx = d.exercises.findIndex(ex => {
+    const c = getSupersetConfig(ex);
+    return c && c.with === prevEx.id;
+  });
+  if (leaderIdx < 0) return prevIdx; // no es receptor → válido tal cual (incluye líderes y sueltos)
+  // Es receptor: el candidato ES el receiver. Buscar pendiente más cercano hacia atrás.
+  const receiverIdx = prevIdx;
+  for (let i = receiverIdx - 1; i > leaderIdx; i--) {
+    const ex = d.exercises[i];
+    if (_isSupersetReceiver(ex, d)) continue; // saltar receptores de otros pares
+    const logged = (S.logged[ex.id] || []).length;
+    if (logged < _totalSetsFor(ex)) return i; // pendiente más próximo al receptor
+  }
+  // Ningún intermedio pendiente (o par adyacente) → ir al líder (receptor nunca solo).
+  return leaderIdx;
 }
 
     // ═══ NAVIGATION ══════════════════════════════════════════════════════════════
@@ -8687,6 +8711,11 @@ function _getNextPendingIdx(d, fromIdx) {
           if (allDone) {
             renderWorkoutHold(d, e);
           } else {
+            // FIX timer time-based multi-serie: re-renderizar la tarjeta para la nueva serie
+            // (muestra ±15s + ▶ INICIAR). Sin esto el contador se quedaba en 0s tras la 1ª serie.
+            // renderWorkoutHold no rearranca el loop: el nuevo setIdx aún no tiene estado persistido
+            // (started:false), así que su cola if(stNow&&stNow.started) no dispara.
+            renderWorkoutHold(d, e);
             startRestInline(e.rest, e.id);
           }
         }
