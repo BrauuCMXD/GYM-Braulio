@@ -1,10 +1,10 @@
 # CLAUDE.md — Gym Braulio PWA
 
-> **Al día con v13** (`c867ec2`, 2026-10-21). Verificado contra el código el 2026-10-24: las cifras se midieron en el archivo, no se copiaron de resúmenes. Ante cualquier duda **gana el código**.
+> **Al día con v14** (`4149485`, 2026-10-24). Verificado contra el código el 2026-10-24: las cifras se midieron en el archivo, no se copiaron de resúmenes. Ante cualquier duda **gana el código**.
 > **Este archivo es PÚBLICO** (repo y GitHub Pages): solo reglas técnicas. Nada personal — medidas, salud, ubicación —; eso va en `CLAUDE.local.md`, que git ignora y Claude Code carga solo en sesiones locales. Los docs del director (`estado_actual.md`, `funciones.md`, `prompts_pendientes.md`, `backlog.md`) también son privados: en una sesión en la nube no existen; trabaja con el código y con este archivo.
 
 ## Proyecto
-HTML monolítico PWA (12,144 líneas, ~891 KB en v13). Vanilla JS/CSS/HTML, sin frameworks, sin backend, 100% offline.
+HTML monolítico PWA (12,237 líneas, ~897 KB en v14). Vanilla JS/CSS/HTML, sin frameworks, sin backend, 100% offline.
 **Deploy:** https://brauucmxd.github.io/GYM-Braulio/ | **Archivo:** `index.html`
 **Verificación:** skill `gym-verificar` (`.claude/skills/gym-verificar/`) + scripts en `tools/` (Node, sin dependencias, solo lectura): `node tools/verificar.mjs` y `node tools/simular-peso.mjs`.
 
@@ -27,7 +27,7 @@ PROFILES_DEFAULT = {
 - `DAYS`, `ORM_DATA`, `EX_SIBLINGS`, `BARBELL_EX` son `let` (no `const`; `DIET_MEALS` se eliminó en v13). Se reasignan al perfil activo en `_reloadProfileData()`. Las funciones siguen leyendo esos identificadores sin cambios.
 - Overrides por perfil: `b5-profiles` (JSON `{id: data}`). Si existe override, hace merge defensivo sobre el default.
 - Perfil activo: `localStorage['b5-active-profile']` (default `'braulio'`).
-- `conditions[]`: condiciones de salud del perfil (valores en `PROFILES_DEFAULT`; el porqué, en `CLAUDE.local.md`). Filtran variantes y destinos de swap vía `unsafeFor[]`.
+- `conditions[]`: condiciones de salud del perfil (valores en `PROFILES_DEFAULT`; el porqué, en `CLAUDE.local.md`). Desde v14 **marcan** variantes y destinos de swap como riesgosos vía `unsafeFor[]` (ya no los ocultan): ver «Riesgo por condición (v14)».
 
 ### Helpers críticos
 - `getActiveProfileId()` — string id, default `'braulio'`.
@@ -42,8 +42,8 @@ PROFILES_DEFAULT = {
 IIFE `_migrateLegacyKeys()` se ejecuta una vez (gate: `b5-active-profile` ausente). Renombra 12 keys legacy → `b5-braulio-*` (v13 quitó `b5-diet-meals`), setea `b5-active-profile = 'braulio'`, garantiza `level:'A'` en ambos perfiles. Se mantiene permanentemente para usuarios que carguen versiones viejas.
 IIFE `_purgeDietData()` (v13) corre en CADA arranque, fuera de ese gate: borra `b5-diet-meals` y `b5-{p}-diet-meals` y quita `dietMeals`/`dietRefWeight` de `b5-profiles`. `_migrateRenamedVariants()` (v12) renombra ids de variante (`soleo-sentado`: `mancuernas` → `mancuerna`) en el equipo elegido, el historial y "Anterior"; se llama en `load()` y al cambiar de perfil. Ambas idempotentes.
 
-### Keys per-perfil (21)
-`hist · pbs · ww · recs · last · cycle-start · user-phase · user-weight · user-fat · user-goal · days-week · active-days · notes · pre-deload-ww · phase-reset-pending · phase-reset-done · archived-swaps · equipment · orm-current · orm-pending · week-overrides`
+### Keys per-perfil (22)
+`hist · pbs · ww · recs · last · cycle-start · user-phase · user-weight · user-fat · user-goal · days-week · active-days · notes · pre-deload-ww · phase-reset-pending · phase-reset-done · archived-swaps · equipment · orm-current · orm-pending · week-overrides · risky-cleanup-v14`
 
 ### Keys globales del dispositivo (no se prefijan)
 `theme · accent · font-size · sound-on · sound-type · vibrate · unit · rest-default · wake-lock · smith-bar-weight · active-profile · profiles`
@@ -169,7 +169,7 @@ Cada serie en `S.logged[exId]` lleva `exRef = ref del catálogo activo`. `finish
 - Items con lenguaje natural sin jerga: "Mismo músculo, técnica casi igual" / "técnica distinta" / "Trabaja músculos parecidos" (en vez de %match). Niveles en palabras completas ("Recomendado para Intermedios y Avanzados") cuando no aplica al nivel del usuario.
 - 2 botones inline expandidos al tap: "Cambiar / solo hoy" (puntual) y "Cambiar / en mi rutina" (permanente, **oculto durante entreno activo** vía `_isDuringActiveWorkout()`). Sin modal extra.
 - Badges inline `#wo-swap-badge` y `#cd-swap-badge` al lado del nombre, poblados por `renderSwapBadgeInline(slotId, where)` desde `renderWorkout`/`renderCooldown`. Oculto en SS (`renderSupersetWorkout` lo limpia explícito).
-- Toast `#swap-toast` (top:60px, fixed, z:1100, 2.6s auto-fade). Variantes `success` (verde) e `info` (azul). Necesario porque en warmup/cooldown el name del main no se ve.
+- Toast `#swap-toast` (top:60px, fixed, z:1100, 2.6s auto-fade). Variantes `success` (verde), `info` (azul) y `warn` (rojo; v14: se eligió algo riesgoso para la condición del perfil). Necesario porque en warmup/cooldown el name del main no se ve.
 - Ocultaciones: sección oculta en warmup/cooldown/`_activation:"auto"`. Item bloqueado (`opacity 0.45`, sin tap) si `inAnotherSlot`.
 - Estado local: `_swapExpandedRef` (ref del item expandido) se resetea al abrir el sheet, NO dentro de `renderSwapSectionInSheet` (el reset interno rompe el toggle).
 
@@ -178,7 +178,7 @@ Desde v12 solo existe el **phase reset** (todos los slots con peso, viene de del
 
 ### Edge cases
 - Slot sin `_ref` (legacy inline): `getAvailableSwapsForSlot` retorna `noCatalog: true`.
-- **Filtro por `conditions` (Lote 7):** `getAvailableSwapsForSlot(slot, d)` retorna `{available, pending, blocked, noCatalog}`. `blocked` = refs-destino vetados por seguridad del perfil vía `_refIsSafeForProfile(ref)` (mismo criterio `unsafeFor ∩ conditions` que las variantes; reusa `_variantAllowedForProfile`). `blocked` NO cuenta como `pending`. **Matiz:** `_refIsSafeForProfile` da `true` para fichas SIN `variants[]` — para poder vetar un ejercicio de equipo único por `conditions` hay que crearle una variante baseline con `unsafeFor` (patrón aplicado en `rdl-mancuernas`, `meadows-row`).
+- **Riesgo por `conditions` (v14; antes «Filtro por conditions», Lote 7):** `getAvailableSwapsForSlot(slot, d)` retorna `{available, pending, blocked, noCatalog}` y ya **no excluye** destinos: cada item lleva `risky` (= `!_refIsSafeForProfile(ref)`, mismo criterio `unsafeFor ∩ conditions` que las variantes; reusa `_variantAllowedForProfile`) y `blocked` queda siempre en 0 (se conserva por compatibilidad). La UI pone la leyenda: ver «Riesgo por condición (v14)». **Matiz:** `_refIsSafeForProfile` da `true` para fichas SIN `variants[]` — para que un ejercicio de equipo único salga como riesgoso hay que crearle una variante baseline con `unsafeFor` (patrón aplicado en `rdl-mancuernas`, `meadows-row`).
 - Receptor de superset: el swap aplica al slot individual; la config del SS vive en el leader (`superset:{with:...}`) que no cambia. El par se mantiene.
 - Slot con `_activation:"auto"`: la UI de swap oculta la sección.
 - Warmup/cooldown: no aceptan swap por ahora.
@@ -203,15 +203,15 @@ Schema por variante: `{ id, name, factor, barWeight, tracking:'baseline'|'shared
 - `barWeight`: base de la gráfica. `> 0` → barra/Smith (Smith: el peso configurado en Config) · `0` con `plateCalc:true` → **máquina de discos** (discos por lado, sin barra). Barras de v11: recta y Z = 10 · olímpica = 20 · trap bar = 25 (supuestos, por confirmar en el gym).
 - `default:true` en exactamente una variante.
 - **`form[]` / `errors[]` (opcionales, P4.4):** ficha técnica propia de la variante. Si existen, `resolveEx` los prefiere sobre la ficha base (vía `_applyVariantFicha`). Si no, la variante hereda `form`/`errors` del ejercicio. Solo afectan form/errors — `muscles`/`nameEn`/`img` siguen siendo del ejercicio. Poblados en 16 variantes de 4 mains que difieren de raíz (Press Banca, Press Inclinado ×2, Hip Thrust, Press Hombros). El resto hereda (cues casi idénticos no justifican ficha separada — regla del coach).
-- **v13 (medido):** **193 variantes en 89 mains** (89 baseline · 19 shared · 85 separate). **77 con discos:** 30 máquinas de discos (`barWeight:0`) · 28 de 10 kg (Smith y barras recta/Z) · 17 de 20 kg (olímpica) · 2 trap bar de 25. 16 con `unsafeFor`. *(Corrección 2026-10-24: los docs decían 132 variantes desde junio; v9 tenía 119 en 51 mains porque las fichas de las Tandas 2A/2B no llegaron a `main` hasta v11.)*
+- **v13 (medido):** **193 variantes en 89 mains** (89 baseline · 19 shared · 85 separate). **77 con discos:** 30 máquinas de discos (`barWeight:0`) · 28 de 10 kg (Smith y barras recta/Z) · 17 de 20 kg (olímpica) · 2 trap bar de 25. 16 con `unsafeFor` (desde v14 se muestran con leyenda de riesgo, no se ocultan). *(Corrección 2026-10-24: los docs decían 132 variantes desde junio; v9 tenía 119 en 51 mains porque las fichas de las Tandas 2A/2B no llegaron a `main` hasta v11.)*
 
 ### Storage + resolución
 - **Key per-perfil:** `b5-{profileId}-equipment` → `{ slotId: variantId }`. Preferencia persistente, NO se borra al terminar entreno. `S.equipmentMode` es cache de sesión NO autoritativo.
-- `getActiveVariant(slotEntry)` precedencia: `equipment[slotId]` (`source:'user'`) > variante `default:true` (`source:'default'`) > `null` (ejercicio sin variants). Storage > default; el cache de sesión NO se consulta para resolver (un cambio de perfil/restore no deja modo fantasma). Si el id guardado ya no existe en el ref activo, cae a default.
+- `getActiveVariant(slotEntry)` precedencia: `equipment[slotId]` (`source:'user'`) > variante `default:true` (`source:'default'`) > `null` (ejercicio sin variants). Storage > default; el cache de sesión NO se consulta para resolver (un cambio de perfil/restore no deja modo fantasma). Si el id guardado ya no existe en el ref activo, cae a default. **v14:** la elección guardada se respeta AUNQUE sea riesgosa para el perfil; sin elección: default si es segura → primera segura → default (nada riesgoso se activa solo).
 - **Coexistencia con swaps:** `getActiveVariant` opera SIEMPRE sobre el ejercicio RESUELTO (`getResolvedRefForSlot` → ref activo). Swap a ejercicio sin variants → switch no aplica (`null`). Swap a ejercicio con variants → switch opera sobre las del ejercicio swappeado.
 
 ### Conversión y tracking
-- `applyVariantSwitch(slotId, newVariantId)`: persiste el modo y retorna `{ ok, suggestedWeight, tracking, fromVariant, toVariant }`. Sigue calculando `suggestedWeight` por factor, pero **desde v12 la UI no lo usa**: `onEquipmentItemClick` precarga con `_prefillKgFor` (tu historial con ese equipo) y, sin registros, dice "primera vez: anota tu peso". `shared`/`baseline` comparten historial y 1RM; `separate` lleva historial propio.
+- `applyVariantSwitch(slotId, newVariantId)`: persiste el modo y retorna `{ ok, suggestedWeight, tracking, fromVariant, toVariant, risky }` (v14: ya no rechaza variantes riesgosas; antes `'bloqueada-por-condicion'`). Sigue calculando `suggestedWeight` por factor, pero **desde v12 la UI no lo usa**: `onEquipmentItemClick` precarga con `_prefillKgFor` (tu historial con ese equipo) y, sin registros, dice "primera vez: anota tu peso". `shared`/`baseline` comparten historial y 1RM; `separate` lleva historial propio.
 - Cada log nuevo lleva `variant` (junto a `exRef`). Logs sin `variant` (pre-4.1) se atribuyen a la **baseline**.
 - Ya no hay variant reset (×0.9, eliminado en v12): ver «Motor de peso». `checkDoubleProgression` y `_recentSessionsFor` filtran por variante activa cuando es `separate` (logs sin `variant` cuentan solo si la activa es la baseline); con baseline/shared activa se excluyen las series de variantes `separate`.
 
@@ -336,7 +336,16 @@ Slots: `1-1 1-2 1-4 1-6 1-7 · 2-1 2-2 2-3 2-4 2-7 · 3-1 3-2 3-5 3-6 · 4-1 4-2
 > *(Corrección 2026-10-24: este doc decía "16 ejercicios con 1RM semilla"; el código siempre tuvo 26 entradas.)*
 
 ## Restricciones por perfil
-Las restricciones de salud de cada perfil viven en `CLAUDE.local.md` (privado). En el código se expresan con `conditions[]` del perfil × `unsafeFor[]` de las variantes (filtran variantes y destinos de swap) y con los `tip`/`note` de cada slot. **Si vas a tocar ejercicios, swaps o variantes y no tienes `CLAUDE.local.md` (sesión en la nube), no quites ni relajes ninguna restricción existente (`unsafeFor`, `repsOverride`, tips): pregunta.**
+Las restricciones de salud de cada perfil viven en `CLAUDE.local.md` (privado). En el código se expresan con `conditions[]` del perfil × `unsafeFor[]` de las variantes (desde v14 **marcan** variantes y destinos de swap como riesgosos; no los ocultan) y con los `tip`/`note` de cada slot. **Si vas a tocar ejercicios, swaps o variantes y no tienes `CLAUDE.local.md` (sesión en la nube), no quites ni relajes ninguna restricción existente (`unsafeFor`, `repsOverride`, tips): pregunta.**
+
+### Riesgo por condición (v14)
+Decisión de producto (2026-10-24): lo que una condición del perfil desaconseja **se avisa, no se bloquea**. Una variante o destino de swap con `unsafeFor ∩ conditions` del perfil activo se muestra y se puede elegir, con la leyenda roja «⚠️ Riesgoso por <condición>». Sustituye al filtro de P4.2 / Lote 7 (ocultar y rechazar).
+- **Predicados** (siguen respondiendo "¿es seguro?"): `_variantAllowedForProfile(v)` y `_refIsSafeForProfile(ref)` (un ejercicio es riesgoso solo si TODAS sus variantes lo son; sin `variants[]` → seguro). Ya no sirven para ocultar ni rechazar.
+- **Texto:** `_riskLabelFor(variant)` → `''` o `"Riesgoso por <condición>"` (nombres `{ scoliosis: 'escoliosis' }`; otra condición → su clave; varias → "a, b y c") · `_riskLabelForRef(ref)` (etiqueta de su variante default) · `_riskToastText(name, label)` → "⚠️ <nombre> — riesgoso por …".
+- **Dónde se ve:** cada item de equipo (`renderEquipmentItemHTML`, también el activo) y de swap (`renderSwapItemHTML`); toast rojo `_showSwapToast(…, 'warn')` al elegir (equipo, "solo hoy", "en mi rutina") y una línea más en el confirm de "Cambiar en mi rutina"; en el entreno, el pill de `renderEquipmentBadgeInline` sale SIEMPRE en rojo si lo activo es riesgoso (con el nombre del equipo delante si además es elección no default); en supersets (sin badges), `_ssRiskNoteHtml(slot)` bajo el nombre de cada ejercicio del par.
+- **Nada riesgoso se activa solo:** `getActiveVariant` respeta la elección del usuario aunque sea riesgosa; sin elección → default si es segura → primera segura → default. `_cleanStaleRiskyEquipment()` (en `load()` y al cambiar de perfil, junto a `_migrateRenamedVariants`) borra UNA vez por perfil las elecciones riesgosas guardadas antes de v14 (P4.2-2 las ignoraba en silencio) y marca `risky-cleanup-v14`.
+- **Retornos:** `getAvailableVariantsForSlot` → `{variants: todas, active, risky: [ids], blocked: 0, noVariants: <2 en total}` · `applyVariantSwitch` → `+ risky` · `getAvailableSwapsForSlot` → cada item con `risky`, `blocked: 0`.
+- El peso no cambia de reglas: una variante riesgosa es un equipo más (sin registros → "primera vez"; si es `separate`, no alimenta el 1RM del slot).
 
 ## Estructura HTML
 ```
@@ -360,9 +369,9 @@ Clases clave: `.screen .sf .ss .card .bottom-nav .today-card .cfg-* .st-row .st-
 
 - **Perfiles:** `getActiveProfileId` `_pkey` `getActiveProfile` `saveProfile` `_reloadProfileData` `switchProfile` `_loadProfileSection` `_onNewProfileClick` `setProfileLevel` `_syncProfileLevelSeg` · IIFE `_migrateLegacyKeys`
 - **Notas + sheet unificado:** `getNotes` `saveNotes` `getNoteForExercise` `setNoteForExercise` `resolveNoteForExercise` `openExerciseEditSheet(exId, opts)` + wrappers ForWorkout/ForWarmup/ForCooldown · acciones del sheet · `_refreshNoteUIFor` · alias retrocompat `openNoteEditorFor`
-- **Swaps lógica (P3B.1):** `getResolvedRefForSlot` `getAvailableSwapsForSlot` `applySwapPuntual` `applySwapPermanente` `revertSwapPuntual` `revertSwapPermanente` `getSwapBadgeForSlot` · seguridad (Lote 7) `_refIsSafeForProfile(ref)` (reusa `_variantAllowedForProfile`; true sin `variants[]`) · internos `_archiveHistoryForSlot` `_getArchivedSwap` `_getAllArchivedSwaps` `_clearArchivedSwap` `_hasLogsWithRef` `_lastWeightForSlotRef` (sin llamadas desde v12) `_refForSlotInCurrentDays` · consola `_testSwap` `_testRevertSwap` `_dumpSwapState`
-- **Swaps UI (P3B.2):** `renderSwapSectionInSheet` `renderSwapItemHTML` `renderSwapBadgeInline` `onSwapItemClick` `onSwapPuntualClick` `onSwapPermanenteClick` `onRevertSwapClick` `onSwapBadgeClick` `_showSwapToast` `_activeSlotIsBarbell` `_isDuringActiveWorkout` `_swapColorForMatch` `_slotEntryFromExId` `_dayIdForSlotId` `_rerenderAfterSwap` `_escHtml` `_escAttr` · estado `_swapExpandedRef`
-- **Switch de variantes (P4.1):** `getActiveVariant(slot)` `_activeVariantForEx(ex)` `_slotShowsPlates(slot)` `applyVariantSwitch(slotId, newVariantId)` · ficha por variante (P4.4) `_applyVariantFicha(resolvedObj, entry)` · storage `_getEquipmentMap` `_saveEquipmentMap` `_setEquipmentForSlot` · lectura segmentada `_lastWeightForVariant` `_hasLogsForVariant` (sin llamadas desde v12) · UI (P4.2) `getAvailableVariantsForSlot` `renderEquipmentSectionInSheet` `renderEquipmentItemHTML` `onEquipmentItemClick` `renderEquipmentBadgeInline` `_variantEffectLabel` `_variantAllowedForProfile` · consola `_testSwitchVariant` `_dumpVariantState` · DEPRECADOS `BARBELL_EX={}` `toggleBarType`(no-op) `_activeSlotIsBarbell`(alias→`_slotShowsPlates`) — ninguno tiene llamadas en v13
+- **Swaps lógica (P3B.1):** `getResolvedRefForSlot` `getAvailableSwapsForSlot` `applySwapPuntual` `applySwapPermanente` `revertSwapPuntual` `revertSwapPermanente` `getSwapBadgeForSlot` · riesgo (v14; antes filtro Lote 7) `_refIsSafeForProfile(ref)` (reusa `_variantAllowedForProfile`; true sin `variants[]`) `_riskLabelForRef(ref)` · internos `_archiveHistoryForSlot` `_getArchivedSwap` `_getAllArchivedSwaps` `_clearArchivedSwap` `_hasLogsWithRef` `_lastWeightForSlotRef` (sin llamadas desde v12) `_refForSlotInCurrentDays` · consola `_testSwap` `_testRevertSwap` `_dumpSwapState`
+- **Swaps UI (P3B.2):** `renderSwapSectionInSheet` `renderSwapItemHTML` `renderSwapBadgeInline` `onSwapItemClick` `onSwapPuntualClick` `onSwapPermanenteClick` `onRevertSwapClick` `onSwapBadgeClick` `_showSwapToast` (tonos success/info/warn) `_riskToastText` `_activeSlotIsBarbell` `_isDuringActiveWorkout` `_swapColorForMatch` `_slotEntryFromExId` `_dayIdForSlotId` `_rerenderAfterSwap` `_escHtml` `_escAttr` · estado `_swapExpandedRef`
+- **Switch de variantes (P4.1):** `getActiveVariant(slot)` `_activeVariantForEx(ex)` `_slotShowsPlates(slot)` `applyVariantSwitch(slotId, newVariantId)` · ficha por variante (P4.4) `_applyVariantFicha(resolvedObj, entry)` · storage `_getEquipmentMap` `_saveEquipmentMap` `_setEquipmentForSlot` · lectura segmentada `_lastWeightForVariant` `_hasLogsForVariant` (sin llamadas desde v12) · UI (P4.2) `getAvailableVariantsForSlot` `renderEquipmentSectionInSheet` `renderEquipmentItemHTML` `onEquipmentItemClick` `renderEquipmentBadgeInline` `_variantEffectLabel` `_variantAllowedForProfile` · riesgo (v14) `_riskLabelFor` `_ssRiskNoteHtml` `_cleanStaleRiskyEquipment` · consola `_testSwitchVariant` `_dumpVariantState` · DEPRECADOS `BARBELL_EX={}` `toggleBarType`(no-op) `_activeSlotIsBarbell`(alias→`_slotShowsPlates`) — ninguno tiene llamadas en v13
 - **Nav:** `showScreen` `switchTab` `hasActiveWorkout` · IIFE `initWoStickyObserver`
 - **Workout:** `startWorkout→renderWarmup→renderWorkout→renderCooldown→finishWorkout`
 - **SuperSet/Biserie:** `getSupersetConfig` `getSupersetPartner` `renderSupersetWorkout(d,eA,eB,cfg)` `buildSSTable` `toggleSetSS` `startSSHold(exId,idx,prefix)` `adjustSSHold` `resetSSHold` `_ssHoldLoop` `_isSupersetReceiver` `_getNextIdxAfterSuperset` `_getPrevIdxFrom` `_getNextPendingIdx` `_restoreNormalWorkoutUI`
@@ -380,7 +389,7 @@ Clases clave: `.screen .sf .ss .card .bottom-nav .today-card .cfg-* .st-row .st-
 - **1RM:** en vivo `_liveE1RMFor` · guardado `_phasePctRange(phaseKey)` `_regenRangesFromOrm(orm)` `_getOrmCurrent` `_getOrmPending` `_saveOrmCurrent` `_saveOrmPending` `_applyLiveOrmToCatalog` `_maybeRecalcOrm` `_undoOrmPendingFor` `_applyPendingOrms` · consola `_dumpOrmState` `_resetOrmAuto` `_applyOrmsNow`
 - **Guardado de entrenos (incl. PARCIALES, 2026-08-26):** `_persistWorkoutToHistory(opts)` `_workoutProgress(loggedObj, dayId)` `_teardownWorkoutSession()` `_partialChipHtml(h)` `_offerSavePendingSession(d)` · consumidores `finishWorkout` `confirmCancel` `checkPendingSession`
 - **Ciclo por trabajo (G4):** `getCurrentWeek` `isCycleExpired` `nextDayId` `startCycle` · week-overrides (getter/setter) · panel "¿Qué llevo?"
-- **Limpieza y migraciones al arrancar:** IIFE `_purgeDietData` (v13) · `_migrateRenamedVariants` (v12). *(La Dieta se eliminó en v13; lista en funciones.md → ELIMINADAS.)*
+- **Limpieza y migraciones al arrancar:** IIFE `_purgeDietData` (v13) · `_migrateRenamedVariants` (v12) · `_cleanStaleRiskyEquipment` (v14, una vez por perfil, marca `risky-cleanup-v14`). *(La Dieta se eliminó en v13; lista en funciones.md → ELIMINADAS.)*
 - **Config:** `loadApariencia` `loadConfigGrupo2` `loadConfigGrupo3` `showInfoRevertModal` `openDetailSheet`
 - **Resolvers:** `resolveEx(entry, d?)` `_resolveDynamicActivation(entry, d)` `resolveCardio(d)`
 - **Fase deload:** `_currentPhaseKey` `_isDeload` `_isCompound` `_phaseAdjustedRest` `_deloadTimeVal` `_round25`
@@ -435,13 +444,13 @@ El toggle Libre↔Smith ahora lo cubren las variantes `barra-libre`+`smith` de c
 
 ## localStorage (per-perfil + globales + efímeras)
 
-### Per-perfil (21 keys, prefijo `b5-{profileId}-`)
+### Per-perfil (22 keys, prefijo `b5-{profileId}-`)
 **Entreno:** hist, pbs, ww, sess (efímera única), cycle-start, last, recs, notes
 **Config entreno:** user-phase, days-week, active-days
 **Perfil:** user-weight, user-fat, user-goal
 **Fase deload/reset:** pre-deload-ww, phase-reset-pending, phase-reset-done
 **Swaps:** archived-swaps
-**Equipo:** equipment
+**Equipo:** equipment · risky-cleanup-v14 (marca de la limpieza única de v14)
 **1RM automático (G3):** orm-current, orm-pending
 **Calendarización (G4):** week-overrides
 
@@ -493,7 +502,7 @@ Braulio no la usaba. Se quitaron `FOOD_DB`, `DIET_MEALS`, `NUTR`, `NUTR_META`, `
 - **Leer la fase con string match** — usar `_isDeload()` / `_currentPhaseKey()`
 - **Leer `e.compound` / `resolved.compound` para decidir si es compuesto** — usar `_isCompound(ex)`. Con swap activo la marca del slot está rancia (Lote 7); `_isCompound` deriva del ref resuelto
 - **Agregar a `COMPOUND_NAMES_EN` cualquiera de las 7 exclusiones del coach** (`Arnold Press` (Arnold Press), `Machine Triceps Press (Seated Dip)` (Press de Tríceps en Máquina), `Barbell Good Morning` (Good Morning con Barra), `Barbell Glute Bridge` (Puente de Glúteo con Barra), `Dumbbell High Step-Up` (Subida a Banco Alto con Mancuernas), `Dumbbell Walking Lunge` (Zancada Caminando con Mancuernas) y `Dumbbell Reverse Lunge` (Zancada hacia Atrás con Mancuernas)) — exclusión permanente (rango fijo, no toleran 5-7)
-- **Vetar un ref-destino por `conditions` sin `variants[]`** — `_refIsSafeForProfile` da `true` sin variantes; crear una variante baseline con `unsafeFor` para poder bloquearlo
+- **Esperar que un ref-destino sin `variants[]` salga como riesgoso por `conditions`** — `_refIsSafeForProfile` da `true` sin variantes; crear una variante baseline con `unsafeFor` para que lleve la leyenda
 - **Aplicar deload a warmup/cooldown**
 - **Marcar `compound:true` en JSON** si está cubierto por `nameEn` en `COMPOUND_NAMES_EN`
 - **Llamar `_phaseAdjustedRest` con `isBetween:true`** salvo en SS receptor
@@ -507,7 +516,7 @@ Braulio no la usaba. Se quitaron `FOOD_DB`, `DIET_MEALS`, `NUTR`, `NUTR_META`, `
 - **Llamar `applySwapPermanente` durante entreno activo** — el botón de UI se oculta vía `_isDuringActiveWorkout()`
 - **Setear `S.sessionSwaps[slotId]` con un ref que NO está en `EX_CATALOG`** — `applySwapPuntual` ya valida
 - **Renderizar `wo-swap-badge`/`cd-swap-badge` sin pasar por `renderSwapBadgeInline`** — el helper limpia el span si no hay swap (evita badge stale)
-- **Asumir que el badge inline aparece en supersets** — `renderSupersetWorkout` lo oculta (en SS `wo-name` queda vacío)
+- **Asumir que el badge inline aparece en supersets** — `renderSupersetWorkout` lo oculta (en SS `wo-name` queda vacío); la leyenda de riesgo va bajo el nombre con `_ssRiskNoteHtml` (v14)
 - **Leer `BARBELL_EX[ex.id]` directamente para decidir toggle/plate calc** — usar `_plateInfoFor(ex)` (considera swap y variante)
 - **Asumir que `S.phase` se autoactualiza al cambiar de pantalla** — debe asignarse explícitamente en cada transición
 - **Mostrar niveles P/I/A abreviados en UI** — usar palabras completas "Principiantes/Intermedios/Avanzados"
@@ -520,7 +529,7 @@ Braulio no la usaba. Se quitaron `FOOD_DB`, `DIET_MEALS`, `NUTR`, `NUTR_META`, `
 - **Setear `equipment[slotId]` con un variantId que NO está en `variants[]` del ref activo** — `applyVariantSwitch` valida; `getActiveVariant` cae a default si el id ya no existe
 - **Duplicar `form`/`errors` en variantes cuando son casi idénticos a la base** — solo poblar variantes cuya técnica difiera de raíz (regla del coach). El resto hereda
 - **Poner `muscles`/`nameEn`/`img` en una variante** — la variante solo personaliza `form`/`errors`; lo demás es del ejercicio
-- **Ofrecer una variante con `unsafeFor` ∩ `conditions` del perfil** — `getAvailableVariantsForSlot` la filtra; si el modo guardado apunta a una bloqueada, `getActiveVariant` cae a default seguro
+- **Ocultar, rechazar o activar en automático una variante o destino riesgoso (`unsafeFor` ∩ `conditions`)** — desde v14 se muestran con «⚠️ Riesgoso por …» y se pueden elegir; sin elección del usuario, `getActiveVariant` prefiere lo seguro (decisión de producto, v14 — ver «Riesgo por condición»)
 - **Hardcodear el peso de la barra Smith** — leer `_getSmithBarWeight()` (lee `b5-smith-bar-weight`, global). El `barWeight:10` del catálogo es solo el default
 - **Escribir 1RM o rangos en `ORM_DATA` del `<script>`** — desde v12 es solo metadata (`name`, `unit`). El 1RM sale de los registros: en vivo `_liveE1RMFor`, guardado en `b5-{p}-orm-current`
 - **Leer `exDetail` como objeto keyed por exId, o `s.weight`** — `exDetail` es array de `{slotId,name,sets:[{w,r,...}]}`; buscar por `slotId` y leer `s.w` (bug G3-1)
@@ -590,7 +599,7 @@ Braulio no la usaba. Se quitaron `FOOD_DB`, `DIET_MEALS`, `NUTR`, `NUTR_META`, `
 - **`variant` por serie en `exDetail` de `finishWorkout`** — shape `{slotId, name, sets:[{w,r,kind,ref,variant}]}`
 - **`_pkey('equipment')`** para el storage de modos de equipo
 - **`_plateInfoFor(ex)`** para decidir la gráfica de discos y su base — fuente única desde v10 (no `_activeSlotIsBarbell`, no regex de nombre)
-- **`_refIsSafeForProfile(ref)` antes de ofrecer un ref como destino de swap** (Lote 7) — mismo filtro `unsafeFor ∩ conditions` que las variantes. `getAvailableSwapsForSlot` separa estos en `blocked`, no en `pending`
+- **Leyenda de riesgo en todo lo riesgoso que se ofrece o está activo** (v14) — `_riskLabelFor(variant)` / `_riskLabelForRef(ref)` (mismo criterio `unsafeFor ∩ conditions` que los predicados): listas de equipo y swap, toasts `'warn'`, confirm de "Cambiar en mi rutina", pill del entreno y `_ssRiskNoteHtml` en supersets
 - **`_barWeightForVariant(v)`** para el peso de la barra (sin variante → 20 · `barWeight` 0 → máquina de discos · Smith → el configurado)
 - **`getSuggestedWeight` como única puerta de cualquier peso sugerido** (deja el número cargable). Orden de `_getSuggestedWeightRaw`: AMRAP → reinicio dl→acc → descarga → re-ancla de fase → doble progresión → rango del 1RM guardado (detalle en «Motor de peso»)
 - **Leer `exDetail` como array y `s.w`** en `_referenceWeightFor` / lectura de historial (buscar por `slotId`)
@@ -601,7 +610,7 @@ Braulio no la usaba. Se quitaron `FOOD_DB`, `DIET_MEALS`, `NUTR`, `NUTR_META`, `
 - **`_persistWorkoutToHistory(opts)` para cualquier escritura nueva a `history`** — `opts.partial` marca `sess.partial` + `sess.completionPct`; `opts.endTs` fija el final real (usado en `elapsed` con clamp 1..240 min, y en `sess.id`/`sess.date`); `opts.loggedObj`/`opts.dayId` permiten persistir desde un `logged` restaurado de `b5-sess`
 - **Tratar la ausencia de `partial`/`completionPct` en un registro de `history` como entreno COMPLETO** — retrocompat de los entrenos previos a 2026-08-26
 - **`renderHome()` sale gratis con `showScreen('home')`** — la función ya lo llama al final (corrección 2026-08-26: la doc asumía que no)
-- **`getAvailableVariantsForSlot(slot)` para la lista del switch UI** — filtra por `conditions` ∩ `unsafeFor` del perfil activo
+- **`getAvailableVariantsForSlot(slot)` para la lista del switch UI** — devuelve TODAS las variantes + `risky` (ids con `unsafeFor ∩ conditions` del perfil activo); `blocked` siempre 0 (v14)
 - **`_applyVariantFicha` dentro de `resolveEx`** para que `form`/`errors` sigan a la variante de equipo activa
 - **Unidad de peso según variante activa** (P4.3): par de mancuernas → "kg total" (con desglose ~X/mano; una sola mancuerna, sin desglose), máquina → "kg", barra/Smith → "kg barra". Aplica en tarjeta deload, sugerencia e historial
 - **`_recentSessionsFor(slotId, opts)`** para cualquier lectura nueva del historial de un slot (`skipDeload:true` si es para progresar o estimar el 1RM)
