@@ -4,8 +4,9 @@
 > **Este archivo es PÚBLICO** (repo y GitHub Pages): solo reglas técnicas. Nada personal — medidas, salud, ubicación —; eso va en `CLAUDE.local.md`, que git ignora y Claude Code carga solo en sesiones locales. Los docs del director (`estado_actual.md`, `funciones.md`, `prompts_pendientes.md`, `backlog.md`) también son privados: en una sesión en la nube no existen; trabaja con el código y con este archivo.
 
 ## Proyecto
-HTML monolítico PWA (12,144 líneas, ~890 KB en v13). Vanilla JS/CSS/HTML, sin frameworks, sin backend, 100% offline.
+HTML monolítico PWA (12,144 líneas, ~891 KB en v13). Vanilla JS/CSS/HTML, sin frameworks, sin backend, 100% offline.
 **Deploy:** https://brauucmxd.github.io/GYM-Braulio/ | **Archivo:** `index.html`
+**Verificación:** skill `gym-verificar` (`.claude/skills/gym-verificar/`) + scripts en `tools/` (Node, sin dependencias, solo lectura): `node tools/verificar.mjs` y `node tools/simular-peso.mjs`.
 
 ### Infraestructura PWA (G7)
 GitHub Pages en subcarpeta `/GYM-Braulio/` → rutas del SW/manifest **relativas** (`./`), nunca absolutas (`/`). `sw.js` (raíz del repo) estrategia **cache-first del app shell**: navegación sirve `./index.html` desde cache sin tocar red mientras exista; todo `fetch` de red en `.catch()` con fallback a `./index.html` cacheado (esto elimina la pantalla en blanco con red mala). Precache resiliente (shell requerido, resto best-effort). **Sin hot-swap:** sin `skipWaiting()`; el SW nuevo queda en espera y toma control en la próxima apertura limpia o vía `postMessage('SKIP_WAITING')` tras confirmación del usuario — nunca recarga si `hasActiveWorkout()`. El registro del SW + `<link rel="manifest">` viven en el HTML (bloque G7-4/G7-8). El SW usa Cache Storage (`gym-braulio-v13`), NO localStorage — no interfiere con las keys `b5-*`.
@@ -76,7 +77,7 @@ EX_CATALOG = {
 - **Override puntual** posible: `{ _ref: "iso-sentadilla-pared", val: 30, sets: 2, note: "..." }` — los campos en el objeto _ref ganan sobre el catálogo.
 - `resolveEx(entry, d?)` consulta `getResolvedRefForSlot` ANTES de leer `_ref` (precedencia: swap puntual > _ref > null). Si hay swap activo, mergea desde ref del swap. Aplica a warmup, cooldown y exercises. El 2º arg `d` opcional permite resolver placeholders dinámicos (`_activation:"auto"`); sin `d`, fallback estático.
 - **Campo `benefits`** (solo warmups/isos): línea corta que se renderiza en `#wu-benefits`. Inline italic 12px sin caja. Si no existe, bloque oculto.
-- **Campo `warmupStep`** (`'mobility' | 'activation' | 'rampup'`): clasifica el rol del paso. `rampup` recibe el mismo tratamiento UI que las activaciones (`isAct=true`).
+- **Campo `warmupStep`** (`'mobility' | 'activation' | 'cardio'` en el catálogo; `'rampup'` lo asigna en runtime `_resolveDynamicActivation`): clasifica el rol del paso. `activation` y `rampup` reciben el tratamiento de activación (`isAct=true`); `mobility` y `cardio` (bicicleta estática, elíptica, remo suave) no. *(Corrección 2026-10-24: el doc no listaba `cardio`.)*
 - **Campo `swaps[]`** (solo mains): lista de sustituciones recomendadas. Cada item `{ ref, match, type:'perm'|'pnt', levels:['P'|'I'|'A'], note? }`. Ver "Sistema de swaps".
 
 ### Activación dinámica del warmup (paso 4)
@@ -285,7 +286,7 @@ Lógica aplica a TODOS los perfiles. La fase vive en `_pkey('user-phase')`.
 Set `COMPOUND_NAMES_EN` (47 entries: 27 hasta v10 + 20 de las fichas reconstruidas en v11 — *los docs decían 47 desde junio, pero el código tenía 27*) — fuente única de verdad por `nameEn`. `_markCompoundExercises(daysArray)` se llama desde `_reloadProfileData()` y marca `e.compound = true` solo si `e.compound === undefined` (override JSON respetado). Multiusuario automático.
 
 **Lote 7 (2026-06-11) — deriva del ejercicio RESUELTO:** `_isCompound(ex)` ya NO confía en la marca `compound` del slot cuando hay swap activo. Con swap (puntual o permanente, vía `getResolvedRefForSlot`) deriva la condición del `nameEn` del **ref activo** contra `COMPOUND_NAMES_EN`. La marca/override `compound` del JSON solo es válida para el ejercicio ORIGINAL del slot — NO sobrevive a un swap. Cierra el bug del compound rancio (swap de un compuesto a Arnold Press dejaba `compound:true` y Arnold periodizaba a 5-7, prohibido por el coach). Cubre de raíz a `getPhaseReps`, `getSuggestedWeight` (F1b/B.5), `_phaseAdjustedRest` y avisos de DP — ninguno se modificó.
-**Exclusiones permanentes de `COMPOUND_NAMES_EN`** (decisión del coach — NUNCA agregarlos): Arnold Press, Machine Triceps Press, Barbell Good Morning, **Puente de Glúteo Cargado, Step-up, Zancada Caminando, Zancada Hacia Atrás** (estas 4 añadidas en 2B). Multiarticulares o de patrón que NO toleran bajar a 5-7; van a rango fijo.
+**Exclusiones permanentes de `COMPOUND_NAMES_EN`** (decisión del coach — NUNCA agregarlos; el set compara el `nameEn` EXACTO): `Arnold Press` (Arnold Press), `Machine Triceps Press (Seated Dip)` (Press de Tríceps en Máquina), `Barbell Good Morning` (Good Morning con Barra), `Barbell Glute Bridge` (Puente de Glúteo con Barra), `Dumbbell High Step-Up` (Subida a Banco Alto con Mancuernas), `Dumbbell Walking Lunge` (Zancada Caminando con Mancuernas) y `Dumbbell Reverse Lunge` (Zancada hacia Atrás con Mancuernas). Las 4 últimas se añadieron en 2B. Multiarticulares o de patrón que NO toleran bajar a 5-7; van a rango fijo. *(Corrección 2026-10-24: antes se listaban con nombres cortos que no coinciden con el catálogo.)*
 
 ### Transición dl → acc (manual desde Config)
 - `setUserPhase('acc')` desde deload dispara `showConfirm` "Reinicio de ciclo" con 6º arg `cancelCb`.
@@ -457,7 +458,7 @@ El toggle Libre↔Smith ahora lo cubren las variantes `barra-libre`+`smith` de c
 Braulio no la usaba. Se quitaron `FOOD_DB`, `DIET_MEALS`, `NUTR`, `NUTR_META`, `PROT_G_PER_KG`, la pantalla `diet`, `edit-sheet`, `swap-sheet`, la pestaña y 30 funciones (~970 líneas). Quedan: peso, grasa y objetivo del perfil, el recordatorio de agua y `showNutrition` como "Análisis de la sesión" (duración e incrementos sugeridos). `_purgeDietData` limpia lo guardado. No reintroducir sin decisión de Braulio.
 
 ## Datos en `<script>`
-`EX_CATALOG{201}` (134 main · 34 warmup · 33 cooldown; 193 variantes en 89 mains, 77 con discos; 16 variantes con `form`/`errors` propios, P4.4; 16 con `unsafeFor`; `execLabel` en los 134 mains, frases `execCue` solo en 51 — faltan las 83 altas de las tandas; 44 mains con `swaps[]` (115 destinos) y **0 refs colgando**) `CARDIO_PROTOCOL{1}` `DAYS[6]` (51 ejercicios: 7·10·9·7·9·9) `JIMENA_DAYS[6]` (32: 5·6·5·6·5·5) `ORM_DATA{26}` (solo `name` + `unit`, Braulio) `PHASES[4]` (acc sem 1-2 12-15 · hyp 3-5 8-10 · str 6 5-7 · dl 7 12-15 ligero — fuente única de periodización y de los %) `PLATES[6]` (20·15·10·5·2.5·1.25) `BAND_SUBS{5}` `EX_SIBLINGS{9}` `TEMAS{2}` `BARBELL_EX{0}` (deprecado) `PROFILES_DEFAULT{2}` (con `conditions[]` por perfil — valores y pendientes en `CLAUDE.local.md`; `level` editable vía Config) `COMPOUND_NAMES_EN{47}` (Arnold Press, Machine Triceps Press, Barbell Good Morning, Puente Glúteo Cargado, Step-up, Zancada Caminando y Zancada Atrás excluidos A PROPÓSITO — rango fijo) `APP_BUILD`. Flags de ejercicio: `amrap:true` (Grupo E), `repsOverride:{fase:reps}` (Grupo A), `needs1RM` (Jimena), `primaryMuscle` (los 134 mains; 14 `'core'`). *(Medido en v13 el 2026-10-24. Antes de v11 el catálogo real era de 140 fichas y 73 mains: las Tandas 2A/2B no habían llegado a `main`.)*
+`EX_CATALOG{201}` (134 main · 34 warmup · 33 cooldown; 193 variantes en 89 mains, 77 con discos; 16 variantes con `form`/`errors` propios, P4.4; 16 con `unsafeFor`; `execLabel` en los 134 mains, frases `execCue` solo en 51 — faltan las 83 altas de las tandas; 44 mains con `swaps[]` (115 destinos) y **0 refs colgando**) `CARDIO_PROTOCOL{1}` `DAYS[6]` (51 ejercicios: 7·10·9·7·9·9) `JIMENA_DAYS[6]` (32: 5·6·5·6·5·5) `ORM_DATA{26}` (solo `name` + `unit`, Braulio) `PHASES[4]` (acc sem 1-2 12-15 · hyp 3-5 8-10 · str 6 5-7 · dl 7 12-15 ligero — fuente única de periodización y de los %) `PLATES[6]` (20·15·10·5·2.5·1.25) `BAND_SUBS{5}` `EX_SIBLINGS{9}` `TEMAS{2}` `BARBELL_EX{0}` (deprecado) `PROFILES_DEFAULT{2}` (con `conditions[]` por perfil — valores y pendientes en `CLAUDE.local.md`; `level` editable vía Config) `COMPOUND_NAMES_EN{47}` (7 exclusiones permanentes del coach por `nameEn` exacto — ver «Identificación de compuestos») `APP_BUILD`. Flags de ejercicio: `amrap:true` (Grupo E), `repsOverride:{fase:reps}` (Grupo A), `needs1RM` (Jimena), `primaryMuscle` (los 134 mains; 14 `'core'`). *(Medido en v13 el 2026-10-24. Antes de v11 el catálogo real era de 140 fichas y 73 mains: las Tandas 2A/2B no habían llegado a `main`.)*
 
 ## NUNCA
 - Poner conteos de segundos por rep (tempo, pausas, apretones) en tip: o form[] — los segundos de apretón viven solo en execCue; isométricos/holds/respiraciones/descansos sí llevan segundos.
@@ -491,7 +492,7 @@ Braulio no la usaba. Se quitaron `FOOD_DB`, `DIET_MEALS`, `NUTR`, `NUTR_META`, `
 - **Mutar `e.sets` para multiplicar por sides** — usar `_totalSetsFor(ex)`
 - **Leer la fase con string match** — usar `_isDeload()` / `_currentPhaseKey()`
 - **Leer `e.compound` / `resolved.compound` para decidir si es compuesto** — usar `_isCompound(ex)`. Con swap activo la marca del slot está rancia (Lote 7); `_isCompound` deriva del ref resuelto
-- **Agregar Arnold Press, Machine Triceps Press, Barbell Good Morning, Puente de Glúteo Cargado, Step-up, Zancada Caminando o Zancada Hacia Atrás a `COMPOUND_NAMES_EN`** — exclusión permanente del coach (rango fijo, no toleran 5-7)
+- **Agregar a `COMPOUND_NAMES_EN` cualquiera de las 7 exclusiones del coach** (`Arnold Press` (Arnold Press), `Machine Triceps Press (Seated Dip)` (Press de Tríceps en Máquina), `Barbell Good Morning` (Good Morning con Barra), `Barbell Glute Bridge` (Puente de Glúteo con Barra), `Dumbbell High Step-Up` (Subida a Banco Alto con Mancuernas), `Dumbbell Walking Lunge` (Zancada Caminando con Mancuernas) y `Dumbbell Reverse Lunge` (Zancada hacia Atrás con Mancuernas)) — exclusión permanente (rango fijo, no toleran 5-7)
 - **Vetar un ref-destino por `conditions` sin `variants[]`** — `_refIsSafeForProfile` da `true` sin variantes; crear una variante baseline con `unsafeFor` para poder bloquearlo
 - **Aplicar deload a warmup/cooldown**
 - **Marcar `compound:true` en JSON** si está cubierto por `nameEn` en `COMPOUND_NAMES_EN`
@@ -606,6 +607,7 @@ Braulio no la usaba. Se quitaron `FOOD_DB`, `DIET_MEALS`, `NUTR`, `NUTR_META`, `
 - **`_recentSessionsFor(slotId, opts)`** para cualquier lectura nueva del historial de un slot (`skipDeload:true` si es para progresar o estimar el 1RM)
 - **Recordar el peso por ejercicio + equipo:** `exHistory[slotId]` y `_savedRecs[slotId]` guardan `ref` y `variant`; "Anterior" y "Rec. anterior" solo se muestran si coinciden con lo activo
 - **`_progressStepFor(exId)`** como paso de progresión (5 con par de mancuernas, 2.5 el resto)
+- **`gym-verificar` antes de entregar** cualquier cambio a `index.html`, `sw.js` o `manifest.json` (`node tools/verificar.mjs`; `node tools/simular-peso.mjs` si tocaste el motor de peso, swaps, variantes o discos)
 
 ## Optimización de tokens
 - Con **Claude Code** el ejecutor lee el HTML de su carpeta (ya NO se pega en el prompt). Las pistas de abajo sirven para **acotar el prompt** (en qué enfocar a Code) y como mapa del director.
@@ -619,6 +621,7 @@ El desarrollo se hace con **Claude Code** sobre el repo local; otro chat (el "di
 **Antes de editar:** la doc puede estar desactualizada. Confirma en el HTML real que lo que vas a tocar existe y se llama como crees. Si código y doc se contradicen, gana el **código** y se reporta (ha pasado: el SW que el HTML nunca registraba; la "nota de ejercicio" que era texto descriptivo).
 
 **Al entregar:** cada cambio comentado en español (`// CAMBIO:` o `// FIX:`). Reporte breve: qué se tocó, qué datos viejos/perfil podría verse afectado, contradicciones doc↔código halladas.
+**Antes de entregar:** corre la skill `gym-verificar` (`node tools/verificar.mjs`; si tocaste peso, 1RM, fases, swaps, variantes o discos, también `node tools/simular-peso.mjs`) y pega el resultado. No entregues con `RESULTADO: FALLA` salvo que la falla ya existiera (compruébalo con `--ref HEAD`) y lo digas.
 
 **Protocolo de cierre (obligatorio):** cuando Braulio confirme que funcionó en device ("aprobado" o equivalente), la última respuesta DEBE ser el **Resumen para el director**, sin que lo pida (nunca antes de la validación). Braulio lo relaya al chat director, que con él actualiza CLAUDE.md / funciones.md / estado_actual.md. Estructura exacta:
 ```
@@ -626,6 +629,8 @@ Resumen para el director — [feature/fix]
 [fecha] · VALIDADO en device por Braulio · [alcance: solo display / toca persistencia / migración: sí-no]
 
 **Qué es:** [2-3 líneas: qué hace, qué reemplaza si aplica]
+
+**Verificación (gym-verificar):** [última línea de `tools/verificar.mjs` y, si aplica, de `tools/simular-peso.mjs`, con las métricas]
 
 **Para CLAUDE.md:**
 - [datos/campos/constantes nuevos en <script>, conteos actualizados]
@@ -649,7 +654,7 @@ Reglas: solo hechos del código final entregado (intermedias solo en "NO documen
 git add index.html && git commit -m "feat: X" && git push origin main
 ```
 **Repo incluye además (G7): `sw.js`, `manifest.json`, `icon-192.png`, `icon-512.png`, `icon.svg`.** Si un cambio toca el service worker o el manifest, incluirlos en el `git add` (`git add index.html sw.js manifest.json`). **Regla de deploy (desde 2026-07-22):** CADA deploy sube `APP_BUILD.version` en `index.html` (hoy `v13 · 21 oct 2026 · 14:38`) **y** `CACHE_NAME` en `sw.js` (hoy `gym-braulio-v13`) — van juntos SIEMPRE, aunque el cambio no toque el SW. Si no, el SW sirve el shell cacheado viejo y la prueba en device es falsa. El número se ve en el home (tap = `buscarActualizacion()`) y en Config → App: es la única forma de confirmar qué build cargó el teléfono. El SW NO hace hot-swap: el SW nuevo queda en espera y toma control en la próxima apertura limpia (o cuando el usuario confirma fuera del entreno), por diseño, para no romper sesiones en curso.
-**Commits solo de docs** (`CLAUDE.md`, `.gitignore`): no cambian la app → no suben versión. `CLAUDE.md` es público: nunca lleva datos personales (van en `CLAUDE.local.md`, ignorado).
+**Commits solo de docs o herramientas** (`CLAUDE.md`, `.gitignore`, `tools/`, `.claude/skills/`): no cambian la app → no suben versión. `CLAUDE.md` es público: nunca lleva datos personales (van en `CLAUDE.local.md`, ignorado).
 
 ## Política de modelo
 Default Opus. Sonnet solo si Braulio lo pide. Razón: tareas usan contexto similar; Opus reduce iteraciones.

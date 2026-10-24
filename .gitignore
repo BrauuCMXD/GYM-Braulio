@@ -1,6 +1,7 @@
 estado_actual.md
 funciones.md
 backlog.md
-.claude/
+.claude/*
+!.claude/skills/
 prompts_pendientes.md
 CLAUDE.local.md
