@@ -8,8 +8,9 @@
 // Cada escenario carga la app de cero (almacenamiento limpio), siembra `history`, fija la fase
 // (_pkey('user-phase')) y ABRE EL DÍA del ejercicio (S.dayId): el motor resuelve el slot con
 // _slotEntryFromExId → day(); sin el día abierto no ve swaps ni variantes.
-// Compara contra los valores que el director obtuvo en v13. Si el motor cambia a propósito,
-// actualiza aquí los esperados en el mismo cambio y explica por qué.
+// Compara contra los valores que el director obtuvo en v13 (escenario 10: v14, escoliosis avisa en vez
+// de bloquear). Si el motor cambia a propósito, actualiza aquí los esperados en el mismo cambio y
+// explica por qué.
 // Solo lectura, sin red, sin dependencias (Node 18+). Sale con código 1 si algo no coincide.
 
 import { cargarApp, leerArchivo, argRef, git, hayGit } from './lib/app.mjs';
@@ -67,13 +68,15 @@ function sesion(fase, slotId, ref, variant, series) {
 }
 const tres = (kg, reps) => [[kg, reps], [kg, reps], [kg, reps]];
 
-// App limpia con atajos. Cada escenario crea la suya.
-function nuevaApp(perfil = 'braulio') {
-  const { q, logs } = cargarApp({ html, perfil });
+// App limpia con atajos. Cada escenario crea la suya. `storage` siembra localStorage antes de cargar
+// (para simular una recarga: nuevaApp(perfil, otraApp.storage.volcar())).
+function nuevaApp(perfil = 'braulio', storage = {}) {
+  const { q, logs, storage: almacen } = cargarApp({ html, perfil, storage });
   const js = (v) => JSON.stringify(v);
   return {
     q,
     logs,
+    storage: almacen,
     abrirDia: (id) => q(`S.dayId = ${Number(id)}`),
     fase: (f) => q(`localStorage.setItem(_pkey('user-phase'), ${js(f)})`),
     historial: (sesiones) => q(`history = ${js(sesiones)}`),
@@ -294,6 +297,88 @@ escenario('Ciclo de 7 semanas en lazo cerrado sobre 1-1 (acc, acc, hyp, hyp, hyp
   } else {
     error('no hubo sugerencia de descarga en la semana 7');
   }
+});
+
+escenario('Escoliosis: avisar, no bloquear (v14) · perfil Braulio, conditions [scoliosis]', () => {
+  // Hasta v13 lo riesgoso (unsafeFor ∩ conditions) se ocultaba: 3-5 mostraba solo plataforma (blocked 4,
+  // noVariants true) y 0 destinos de swap (blocked 4). Desde v14 todo se lista con `risky` y blocked = 0.
+  const variantesDe = (app, slot) => app.q(`(() => { const r = getAvailableVariantsForSlot(_slotEntryFromExId(${JSON.stringify(slot)}, 'workout'));
+    return { ids: r.variants.map(v => v.id), risky: r.risky || [], blocked: r.blocked, noVariants: r.noVariants, active: r.active ? r.active.id : null }; })()`);
+  const swapsDe = (app, slot) => app.q(`(() => { const r = getAvailableSwapsForSlot(_slotEntryFromExId(${JSON.stringify(slot)}, 'workout'), day());
+    return { refs: r.available.map(x => x.ref), risky: r.available.filter(x => x.risky).map(x => x.ref), blocked: r.blocked }; })()`);
+  const activa = (app, slot) => app.q(`(() => { const a = getActiveVariant(_slotEntryFromExId(${JSON.stringify(slot)}, 'workout')); return a ? { id: a.variant.id, source: a.source } : null; })()`);
+
+  // a. Variantes de 3-5 (RDL plataforma, día 3).
+  const app = nuevaApp();
+  app.abrirDia(3);
+  const v35 = variantesDe(app, '3-5');
+  console.log(`   3-5 variantes: ${v35.ids.join(', ')} · riesgosas: ${v35.risky.join(', ')} · activa ${v35.active}`);
+  espera('3-5: las 5 variantes', v35.ids, ['plataforma', 'barra', 'smith', 'mancuernas', 'trap-bar'], JSON.stringify);
+  espera('3-5: risky', v35.risky, ['barra', 'smith', 'mancuernas', 'trap-bar'], JSON.stringify);
+  espera('3-5: blocked', v35.blocked, 0);
+  espera('3-5: noVariants', v35.noVariants, false, String);
+  espera('3-5: activa sin elección (la segura)', v35.active, 'plataforma', String);
+
+  // b. Swaps de 3-5: los 4 destinos, todos riesgosos.
+  const s35 = swapsDe(app, '3-5');
+  console.log(`   3-5 swaps: ${s35.refs.join(', ')} · riesgosos: ${s35.risky.length}`);
+  espera('3-5: destinos de swap', s35.refs, ['rdl-mancuernas', 'rdl-smith', 'trap-bar-deadlift', 'good-morning-barra'], JSON.stringify);
+  espera('3-5: los 4 destinos con risky:true', s35.risky, s35.refs, JSON.stringify);
+  espera('3-5: swaps blocked', s35.blocked, 0);
+
+  // c. Elegir mancuernas (riesgosa): se aplica, se respeta y es un equipo sin registros.
+  app.historial([sesion('str', '3-5', 'rdl-plataforma', 'plataforma', [[80, 8], [80, 8], [80, 7]])]);
+  app.fase('str');
+  verdad('control: con plataforma y su historial sí hay sugerencia', app.sug('3-5') !== null, rango(app.sug('3-5')));
+  const r = app.q(`(() => { const x = applyVariantSwitch('3-5', 'mancuernas'); return { ok: x.ok, risky: x.risky }; })()`);
+  espera(`applyVariantSwitch('3-5', 'mancuernas')`, r, { ok: true, risky: true }, JSON.stringify);
+  espera('getActiveVariant(3-5) tras elegirla', activa(app, '3-5'), { id: 'mancuernas', source: 'user' }, JSON.stringify);
+  const filas = filasPorFase(app, '3-5');
+  imprimirFases(filas);
+  for (const { f, s, pre } of filas) {
+    esperaSug(`${f}: mancuernas sin registros → sin sugerencia`, s, null);
+    espera(`${f}: prefill vacío`, pre, 0);
+  }
+
+  // d. Recorrido de los 6 días (app limpia, sin elecciones): blocked 0 y risky exacto.
+  const recorrido = (perfil, espVar, espSwap) => {
+    const a = nuevaApp(perfil);
+    const malos = [];
+    let slots = 0;
+    for (const dia of a.q('DAYS.map(d => d.id)')) {
+      a.abrirDia(dia);
+      for (const id of a.q('day().exercises.map(s => s.id)')) {
+        slots++;
+        const v = variantesDe(a, id);
+        const s = swapsDe(a, id);
+        if (v.blocked !== 0) malos.push(`${id} variantes blocked ${v.blocked}`);
+        if (s.blocked !== 0) malos.push(`${id} swaps blocked ${s.blocked}`);
+        if (v.risky.length !== (espVar[id] || 0)) malos.push(`${id} variantes risky ${v.risky.length} (esperaba ${espVar[id] || 0})`);
+        if (s.risky.length !== (espSwap[id] || 0)) malos.push(`${id} swaps risky ${s.risky.length} (esperaba ${espSwap[id] || 0})`);
+      }
+    }
+    return { slots, malos };
+  };
+  const espVar = { '1-4': 2, '4-1': 2, '3-5': 4, '6-2': 4, '6-3': 2 };
+  const espSwap = { '1-4': 1, '4-1': 1, '3-1': 1, '3-7': 1, '6-6': 1, '3-5': 4, '6-2': 4 };
+  const rb = recorrido('braulio', espVar, espSwap);
+  verdad(`Braulio, 6 días: blocked 0 y risky exacto en los ${rb.slots} slots`, rb.malos.length === 0,
+    rb.malos.join(' · ') || 'variantes 1-4/4-1 → 2, 3-5/6-2 → 4, 6-3 → 2 · swaps 1-4/4-1/3-1/3-7/6-6 → 1, 3-5/6-2 → 4');
+
+  // e. Limpieza única: una elección riesgosa vieja (de v13) se borra una vez; la de v14 se respeta.
+  const vieja = nuevaApp('braulio', { 'b5-braulio-equipment': JSON.stringify({ '1-4': 'smith-vertical' }) });
+  vieja.abrirDia(1);
+  espera('limpieza: 1-4 con smith-vertical guardada de antes → activa', activa(vieja, '1-4'), { id: 'maquina', source: 'default' }, JSON.stringify);
+  espera('limpieza: la entrada de 1-4 se borró', JSON.parse(vieja.storage.getItem('b5-braulio-equipment') || '{}')['1-4'] ?? null, null, String);
+  espera('limpieza: marca b5-braulio-risky-cleanup-v14', vieja.storage.getItem('b5-braulio-risky-cleanup-v14'), '1', String);
+  vieja.q(`applyVariantSwitch('1-4', 'smith-vertical')`);
+  const recargada = nuevaApp('braulio', vieja.storage.volcar());
+  recargada.abrirDia(1);
+  espera('elegida en v14 y recargada → se respeta', activa(recargada, '1-4'), { id: 'smith-vertical', source: 'user' }, JSON.stringify);
+
+  // f. Jimena (conditions []) no cambia: nada riesgoso ni bloqueado en sus 6 días.
+  const rj = recorrido('jimena', {}, {});
+  verdad(`Jimena, 6 días: ningún risky ni blocked en los ${rj.slots} slots`, rj.malos.length === 0, rj.malos.join(' · ') || 'ok');
 });
 
 // ─── resultado ───────────────────────────────────────────────────────────────

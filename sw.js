@@ -27,7 +27,8 @@
 // CAMBIO swap-peso/equipo: sube a v11 junto con APP_BUILD (peso por ejercicio, máquinas/barras, catálogo).
 // CAMBIO registros (v12): sube junto con APP_BUILD (todo desde tus registros, sin 1RM en el código).
 // CAMBIO dieta-fuera (v13): sube junto con APP_BUILD (se eliminó el módulo de Dieta).
-const CACHE_NAME = 'gym-braulio-v13';
+// CAMBIO escoliosis-aviso (v14): sube junto con APP_BUILD (lo riesgoso se muestra con leyenda, ya no se bloquea).
+const CACHE_NAME = 'gym-braulio-v14';
 
 // Documento principal del app shell (GitHub Pages en subcarpeta /GYM-Braulio/,
 // rutas relativas a la ubicación del SW).

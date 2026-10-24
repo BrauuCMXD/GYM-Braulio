@@ -2865,13 +2865,13 @@
       const userVid = map[slotEntry.id];
       if (userVid) {
         const v = cat.variants.find(x => x.id === userVid);
-        // CAMBIO P4.2-2: auto-corrección. Si la variante guardada existe pero ahora está
-        //   bloqueada por la condición del perfil (unsafeFor ∩ conditions), NO la mostramos
-        //   como activa: caemos a la primera variante segura (preferir default si es segura).
-        if (v && _variantAllowedForProfile(v)) return { variant: v, source: 'user', ref: resolved.ref };
-        // Si v no existe (swap a otro ej.) o está bloqueada → caer a default seguro.
+        // CAMBIO v14 (escoliosis: avisar, no bloquear): la elección del usuario se respeta AUNQUE
+        //   sea riesgosa para su condición (antes, P4.2-2, caía en silencio a la default segura).
+        //   La UI la marca con "⚠️ Riesgoso por …" (_riskLabelFor).
+        if (v) return { variant: v, source: 'user', ref: resolved.ref };
+        // Si v no existe (swap a otro ej.) → caer a default seguro.
       }
-      // Default seguro: la variante default si es permitida; si no, la primera permitida.
+      // Sin elección: nada riesgoso se activa solo. La variante default si es segura; si no, la primera segura.
       const def = cat.variants.find(x => x.default);
       if (def && _variantAllowedForProfile(def)) return { variant: def, source: 'default', ref: resolved.ref };
       const firstSafe = cat.variants.find(x => _variantAllowedForProfile(x));
@@ -2882,7 +2882,10 @@
     }
 
     // CAMBIO P4.2-3: ¿la variante es segura para el perfil activo?
-    //   Bloquea si unsafeFor ∩ conditions ≠ ∅. Sin unsafeFor → siempre segura.
+    //   Riesgosa si unsafeFor ∩ conditions ≠ ∅. Sin unsafeFor → siempre segura.
+    // CAMBIO v14 (escoliosis: avisar, no bloquear): sigue siendo el predicado "¿es segura?", pero
+    //   ya NO sirve para ocultar ni para rechazar variantes — solo decide la default sin elección
+    //   (getActiveVariant) y la leyenda de riesgo (_riskLabelFor).
     function _variantAllowedForProfile(variant) {
       if (!variant || !Array.isArray(variant.unsafeFor) || variant.unsafeFor.length === 0) return true;
       let conds = [];
@@ -2891,16 +2894,44 @@
       return !variant.unsafeFor.some(c => conds.includes(c));
     }
 
+    // CAMBIO v14 (escoliosis: avisar, no bloquear): helper único de la leyenda de riesgo.
+    //   '' si la variante es segura para el perfil activo; si no, "Riesgoso por <condición>".
+    //   Misma intersección unsafeFor ∩ conditions que _variantAllowedForProfile (la reusa).
+    //   Varias condiciones → "Riesgoso por a, b y c". Condición sin nombre conocido → su clave tal cual.
+    function _riskLabelFor(variant) {
+      if (_variantAllowedForProfile(variant)) return '';
+      const NAMES = { scoliosis: 'escoliosis' };
+      let conds = [];
+      try { conds = getActiveProfile().conditions || []; } catch { conds = []; }
+      const hit = [...new Set(variant.unsafeFor.filter(c => conds.includes(c)))].map(c => NAMES[c] || c);
+      if (!hit.length) return '';
+      const txt = hit.length === 1 ? hit[0] : hit.slice(0, -1).join(', ') + ' y ' + hit[hit.length - 1];
+      return 'Riesgoso por ' + txt;
+    }
+    // CAMBIO v14: leyenda de un ejercicio ENTERO (destino de swap). Es riesgoso solo si TODAS sus
+    //   variantes lo son (= !_refIsSafeForProfile(ref)); la etiqueta sale de su variante default.
+    function _riskLabelForRef(ref) {
+      if (_refIsSafeForProfile(ref)) return '';
+      const cat = EX_CATALOG[ref];
+      return _riskLabelFor(cat.variants.find(v => v.default) || cat.variants[0]);
+    }
+    // CAMBIO v14: "riesgoso por escoliosis" para el toast (minúscula inicial tras el guion).
+    function _riskToastText(name, label) {
+      return '⚠️ ' + name + ' — ' + label.charAt(0).toLowerCase() + label.slice(1);
+    }
+
     // FIX Lote 7.2 (filtro de swaps por conditions): ¿el ref destino tiene al menos
     //   una variante segura para el perfil activo? Reusa _variantAllowedForProfile —
     //   la MISMA intersección unsafeFor ∩ conditions que getAvailableVariantsForSlot,
     //   sin duplicar la lógica. Reglas:
     //   - Ref sin ficha en catálogo → true (no es decisión de seguridad; ese caso lo
     //     maneja el flujo de pendientes/noCatalog del caller).
-    //   - Ficha sin variants[] → true (no hay nada que bloquear; ej. arnold-press).
+    //   - Ficha sin variants[] → true (no hay nada que marcar; ej. arnold-press).
     //   - Con variants[] → true si AL MENOS UNA variante es segura (al aplicar el
-    //     swap, getActiveVariant ya cae a la default segura). Si TODAS quedan
-    //     bloqueadas (ej. smith-press-vertical para escoliosis, variante única) → false.
+    //     swap, getActiveVariant cae a la default segura si no hay elección). Si TODAS
+    //     son riesgosas (ej. smith-press-vertical para escoliosis, variante única) → false.
+    // CAMBIO v14 (escoliosis: avisar, no bloquear): sigue siendo el predicado "¿es seguro?", pero
+    //   ya NO oculta destinos de swap: getAvailableSwapsForSlot lo usa para marcar `risky`.
     function _refIsSafeForProfile(ref) {
       try {
         const cat = (ref && typeof EX_CATALOG !== 'undefined') ? EX_CATALOG[ref] : null;
@@ -2910,26 +2941,28 @@
       } catch { return true; } // Defensa: ante cualquier error, no bloquear (comportamiento previo)
     }
 
-    // CAMBIO P4.2-3: variantes disponibles para un slot tras filtrar por restricción.
-    //   Retorna { variants:[...seguras], active, blocked:N, noVariants:bool }.
-    //   active = variante activa actual (ya auto-corregida por getActiveVariant).
-    //   noVariants: true si el ejercicio resuelto no tiene variants[] o quedan <2 tras filtrar.
+    // CAMBIO P4.2-3: variantes disponibles para un slot.
+    // CAMBIO v14 (escoliosis: avisar, no bloquear): ya no filtra por restricción.
+    //   Retorna { variants:[...todas], active, risky:[ids riesgosos], blocked:0, noVariants:bool }.
+    //   active = variante activa actual (getActiveVariant: respeta la elección aunque sea riesgosa).
+    //   risky  = ids con unsafeFor ∩ conditions del perfil (la UI les pone "⚠️ Riesgoso por …").
+    //   blocked se conserva en 0 por compatibilidad. noVariants: menos de 2 variantes en total.
     function getAvailableVariantsForSlot(slotEntry) {
-      if (!slotEntry || !slotEntry.id) return { variants: [], active: null, blocked: 0, noVariants: true };
+      if (!slotEntry || !slotEntry.id) return { variants: [], active: null, risky: [], blocked: 0, noVariants: true };
       const resolved = getResolvedRefForSlot(slotEntry);
       const cat = resolved && resolved.ref ? EX_CATALOG[resolved.ref] : null;
       if (!cat || !Array.isArray(cat.variants) || cat.variants.length === 0) {
-        return { variants: [], active: null, blocked: 0, noVariants: true };
+        return { variants: [], active: null, risky: [], blocked: 0, noVariants: true };
       }
       const all = cat.variants;
-      const safe = all.filter(v => _variantAllowedForProfile(v));
-      const blocked = all.length - safe.length;
+      const risky = all.filter(v => !_variantAllowedForProfile(v)).map(v => v.id);
       const av = getActiveVariant(slotEntry);
       return {
-        variants: safe,
+        variants: all.slice(),
         active: av ? av.variant : null,
-        blocked,
-        noVariants: safe.length < 2
+        risky,
+        blocked: 0,
+        noVariants: all.length < 2
       };
     }
 
@@ -2991,7 +3024,7 @@
 
     // §4: aplicar switch de variante. Calcula peso equivalente y persiste el modo.
     //   pesoNuevo = pesoActual × (factorNuevo / factorViejo), redondeado a 2.5 kg.
-    //   Retorna { ok, suggestedWeight, tracking, fromVariant, toVariant } | { ok:false, reason }.
+    //   Retorna { ok, suggestedWeight, tracking, fromVariant, toVariant, risky } | { ok:false, reason }.
     function applyVariantSwitch(slotId, newVariantId) {
       const d = (typeof day === 'function') ? day() : null;
       let slot = null;
@@ -3004,8 +3037,9 @@
       if (!cat || !Array.isArray(cat.variants)) return { ok: false, reason: 'sin-variantes' };
       const toV = cat.variants.find(v => v.id === newVariantId);
       if (!toV) return { ok: false, reason: 'variante-invalida' };
-      // CAMBIO P4.2-2: no permitir cambiar a una variante bloqueada por la condición del perfil.
-      if (!_variantAllowedForProfile(toV)) return { ok: false, reason: 'bloqueada-por-condicion' };
+      // CAMBIO v14 (escoliosis: avisar, no bloquear): ya no se rechaza una variante riesgosa para la
+      //   condición del perfil (antes 'bloqueada-por-condicion'); se aplica y se informa con `risky`.
+      const risky = !_variantAllowedForProfile(toV);
       const cur = getActiveVariant(slot);
       const fromV = cur ? cur.variant : (cat.variants.find(v => v.default) || cat.variants[0]);
       // Peso de partida: último peso de trabajo del slot, o referencia de fuerza.
@@ -3020,7 +3054,7 @@
       if (typeof saveSession === 'function' && hasActiveWorkout && hasActiveWorkout()) {
         try { saveSession(S.phase || 'workout'); } catch { }
       }
-      return { ok: true, suggestedWeight: suggested, tracking: toV.tracking, fromVariant: fromV ? fromV.id : null, toVariant: toV.id };
+      return { ok: true, suggestedWeight: suggested, tracking: toV.tracking, fromVariant: fromV ? fromV.id : null, toVariant: toV.id, risky }; // CAMBIO v14: + risky
     }
 
     // §5: último peso registrado para un slot bajo una variante concreta (tracking 'separate').
@@ -3064,10 +3098,13 @@
     //   - name: nombre del ejercicio destino (desde catálogo)
     //   - inAnotherSlot: id del otro slot del mismo día si el destino ya está ahí (bloqueo lógico)
     //   - warnLevel: true si el nivel del perfil NO está en swap.levels (advertencia, no bloqueo)
+    //   - risky: true si TODAS las variantes del destino son riesgosas para el perfil (CAMBIO v14)
     function getAvailableSwapsForSlot(slotEntry, d) {
       // FIX Lote 7.2: se agrega `blocked` al retorno — destinos del catálogo excluidos
       //   por seguridad del perfil (unsafeFor ∩ conditions). NO cuentan como `pending`
       //   (pending = refs aún fuera del catálogo).
+      // CAMBIO v14 (escoliosis: avisar, no bloquear): ya no se excluye ningún destino por la
+      //   condición del perfil; cada item lleva `risky` y `blocked` queda en 0 (compatibilidad).
       const empty = { available: [], pending: 0, blocked: 0, noCatalog: false };
       if (!slotEntry) return empty;
       const resolved = getResolvedRefForSlot(slotEntry);
@@ -3077,7 +3114,6 @@
       const userLevel = (typeof getActiveProfile === 'function') ? (getActiveProfile().level || 'I') : 'I';
       const available = [];
       let pending = 0;
-      let blocked = 0; // FIX Lote 7.2: contador de destinos bloqueados por seguridad
       // Slots del mismo día con su ref resuelto (para detectar duplicados)
       const dayRefs = {};
       if (d && Array.isArray(d.exercises)) {
@@ -3090,12 +3126,9 @@
       current.swaps.forEach(s => {
         const target = EX_CATALOG[s.ref];
         if (!target) { pending++; return; }
-        // FIX Lote 7.2: excluir del listado todo destino sin variante segura para el
-        //   perfil activo (mismo criterio que getAvailableVariantsForSlot, vía
-        //   _refIsSafeForProfile). Caso actual: smith-press-vertical (variante única
-        //   bloqueada por escoliosis) NO se ofrece a Braulio; un perfil sin
-        //   conditions (Jimena) lo sigue viendo donde el coach lo listó.
-        if (!_refIsSafeForProfile(s.ref)) { blocked++; return; }
+        // CAMBIO v14 (escoliosis: avisar, no bloquear): antes (FIX Lote 7.2) se saltaba todo destino
+        //   sin variante segura para el perfil (ej. smith-press-vertical para Braulio). Ahora se ofrece
+        //   marcado con risky:true (misma regla, vía _refIsSafeForProfile); la UI pone la leyenda.
         available.push({
           ref: s.ref,
           match: s.match,
@@ -3104,10 +3137,11 @@
           note: s.note || '',
           name: target.name || s.ref,
           inAnotherSlot: dayRefs[s.ref] || null,
-          warnLevel: Array.isArray(s.levels) && s.levels.length > 0 && !s.levels.includes(userLevel)
+          warnLevel: Array.isArray(s.levels) && s.levels.length > 0 && !s.levels.includes(userLevel),
+          risky: !_refIsSafeForProfile(s.ref) // CAMBIO v14
         });
       });
-      return { available, pending, blocked, noCatalog: false };
+      return { available, pending, blocked: 0, noCatalog: false }; // CAMBIO v14: blocked siempre 0
     }
 
     // CAMBIO P3B.1-8: archivo de swaps permanentes.
@@ -3407,7 +3441,7 @@
     //   simple vista si el device cargó la versión nueva (si dice v6 → cargó lo nuevo).
     // ═══════════════════════════════════════════════════════════════════════════
     // CAMBIO parcial-6: subir versión por el guardado de entrenos parciales (fuerza refresco del SW).
-    const APP_BUILD = { version: 'v13', date: '21 oct 2026 · 14:38' };
+    const APP_BUILD = { version: 'v14', date: '24 oct 2026 · 10:03' }; // CAMBIO v14: escoliosis — avisar, no bloquear
 
     // CAMBIO versión/actualización: chequeo manual desde Config (o tap en la versión del
     //   home). Fuerza reg.update() y reporta: al día / descargando / hay nueva versión.
@@ -5677,12 +5711,35 @@ function exportarProgreso() {
       } catch { }
     }
 
+    // CAMBIO v14 (escoliosis: avisar, no bloquear): limpieza ÚNICA por perfil. Hasta v13 la
+    //   auto-corrección de getActiveVariant (P4.2-2) ignoraba en silencio las elecciones de equipo
+    //   riesgosas guardadas en b5-{perfil}-equipment; desde v14 se respetan, así que esas elecciones
+    //   viejas reaparecerían solas al actualizar. Se borran una vez (slot → _ref vía DAYS, como
+    //   _migrateRenamedVariants) y se marca _pkey('risky-cleanup-v14'); lo que se elija en v14 ya no se toca.
+    function _cleanStaleRiskyEquipment() {
+      try {
+        const FLAG = _pkey('risky-cleanup-v14');
+        if (localStorage.getItem(FLAG)) return;
+        const slotRef = {};
+        (DAYS || []).forEach(d => (d.exercises || []).forEach(e => { if (e && e.id && e._ref) slotRef[e.id] = e._ref; }));
+        const map = _getEquipmentMap(); let ch = false;
+        Object.keys(map).forEach(sid => {
+          const cat = EX_CATALOG[slotRef[sid]];
+          const v = (cat && Array.isArray(cat.variants)) ? cat.variants.find(x => x.id === map[sid]) : null;
+          if (v && !_variantAllowedForProfile(v)) { delete map[sid]; ch = true; }
+        });
+        if (ch) _saveEquipmentMap(map);
+        localStorage.setItem(FLAG, '1');
+      } catch { }
+    }
+
     function load() {
       try { history = JSON.parse(localStorage.getItem(_pkey('hist')) || '[]'); } catch { }
       try { pbs = JSON.parse(localStorage.getItem(_pkey('pbs')) || '{}') } catch { }
       try { const ww = localStorage.getItem(_pkey('ww')); if (ww) S.workingWeights = JSON.parse(ww); } catch { }
       loadExHistory();
       _migrateRenamedVariants(); // CAMBIO registros-3 (v12)
+      _cleanStaleRiskyEquipment(); // CAMBIO v14: limpieza única de elecciones riesgosas viejas
       loadApariencia();     // Aplica font-size, tema y acento guardados
       loadConfigGrupo2();   // Aplica preferencias de temporizadores y entrenamiento
       loadConfigGrupo3();   // Aplica perfil (peso, grasa, objetivo)
@@ -8093,6 +8150,14 @@ function _getPrevIdxFrom(d, fromIdx) {
 
     // ═══ SUPERSET RENDER ═════════════════════════════════════════════════════════
     // type: 'superset' (default) | 'biserie' (sin descanso interno, solo entre pares)
+    // CAMBIO v14 (escoliosis: avisar, no bloquear): leyenda "⚠️ Riesgoso por …" bajo el nombre de un
+    //   ejercicio del par cuando su ejercicio/equipo ACTIVO es riesgoso ('' si no). En SS no hay badges.
+    function _ssRiskNoteHtml(slot) {
+      const av = getActiveVariant(slot);
+      const lbl = av ? _riskLabelFor(av.variant) : '';
+      return lbl ? `<div style="font-size:11px;font-weight:700;color:#ef4444;margin-bottom:4px;">⚠️ ${_escHtml(lbl)}</div>` : '';
+    }
+
     function renderSupersetWorkout(d, eA, eB, cfg) {
       // Normalizar cfg por si viene undefined (defensivo)
       if (!cfg) cfg = getSupersetConfig(eA) || { with: eB.id, internal: 15, between: 60, type: 'superset' };
@@ -8300,6 +8365,8 @@ function _getPrevIdxFrom(d, fromIdx) {
         <div style="font-size:16px;font-weight:800;color:${d.color};flex:1;min-width:0;line-height:1.2;">${eAR.name}</div>
         <span style="font-size:12px;opacity:0.4;flex-shrink:0;margin-top:2px;">✏️</span>
       </div>`;
+      // CAMBIO v14 (escoliosis: avisar, no bloquear): en SS no hay badges → leyenda bajo el nombre.
+      html += _ssRiskNoteHtml(eA);
       if (eAR.nameEn && eAR.nameEn.trim().toLowerCase() !== eAR.name.trim().toLowerCase()) {
         html += `<div style="font-size:10px;color:var(--t3);font-style:italic;margin-bottom:4px;">${eAR.nameEn}</div>`;
       }
@@ -8395,6 +8462,7 @@ function _getPrevIdxFrom(d, fromIdx) {
         <div style="font-size:16px;font-weight:800;color:${d.color};flex:1;min-width:0;line-height:1.2;">${eBR.name}</div>
         <span style="font-size:12px;opacity:0.4;flex-shrink:0;margin-top:2px;">✏️</span>
       </div>`;
+      html += _ssRiskNoteHtml(eB); // CAMBIO v14: leyenda de riesgo del receptor
       if (eBR.nameEn && eBR.nameEn.trim().toLowerCase() !== eBR.name.trim().toLowerCase()) {
         html += `<div style="font-size:10px;color:var(--t3);font-style:italic;margin-bottom:4px;">${eBR.nameEn}</div>`;
       }
@@ -11116,6 +11184,7 @@ function _getPrevIdxFrom(d, fromIdx) {
         if (!_savedRecs) _savedRecs = {}; // FIX 2026-04-26: el JSON.parse('null') devolvía null y crasheaba renderWorkout
         try { exHistory = JSON.parse(localStorage.getItem(_pkey('last')) || '{}'); } catch { exHistory = {}; }
         _migrateRenamedVariants(); // CAMBIO registros-3 (v12)
+        _cleanStaleRiskyEquipment(); // CAMBIO v14: limpieza única de elecciones riesgosas viejas
         _migratedTipsThisSession = {};
         // Re-cargar CYCLE_START del nuevo perfil
         const cs = localStorage.getItem(_pkey('cycle-start'));
@@ -11440,12 +11509,7 @@ function _getPrevIdxFrom(d, fromIdx) {
       if (data.available.length === 0) {
         if (data.pending > 0) {
           list.innerHTML = `<div style="font-size:12px;color:var(--t3);font-style:italic;text-align:center;padding:14px 8px;">Aún no hay alternativas para este ejercicio.<br><span style="font-size:10px;">(${data.pending} en preparación)</span></div>`;
-        } else if (data.blocked > 0) {
-          // FIX Lote 7.2: hay alternativas en el catálogo pero TODAS quedaron
-          //   bloqueadas por la condición física del perfil — no decir "no tiene
-          //   alternativas" (sería falso y confuso).
-          list.innerHTML = `<div style="font-size:12px;color:var(--t3);font-style:italic;text-align:center;padding:14px 8px;">Este ejercicio tiene alternativas, pero ninguna es recomendable para ti por tu condición física.</div>`;
-        } else {
+        } else { // CAMBIO v14: sin rama "ninguna es recomendable para ti" (los riesgosos ya se listan)
           list.innerHTML = `<div style="font-size:12px;color:var(--t3);font-style:italic;text-align:center;padding:14px 8px;">Este ejercicio no tiene alternativas.</div>`;
         }
       } else {
@@ -11454,13 +11518,11 @@ function _getPrevIdxFrom(d, fromIdx) {
         list.innerHTML = h;
       }
 
-      // 7. Footer — pendientes y/o bloqueados por seguridad (FIX Lote 7.2: el conteo
-      //   refleja la lista ya FILTRADA; los bloqueados se reportan aparte, en
-      //   lenguaje simple, sin nombrar la condición).
+      // 7. Footer — pendientes. CAMBIO v14: sin el pie "N opciones no recomendables para ti"
+      //   (FIX Lote 7.2): los destinos riesgosos ya salen en la lista con su leyenda.
       if (data.available.length > 0) {
         const footerBits = [];
         if (data.pending > 0) footerBits.push(`${data.pending} alternativas más en preparación`);
-        if (data.blocked > 0) footerBits.push(`${data.blocked} ${data.blocked === 1 ? 'opción no recomendable' : 'opciones no recomendables'} para ti`);
         if (footerBits.length) footer.textContent = footerBits.join(' · ');
       }
     }
@@ -11499,6 +11561,12 @@ function _getPrevIdxFrom(d, fromIdx) {
       }
       const blockedNote = blocked
         ? `<div style="font-size:10px;color:#ef4444;margin-top:4px;">🚫 Ya está en otro ejercicio de hoy</div>`
+        : '';
+      // CAMBIO v14 (escoliosis: avisar, no bloquear): destino riesgoso para la condición del perfil →
+      //   leyenda en rojo; se puede elegir "solo hoy" y "en mi rutina" igual que cualquier otro.
+      const riskLbl = item.risky ? _riskLabelForRef(item.ref) : '';
+      const riskNote = riskLbl
+        ? `<div style="font-size:10px;color:#ef4444;margin-top:4px;">⚠️ ${_escHtml(riskLbl)}</div>`
         : '';
 
       // Detalle del coach (solo visible al expandir)
@@ -11548,6 +11616,7 @@ function _getPrevIdxFrom(d, fromIdx) {
           </div>
           <div style="font-size:11px;color:${matchColor};margin-top:3px;font-weight:600;line-height:1.3;">${matchText}</div>
           ${warnNote}
+          ${riskNote}
           ${blockedNote}
           ${expandedDetail}
           ${actions}
@@ -11605,6 +11674,9 @@ function _getPrevIdxFrom(d, fromIdx) {
       closeExerciseEditSheet();
       _swapExpandedRef = null;
       _rerenderAfterSwap();
+      // CAMBIO v14: destino riesgoso para la condición del perfil → el toast lo dice.
+      const riskLbl = _riskLabelForRef(ref);
+      if (riskLbl) { _showSwapToast(_riskToastText(newName, riskLbl), 'warn'); return; }
       _showSwapToast('✓ ' + newName + ' — solo para hoy', 'success');
     }
 
@@ -11621,10 +11693,12 @@ function _getPrevIdxFrom(d, fromIdx) {
       const oldRef = slot ? slot._ref : null;
       const oldName = (oldRef && EX_CATALOG[oldRef]) ? EX_CATALOG[oldRef].name : 'el ejercicio actual';
       const newName = EX_CATALOG[ref] ? EX_CATALOG[ref].name : ref;
+      const riskLbl = _riskLabelForRef(ref); // CAMBIO v14: '' si el destino es seguro para el perfil
       const body =
         `${newName} reemplaza a ${oldName} cada vez que entrenes este día.\n\n` +
         `El historial de ${oldName} se guarda aparte (puedes recuperarlo deshaciendo el cambio).\n\n` +
-        `La primera vez anota tu peso (empieza ligero para probar la técnica); desde ahí la app aprende de tus registros.`; // CAMBIO registros-2 (v12)
+        `La primera vez anota tu peso (empieza ligero para probar la técnica); desde ahí la app aprende de tus registros.` + // CAMBIO registros-2 (v12)
+        (riskLbl ? `\n\n⚠️ ${riskLbl}.` : ''); // CAMBIO v14: aviso de riesgo en el confirm
       showConfirm('🔄', 'Cambiar en mi rutina', body, 'Sí, cambiar', () => {
         const ok = applySwapPermanente(slotId, ref, dayId);
         if (!ok) {
@@ -11634,6 +11708,7 @@ function _getPrevIdxFrom(d, fromIdx) {
         closeExerciseEditSheet();
         _swapExpandedRef = null;
         _rerenderAfterSwap();
+        if (riskLbl) { _showSwapToast(_riskToastText(newName, riskLbl), 'warn'); return; } // CAMBIO v14
         _showSwapToast('✓ ' + newName + ' — cambiado en tu rutina', 'success');
       });
     }
@@ -11713,25 +11788,20 @@ function _getPrevIdxFrom(d, fromIdx) {
 
       const data = getAvailableVariantsForSlot(slot);
 
-      // 2. Sin variantes útiles (sin variants[] o <2 tras filtro) → ocultar sección entera
+      // 2. Sin variantes útiles (sin variants[] o <2 en total) → ocultar sección entera
       if (data.noVariants) { section.style.display = 'none'; return; }
 
       section.style.display = '';
 
-      // 3. Lista de variantes seguras (diseño limpio: fila simple, activa = borde acento + ✓)
+      // 3. Lista de variantes (diseño limpio: fila simple, activa = borde acento + ✓).
+      //   CAMBIO v14: TODAS, también las riesgosas (llevan "⚠️ Riesgoso por …" y se pueden elegir).
       const activeId = data.active ? data.active.id : null;
       let h = '';
       data.variants.forEach(v => {
         h += renderEquipmentItemHTML(v, slot, v.id === activeId);
       });
       list.innerHTML = h;
-
-      // 4. Footer — conteo de variantes ocultadas por condición (sin listar cuáles)
-      if (data.blocked > 0) {
-        footer.textContent = data.blocked === 1
-          ? '1 equipo oculto por tu condición'
-          : `${data.blocked} equipos ocultos por tu condición`;
-      }
+      // CAMBIO v14: sin el pie "N equipos ocultos por tu condición" (ya no se oculta ninguno).
     }
 
     // Item de variante — CAMBIO P4.3: diseño limpio tipo mockup (menos saturación).
@@ -11747,6 +11817,11 @@ function _getPrevIdxFrom(d, fromIdx) {
         if (isDb) bits.push('peso total entre las dos manos');
         sub = `<div style="font-size:10px;color:var(--t3);margin-top:3px;line-height:1.35;">${_escHtml(bits.join(' · '))}</div>`;
       }
+      // CAMBIO v14 (escoliosis: avisar, no bloquear): leyenda de riesgo SIEMPRE (también en la activa).
+      const riskLbl = _riskLabelFor(variant);
+      const riskNote = riskLbl
+        ? `<div style="font-size:10px;color:#ef4444;margin-top:3px;line-height:1.35;">⚠️ ${_escHtml(riskLbl)}</div>`
+        : '';
       const bd = isActive ? '1.5px solid var(--acc)' : '1px solid var(--bd)';
       const nameColor = isActive ? 'var(--acc)' : 'var(--t1)';
       const check = isActive
@@ -11759,6 +11834,7 @@ function _getPrevIdxFrom(d, fromIdx) {
           <div style="flex:1;min-width:0;">
             <div style="font-size:13px;font-weight:600;color:${nameColor};">${_escHtml(variant.name || variant.id)}</div>
             ${sub}
+            ${riskNote}
           </div>
           ${check}
         </div>`;
@@ -11795,10 +11871,13 @@ function _getPrevIdxFrom(d, fromIdx) {
       } else {
         wTxt = ' · primera vez: anota tu peso';
       }
+      // CAMBIO v14: si el equipo elegido es riesgoso para la condición del perfil, el toast lo dice.
+      const riskLbl = res.risky ? _riskLabelFor(vObj) : '';
+      if (riskLbl) { _showSwapToast(_riskToastText(vName || variantId, riskLbl), 'warn'); return; }
       _showSwapToast(`Cambiado a ${vName || variantId}${wTxt}`, 'success');
     }
 
-    // CAMBIO P4.2-5: pill inline ⚙️ del equipo activo en workout (solo si NO es la default).
+    // CAMBIO P4.2-5: pill inline ⚙️ del equipo activo en workout (solo si NO es la default; v14: o si es riesgoso).
     //   Se coloca junto al badge de swap. Tap → abre el sheet en la sección de equipo.
     //   No se renderiza en supersets (mismo criterio que el badge de swap).
     function renderEquipmentBadgeInline(slotId, where) {
@@ -11807,8 +11886,20 @@ function _getPrevIdxFrom(d, fromIdx) {
       if (!el) return;
       const slot = _slotEntryFromExId(slotId, where === 'cooldown' ? 'cooldown' : 'workout');
       const av = slot ? getActiveVariant(slot) : null;
+      // CAMBIO v14 (escoliosis: avisar, no bloquear): si el ejercicio o equipo ACTIVO es riesgoso para
+      //   la condición del perfil, el pill sale SIEMPRE en rojo con la leyenda (y el nombre del equipo
+      //   delante si además es una elección no default).
+      const riskLbl = av ? _riskLabelFor(av.variant) : '';
+      const isChoice = !!(av && av.source === 'user' && !av.variant.default);
+      if (av && riskLbl) {
+        const txt = (isChoice ? '⚙️ ' + (av.variant.name || av.variant.id) + ' · ' : '') + '⚠️ ' + riskLbl;
+        el.style.display = 'inline-block';
+        el.innerHTML = `<span onclick="event.stopPropagation();onEquipmentBadgeClick('${_escAttr(slotId)}')"
+        style="display:inline-block;font-size:11px;font-weight:700;background:rgba(239,68,68,.15);color:#ef4444;padding:2px 7px;border-radius:5px;cursor:pointer;line-height:1.4;">${_escHtml(txt)}</span>`;
+        return;
+      }
       // Solo si hay variante activa, es de fuente 'user' (eligió algo) y NO es la default.
-      if (!av || av.source !== 'user' || av.variant.default) {
+      if (!isChoice) {
         el.style.display = 'none'; el.innerHTML = ''; return;
       }
       el.style.display = 'inline-block';
@@ -11853,14 +11944,16 @@ function _getPrevIdxFrom(d, fromIdx) {
     // CAMBIO P3B.2-TOAST: helper para mostrar un mensaje breve confirmando que un swap se aplicó.
     //   Necesario porque en warmup/cooldown el nombre del ejercicio principal no está visible,
     //   y sin este toast el usuario no ve feedback al aplicar el cambio.
-    //   `tone` ∈ {'success','info'} controla el color de fondo.
+    //   `tone` ∈ {'success','info','warn'} controla el color de fondo.
     let _swapToastTimer = null;
     function _showSwapToast(msg, tone) {
       const el = document.getElementById('swap-toast');
       if (!el) return;
       const bg = (tone === 'info')
         ? 'rgba(56,189,248,.95)'   // azul info (revert)
-        : 'rgba(34,197,94,.95)';   // verde success (cambio aplicado)
+        : (tone === 'warn')
+          ? 'rgba(239,68,68,.95)'  // CAMBIO v14: rojo warn (se eligió algo riesgoso para la condición)
+          : 'rgba(34,197,94,.95)'; // verde success (cambio aplicado)
       el.style.background = bg;
       el.textContent = msg;
       el.style.display = 'block';
@@ -12010,7 +12103,7 @@ function _getPrevIdxFrom(d, fromIdx) {
             `  [${s.id}] ref=${r ? r.ref : '(inline)'} src=${r ? r.source : '-'}`
             + ` · swaps disponibles=${swaps.available.length}`
             + ` · pendientes=${swaps.pending}`
-            + ` · bloqueados por seguridad=${swaps.blocked || 0}` // FIX Lote 7.2
+            + ` · riesgosos=${swaps.available.filter(x => x.risky).length}` // CAMBIO v14: antes "bloqueados por seguridad" (FIX Lote 7.2)
             + (badge ? ` · badge="${badge.label}"` : '')
           );
         });

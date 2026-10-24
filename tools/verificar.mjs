@@ -305,8 +305,18 @@ if (!hayGit()) {
   if (!existeBase) {
     aviso(`no hay commit ${base} contra el cual comparar la versión`);
   } else {
-    const diff = git(REF ? ['diff', '--name-only', base, REF, '--', ...ARCHIVOS_APP] : ['diff', '--name-only', base, '--', ...ARCHIVOS_APP]);
-    const cambiados = (diff || '').split(/\r?\n/).filter(Boolean);
+    // Con --ref: diff entre dos commits. En disco: hash del archivo (hash-object) contra el de HEAD
+    // (rev-parse HEAD:<archivo>), archivo por archivo. Ninguno de los dos toca el índice, así que no
+    // deja .git/index.lock (git diff contra la carpeta sí podía, y ese candado bloquea GitHub Desktop).
+    // Un archivo que no existe en HEAD cuenta como cambiado (y uno borrado del disco también).
+    const cambiados = REF
+      ? (git(['diff', '--name-only', base, REF, '--', ...ARCHIVOS_APP]) || '').split(/\r?\n/).filter(Boolean)
+      : ARCHIVOS_APP.filter((f) => {
+        const disco = git(['hash-object', '--', f]);
+        const enHead = git(['rev-parse', '--verify', '--quiet', `${base}:${f}`]);
+        if (disco === null) return enHead !== null;
+        return enHead === null || enHead.trim() !== disco.trim();
+      });
     htmlBase = leerArchivo('index.html', base);
     const versionBase = htmlBase ? versionApp(analizarHtml(htmlBase).sinCom) : null;
     const quien = REF ? `el commit ${REF} respecto a su padre` : 'respecto a HEAD';
