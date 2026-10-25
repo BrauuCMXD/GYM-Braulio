@@ -1,10 +1,10 @@
 # CLAUDE.md — Gym Braulio PWA
 
-> **Al día con v14** (`4149485`, 2026-10-24). Verificado contra el código el 2026-10-24: las cifras se midieron en el archivo, no se copiaron de resúmenes. Ante cualquier duda **gana el código**.
+> **Al día con v15** (`b2141ea`, 2026-10-24). Verificado contra el código el 2026-10-24: las cifras se midieron en el archivo, no se copiaron de resúmenes. Ante cualquier duda **gana el código**.
 > **Este archivo es PÚBLICO** (repo y GitHub Pages): solo reglas técnicas. Nada personal — medidas, salud, ubicación —; eso va en `CLAUDE.local.md`, que git ignora y Claude Code carga solo en sesiones locales. Los docs del director (`estado_actual.md`, `funciones.md`, `prompts_pendientes.md`, `backlog.md`) también son privados: en una sesión en la nube no existen; trabaja con el código y con este archivo.
 
 ## Proyecto
-HTML monolítico PWA (12,237 líneas, ~897 KB en v14). Vanilla JS/CSS/HTML, sin frameworks, sin backend, 100% offline.
+HTML monolítico PWA (12,256 líneas, ~899 KB en v15). Vanilla JS/CSS/HTML, sin frameworks, sin backend, 100% offline.
 **Deploy:** https://brauucmxd.github.io/GYM-Braulio/ | **Archivo:** `index.html`
 **Verificación:** skill `gym-verificar` (`.claude/skills/gym-verificar/`) + scripts en `tools/` (Node, sin dependencias, solo lectura): `node tools/verificar.mjs` y `node tools/simular-peso.mjs`.
 
@@ -360,7 +360,7 @@ config: cfg-sec-profile arriba de Apariencia (incluye selector de perfil + fila 
 ```
 
 ## CSS
-Variables: `--bg --s1 --s2 --bd --t1 --t2 --t3 --acc --warm --cool`
+Variables: `--bg --s1 --s2 --bd --t1 --t2 --t3 --acc --warm --cool` + `--acc-rgb --acc-bg` (v15: las pone `_applyAccentVars(hex)` junto con `--acc`)
 Clases clave: `.screen .sf .ss .card .bottom-nav .today-card .cfg-* .st-row .st-input .bnav-compact .wo-sticky(.empty) .skip-chip`
 
 ## JS — funciones críticas (no romper)
@@ -390,7 +390,7 @@ Clases clave: `.screen .sf .ss .card .bottom-nav .today-card .cfg-* .st-row .st-
 - **Guardado de entrenos (incl. PARCIALES, 2026-08-26):** `_persistWorkoutToHistory(opts)` `_workoutProgress(loggedObj, dayId)` `_teardownWorkoutSession()` `_partialChipHtml(h)` `_offerSavePendingSession(d)` · consumidores `finishWorkout` `confirmCancel` `checkPendingSession`
 - **Ciclo por trabajo (G4):** `getCurrentWeek` `isCycleExpired` `nextDayId` `startCycle` · week-overrides (getter/setter) · panel "¿Qué llevo?"
 - **Limpieza y migraciones al arrancar:** IIFE `_purgeDietData` (v13) · `_migrateRenamedVariants` (v12) · `_cleanStaleRiskyEquipment` (v14, una vez por perfil, marca `risky-cleanup-v14`). *(La Dieta se eliminó en v13; lista en funciones.md → ELIMINADAS.)*
-- **Config:** `loadApariencia` `loadConfigGrupo2` `loadConfigGrupo3` `showInfoRevertModal` `openDetailSheet`
+- **Config:** `loadApariencia` `loadConfigGrupo2` `loadConfigGrupo3` `showInfoRevertModal` `openDetailSheet` · acento `setTheme`/`setAccent` → `_applyAccentVars` (v15)
 - **Resolvers:** `resolveEx(entry, d?)` `_resolveDynamicActivation(entry, d)` `resolveCardio(d)`
 - **Fase deload:** `_currentPhaseKey` `_isDeload` `_isCompound` `_phaseAdjustedRest` `_deloadTimeVal` `_round25`
 - **Reset acumulación:** `_savePreDeloadSnapshot` `_getPreDeloadSnapshot` `_referenceWeightFor` `_phaseResetPendingFor` `_markPhaseResetDoneFor` `_clearAllPhaseResetFlags`
@@ -617,6 +617,7 @@ Braulio no la usaba. Se quitaron `FOOD_DB`, `DIET_MEALS`, `NUTR`, `NUTR_META`, `
 - **Recordar el peso por ejercicio + equipo:** `exHistory[slotId]` y `_savedRecs[slotId]` guardan `ref` y `variant`; "Anterior" y "Rec. anterior" solo se muestran si coinciden con lo activo
 - **`_progressStepFor(exId)`** como paso de progresión (5 con par de mancuernas, 2.5 el resto)
 - **`gym-verificar` antes de entregar** cualquier cambio a `index.html`, `sw.js` o `manifest.json` (`node tools/verificar.mjs`; `node tools/simular-peso.mjs` si tocaste el motor de peso, swaps, variantes o discos)
+- **Aplicar el acento con `_applyAccentVars(hex)`** (v15): pone `--acc`, `--acc-rgb` y `--acc-bg` juntos; `setTheme` y `setAccent` ya la llaman. Nunca poner `--acc` suelto.
 
 ## Optimización de tokens
 - Con **Claude Code** el ejecutor lee el HTML de su carpeta (ya NO se pega en el prompt). Las pistas de abajo sirven para **acotar el prompt** (en qué enfocar a Code) y como mapa del director.
