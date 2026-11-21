@@ -7,6 +7,7 @@
 HTML monolítico PWA (12,256 líneas, ~899 KB en v15). Vanilla JS/CSS/HTML, sin frameworks, sin backend, 100% offline.
 **Deploy:** https://brauucmxd.github.io/GYM-Braulio/ | **Archivo:** `index.html`
 **Verificación:** skill `gym-verificar` (`.claude/skills/gym-verificar/`) + scripts en `tools/` (Node, sin dependencias, solo lectura): `node tools/verificar.mjs` y `node tools/simular-peso.mjs`.
+**Diseño:** skill `gym-diseno` (`.claude/skills/gym-diseno/`): sistema visual de la maqueta 4.2 aprobada — tokens por tema y acento, letra, tamaños para tocar, íconos, componentes, pantallas y orden del rediseño 4.3. Trae `capturas.mjs` (capturas a 390×844 con Playwright; si no está, no se instala).
 
 ### Infraestructura PWA (G7)
 GitHub Pages en subcarpeta `/GYM-Braulio/` → rutas del SW/manifest **relativas** (`./`), nunca absolutas (`/`). `sw.js` (raíz del repo) estrategia **cache-first del app shell**: navegación sirve `./index.html` desde cache sin tocar red mientras exista; todo `fetch` de red en `.catch()` con fallback a `./index.html` cacheado (esto elimina la pantalla en blanco con red mala). Precache resiliente (shell requerido, resto best-effort). **Sin hot-swap:** sin `skipWaiting()`; el SW nuevo queda en espera y toma control en la próxima apertura limpia o vía `postMessage('SKIP_WAITING')` tras confirmación del usuario — nunca recarga si `hasActiveWorkout()`. El registro del SW + `<link rel="manifest">` viven en el HTML (bloque G7-4/G7-8). El SW usa Cache Storage (`gym-braulio-vN`, mismo número que `APP_BUILD.version`), NO localStorage — no interfiere con las keys `b5-*`.
@@ -361,6 +362,7 @@ config: cfg-sec-profile arriba de Apariencia (incluye selector de perfil + fila 
 
 ## CSS
 Variables: `--bg --s1 --s2 --bd --t1 --t2 --t3 --acc --warm --cool` + `--acc-rgb --acc-bg` (v15: las pone `_applyAccentVars(hex)` junto con `--acc`)
+Sistema del rediseño (tokens nuevos, `--acc-fill`/`--acc-on`/`--acc-tint`, escala de letra, componentes): skill `gym-diseno`. Hasta que el paso 1 de 4.3 lo implemente, el código sigue con las variables de arriba.
 Clases clave: `.screen .sf .ss .card .bottom-nav .today-card .cfg-* .st-row .st-input .bnav-compact .wo-sticky(.empty) .skip-chip`
 
 ## JS — funciones críticas (no romper)
@@ -618,6 +620,7 @@ Braulio no la usaba. Se quitaron `FOOD_DB`, `DIET_MEALS`, `NUTR`, `NUTR_META`, `
 - **`_progressStepFor(exId)`** como paso de progresión (5 con par de mancuernas, 2.5 el resto)
 - **`gym-verificar` antes de entregar** cualquier cambio a `index.html`, `sw.js` o `manifest.json` (`node tools/verificar.mjs`; `node tools/simular-peso.mjs` si tocaste el motor de peso, swaps, variantes o discos)
 - **Aplicar el acento con `_applyAccentVars(hex)`** (v15): pone `--acc`, `--acc-rgb` y `--acc-bg` juntos; `setTheme` y `setAccent` ya la llaman. Nunca poner `--acc` suelto.
+- **Skill `gym-diseno` antes de cualquier cambio visual** (CSS, clases, estilos, HTML o funciones que pintan pantallas): colores con tokens, letra de la escala, 44 px para tocar (el ✓ de serie, 48), íconos de línea con `_icon`, y el color del día solo en su disco.
 
 ## Optimización de tokens
 - Con **Claude Code** el ejecutor lee el HTML de su carpeta (ya NO se pega en el prompt). Las pistas de abajo sirven para **acotar el prompt** (en qué enfocar a Code) y como mapa del director.
