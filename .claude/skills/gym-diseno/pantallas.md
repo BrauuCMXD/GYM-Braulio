@@ -61,7 +61,7 @@ Maqueta: `inicio-oscuro.png` y `inicio-claro.png`. Funciones: `renderHome` y `re
   - El foco del día ya no sale aquí.
 
 **Estados:**
-- Ciclo sin iniciar, en curso (semanas 1 a 7) y en descarga.
+- Ciclo sin iniciar, en curso (semanas 1 a 7) y en deload.
 - Días hechos, saltados (marca manual) y pendientes.
 - Día vacío, que bloquea «Entrenar».
 - Perfil Jimena.
@@ -98,7 +98,7 @@ Detalles:
 - Con discos: barra, Smith y máquina de discos.
 - Par de mancuernas («kg total» o «kg (par)»), peso corporal y AMRAP (Jimena 5-5).
 - Lados con peso (Jimena 1-3 y 6-3, búlgara) y peso más tiempo (Braulio 5-8, caminata de granjero).
-- Descarga y reinicio.
+- Deload y reinicio.
 - Swap activo y variante riesgosa.
 - Con y sin nota.
 - Descanso corriendo y terminado.
@@ -146,7 +146,7 @@ Maqueta: `timer-listo-*` y `timer-corriendo-*`. Funciones: `renderWorkoutHold` (
   5. Abajo, el timer: «Serie 3, lado derecho», aro de 184, −15 s y +15 s, «Iniciar» o «Reiniciar», y la línea de ayuda.
 - La cuenta regresiva 3-2-1 (`#countdown-overlay`) se queda como está: falta diseñarla.
 - `renderTimeAndWeightTable` (peso más tiempo) usa los mismos campos y el mismo timer.
-- **Estados:** listo, corriendo y terminado; con y sin lados; paso de calentamiento con tiempo y sin él (reps); descarga (tiempo al 70 %).
+- **Estados:** listo, corriendo y terminado; con y sin lados; paso de calentamiento con tiempo y sin él (reps); deload (tiempo al 70 %).
 
 ## Config (paso 6)
 - Llega «Borrar todo», con su confirmación de siempre (`resetAllData`).

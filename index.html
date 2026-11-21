@@ -9,7 +9,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Gym Braulio">
-  <meta name="theme-color" content="#0f0f0f">
+  <!-- CAMBIO v16: --bg del tema oscuro; setTheme lo ajusta al tema activo -->
+  <meta name="theme-color" content="#000000">
   <!-- CAMBIO G7-8: enlaces PWA. manifest.json → instalable en Android/Chrome y
        fuente de iconos/display/theme. apple-touch-icon → icono de inicio en iOS.
        Ambos archivos confirmados en el repo (manifest.json, icon-192.png). -->
@@ -25,17 +26,32 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    /* CAMBIO v16 (rediseño paso 1): tokens del sistema gym-diseno con los valores del tema oscuro
+       para el primer pintado; setTheme/_applyAccentVars los ajustan al tema y acento guardados. */
     :root {
-      --bg: #0f0f0f;
-      --s1: #1a1a1a;
-      --s2: #222;
-      --bd: #2e2e2e;
-      --t1: #f0f0f0;
-      --t2: #b0b0b0;
-      --t3: #808080;
+      color-scheme: dark;
+      --bg: #000000;
+      --s1: #141414;
+      --s2: #232323;
+      --bd: #2a2a2a;
+      --track: #2a2a2a;
+      --bdin: #3a3a3a;
+      --bd2: #6e6e6e;
+      --t1: #f5f5f5;
+      --t2: #b8b8b8;
+      --t3: #8c8c8c;
+      --danger: #f87171;
+      --font-text: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
+      --font-num: ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif;
       --warm: #f59e0b;
       --cool: #38bdf8;
-      --acc: #f43f5e;
+      /* CAMBIO v16: acento rosa en oscuro (texto, relleno, letra sobre relleno, rgb y tinte) */
+      --acc: #fb7185;
+      --acc-fill: #f43f5e;
+      --acc-on: #000000;
+      --acc-rgb: 244,63,94;
+      --acc-tint: rgba(244,63,94,.16);
+      --acc-bg: rgba(244,63,94,.16);
       /* FIX: variable de escala de texto; se actualiza vía setFontSize() */
       --fs-zoom: 1;
     }
@@ -48,7 +64,8 @@
     body {
       background: var(--bg);
       color: var(--t1);
-      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      /* CAMBIO v16: pila de letra del sistema (--font-text) */
+      font-family: var(--font-text);
       max-width: 430px;
       margin: 0 auto;
       min-height: 100vh;
@@ -627,6 +644,7 @@
       color: var(--t2);
     }
 
+    /* CAMBIO v16: contorno del ✓ sin marcar → var(--bd2) (contraste 3:1 en los dos temas) */
     .st-check {
       width: 32px;
       height: 32px;
@@ -634,7 +652,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1.5px solid var(--bd);
+      border: 1.5px solid var(--bd2);
       background: var(--s2);
       cursor: pointer;
       font-size: 14px;
@@ -1124,9 +1142,10 @@
       transition: background .15s, color .15s;
     }
 
+    /* CAMBIO v16: relleno de acento con letra encima → --acc-fill / --acc-on */
     .cfg-seg button.active {
-      background: var(--acc);
-      color: #fff;
+      background: var(--acc-fill);
+      color: var(--acc-on);
     }
 
     /* Toggle on/off */
@@ -1158,8 +1177,9 @@
       transition: background .2s;
     }
 
+    /* CAMBIO v16: relleno de acento (sin letra) → --acc-fill */
     .cfg-toggle input:checked + .cfg-toggle-track {
-      background: var(--acc);
+      background: var(--acc-fill);
     }
 
     .cfg-toggle-track::after {
@@ -1217,10 +1237,11 @@
       transition: background .15s, color .15s, border-color .15s;
     }
 
+    /* CAMBIO v16: relleno de acento con letra encima → --acc-fill / --acc-on (también el borde) */
     .cfg-rest-btn.active {
-      background: var(--acc);
-      color: #fff;
-      border-color: var(--acc);
+      background: var(--acc-fill);
+      color: var(--acc-on);
+      border-color: var(--acc-fill);
     }
 
     /* Selector de tema (Oscuro / Claro) */
@@ -1299,9 +1320,10 @@
         Ver detalle →
       </button>
       <!-- "Entendido" aplica el cambio definitivamente -->
+      <!-- CAMBIO v16: relleno de acento → --acc-fill con letra --acc-on -->
       <button id="ir-ok"
         onclick="irEntendido()"
-        style="width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;color:#fff;background:var(--acc);margin-bottom:10px;">Entendido</button>
+        style="width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;color:var(--acc-on);background:var(--acc-fill);margin-bottom:10px;">Entendido</button>
       <!-- "Revertir" cancela y restaura el valor anterior -->
       <button onclick="irRevertir()"
         style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px;font-size:15px;font-weight:600;color:var(--t1);">Revertir</button>
@@ -1350,8 +1372,9 @@
       <div id="dp-warning"
         style="display:none;font-size:12px;color:#ef4444;text-align:center;margin-bottom:12px;font-weight:600;"></div>
       <!-- Botones -->
+      <!-- CAMBIO v16: relleno de acento → --acc-fill con letra --acc-on -->
       <button onclick="confirmarDiasActivos()"
-        style="width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;color:#fff;background:var(--acc);margin-bottom:10px;">
+        style="width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;color:var(--acc-on);background:var(--acc-fill);margin-bottom:10px;">
         Confirmar días
       </button>
       <button onclick="cancelarDiasPicker()"
@@ -1676,13 +1699,14 @@
         style="display:none;font-size:12px;color:#f59e0b;background:#f59e0b12;border:1px solid #f59e0b33;border-radius:8px;padding:8px 12px;margin-bottom:12px;line-height:1.4;">
       </div>
       <!-- CAMBIO P3A-4: bloque amarillo de nota personal. Solo visible si hay nota guardada. -->
+      <!-- CAMBIO v16: colores fijos ámbar → tokens (fondo --s1, borde --bd2, etiqueta y lápiz --t3, texto --t1) -->
       <div id="wu-notes-block" onclick="openExerciseEditSheetForWarmup()"
-        style="display:none;background:#f59e0b18;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:8px 12px;margin-bottom:12px;cursor:pointer;">
+        style="display:none;background:var(--s1);border-left:3px solid var(--bd2);border-radius:0 8px 8px 0;padding:8px 12px;margin-bottom:12px;cursor:pointer;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#f59e0b;">📝 MI NOTA</div>
-          <div style="font-size:11px;color:#f59e0b;opacity:0.7;">✏️</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--t3);">📝 MI NOTA</div>
+          <div style="font-size:11px;color:var(--t3);opacity:0.7;">✏️</div>
         </div>
-        <div id="wu-notes-text" style="font-size:12px;color:#f59e0b;line-height:1.5;"></div>
+        <div id="wu-notes-text" style="font-size:12px;color:var(--t1);line-height:1.5;"></div>
       </div>
       <div id="wu-form-acc"></div>
       <div id="wu-action"></div>
@@ -1728,18 +1752,20 @@
       <div id="wo-meta" style="font-size:12px;color:var(--t2);margin-bottom:8px;"></div>
       <!-- CAMBIO: Chip toggle Barra Libre ↔ Smith (solo visible en ejercicios con barra) -->
       <div id="wo-bar-toggle" style="display:none;margin-bottom:8px;"></div>
-      <span id="wo-pr-tag" class="tag" style="background:#ffd70020;color:#ffd700;display:none;margin-bottom:8px;">⭐
+      <!-- CAMBIO v16: tag de PR con el acento (fondo --acc-tint, letra --acc) en vez de dorado fijo -->
+      <span id="wo-pr-tag" class="tag" style="background:var(--acc-tint);color:var(--acc);display:none;margin-bottom:8px;">⭐
         PR</span>
       <!-- MUSCLES -->
       <div id="wo-muscles" style="font-size:12px;color:var(--t3);margin-bottom:8px;"></div>
       <!-- NOTES — CAMBIO P3A-3b: tap abre el sheet unificado de edición. -->
+      <!-- CAMBIO v16: colores fijos ámbar → tokens (fondo --s1, borde --bd2, etiqueta y lápiz --t3, texto --t1) -->
       <div id="wo-notes-block" onclick="openExerciseEditSheetForWorkout()"
-        style="display:none;background:#f59e0b18;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:8px 12px;margin-bottom:10px;cursor:pointer;position:relative;">
+        style="display:none;background:var(--s1);border-left:3px solid var(--bd2);border-radius:0 8px 8px 0;padding:8px 12px;margin-bottom:10px;cursor:pointer;position:relative;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#f59e0b;">📝 MI NOTA</div>
-          <div style="font-size:11px;color:#f59e0b;opacity:0.7;">✏️</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--t3);">📝 MI NOTA</div>
+          <div style="font-size:11px;color:var(--t3);opacity:0.7;">✏️</div>
         </div>
-        <div id="wo-notes-text" style="font-size:12px;color:#f59e0b;line-height:1.5;"></div>
+        <div id="wo-notes-text" style="font-size:12px;color:var(--t1);line-height:1.5;"></div>
       </div>
       <!-- FORM/TIPS (collapsible) — CAMBIO Exec Labels v2: la sección ⚡ EJECUCIÓN vive DENTRO (wo-form-acc) -->
       <details id="wo-details"
@@ -1880,13 +1906,14 @@
         style="display:none;font-size:12px;color:#f59e0b;background:#f59e0b12;border:1px solid #f59e0b33;border-radius:8px;padding:8px 12px;margin-bottom:12px;line-height:1.4;">
       </div>
       <!-- CAMBIO P3A-6: bloque amarillo de nota personal. Solo visible si hay nota guardada. -->
+      <!-- CAMBIO v16: colores fijos ámbar → tokens (fondo --s1, borde --bd2, etiqueta y lápiz --t3, texto --t1) -->
       <div id="cd-notes-block" onclick="openExerciseEditSheetForCooldown()"
-        style="display:none;background:#f59e0b18;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:8px 12px;margin-bottom:12px;cursor:pointer;">
+        style="display:none;background:var(--s1);border-left:3px solid var(--bd2);border-radius:0 8px 8px 0;padding:8px 12px;margin-bottom:12px;cursor:pointer;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#f59e0b;">📝 MI NOTA</div>
-          <div style="font-size:11px;color:#f59e0b;opacity:0.7;">✏️</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--t3);">📝 MI NOTA</div>
+          <div style="font-size:11px;color:var(--t3);opacity:0.7;">✏️</div>
         </div>
-        <div id="cd-notes-text" style="font-size:12px;color:#f59e0b;line-height:1.5;"></div>
+        <div id="cd-notes-text" style="font-size:12px;color:var(--t1);line-height:1.5;"></div>
       </div>
       <div id="cd-form-acc"></div>
       <div id="cd-action"></div>
@@ -2079,12 +2106,13 @@
               <div class="cfg-row-sub">Color de fondo de la aplicación</div>
             </div>
             <div class="cfg-theme-opts" id="cfg-theme-opts">
+              <!-- CAMBIO v16: vistas previas con los fondos nuevos (bg y s1) de cada tema -->
               <button class="cfg-theme-btn" data-theme="dark" onclick="setTheme('dark')">
-                <div class="cfg-theme-preview" style="background:linear-gradient(135deg,#0f0f0f 50%,#1a1a1a 50%);"></div>
+                <div class="cfg-theme-preview" style="background:linear-gradient(135deg,#000000 50%,#141414 50%);"></div>
                 <span>Oscuro</span>
               </button>
               <button class="cfg-theme-btn" data-theme="light" onclick="setTheme('light')">
-                <div class="cfg-theme-preview" style="background:linear-gradient(135deg,#f5f5f5 50%,#ffffff 50%);"></div>
+                <div class="cfg-theme-preview" style="background:linear-gradient(135deg,#eceef1 50%,#ffffff 50%);"></div>
                 <span>Claro</span>
               </button>
             </div>
@@ -3445,7 +3473,7 @@
     //   simple vista si el device cargó la versión nueva (si dice v6 → cargó lo nuevo).
     // ═══════════════════════════════════════════════════════════════════════════
     // CAMBIO parcial-6: subir versión por el guardado de entrenos parciales (fuerza refresco del SW).
-    const APP_BUILD = { version: 'v15', date: '24 oct 2026 · 17:05' }; // CAMBIO v15: arreglos de presentación (color de botones, volumen, acento, nombre en inglés en SS, dígitos fijos)
+    const APP_BUILD = { version: 'v16', date: '21 nov 2026 · 11:32' }; // CAMBIO v16: rediseño paso 1 — colores nuevos y acento por tema
 
     // CAMBIO versión/actualización: chequeo manual desde Config (o tap en la versión del
     //   home). Fuerza reg.update() y reporta: al día / descargando / hay nueva versión.
@@ -3501,11 +3529,12 @@
     //   Unidades: Braulio anota la SUMA de las dos mancuernas (1-2, 6-3 "kg total"); 2-4 es UNA mancuerna.
     let ORM_DATA = {"1-1": {"name": "Press Banca", "unit": "kg barra"}, "1-2": {"name": "Press Inc.Mc", "unit": "kg total"}, "1-4": {"name": "P.Hombros", "unit": "kg total maq"}, "1-6": {"name": "Pushdown", "unit": "kg"}, "1-7": {"name": "Ext.OH.U", "unit": "kg c/brazo"}, "2-1": {"name": "Jalón Ancho", "unit": "kg"}, "2-2": {"name": "Remo Neutro", "unit": "kg"}, "2-3": {"name": "Jalón Supino", "unit": "kg"}, "2-4": {"name": "Remo Mc 1B", "unit": "kg"}, "2-7": {"name": "Curl Barra", "unit": "kg"}, "3-1": {"name": "Hack Squat", "unit": "kg maq"}, "3-2": {"name": "Prensa", "unit": "kg maq"}, "3-5": {"name": "RDL Plat.", "unit": "kg plat"}, "3-6": {"name": "C.Isq.Sent", "unit": "kg"}, "4-1": {"name": "P.Hombros B", "unit": "kg total maq"}, "4-2": {"name": "Press Inc.Máq", "unit": "kg"}, "4-3": {"name": "Press Cerr.", "unit": "kg barra"}, "4-7": {"name": "Ext.OH B", "unit": "kg c/brazo"}, "5-1": {"name": "Chest Row", "unit": "kg"}, "5-2": {"name": "Remo Ancho", "unit": "kg"}, "5-3": {"name": "Jalón N/C", "unit": "kg"}, "5-7": {"name": "C.Invertido", "unit": "kg"}, "6-1": {"name": "Hip Thrust", "unit": "kg barra"}, "6-2": {"name": "RDL Plat.", "unit": "kg plat"}, "6-3": {"name": "BSS", "unit": "kg total"}, "6-4": {"name": "C.Isq.Tumb", "unit": "kg"}};
 
+    // CAMBIO v16: la fase 4 se llama 'Deload' sin emoji (regla 10 de gym-diseno); solo se pinta, nada compara contra el nombre.
     const PHASES = [
       { weeks: [1, 2], key: 'acc', name: 'Acumulación', color: '#3b82f6', reps: '12-15', pct: '65-70%' },
       { weeks: [3, 5], key: 'hyp', name: 'Hipertrofia', color: '#f97316', reps: '8-10', pct: '75-80%' },
       { weeks: [6, 6], key: 'str', name: 'Fuerza', color: '#ef4444', reps: '5-7', pct: '82-87%' },
-      { weeks: [7, 7], key: 'dl', name: 'Deload 🔄', color: '#22c55e', reps: '12-15 ligero', pct: '50-55%' },
+      { weeks: [7, 7], key: 'dl', name: 'Deload', color: '#22c55e', reps: '12-15 ligero', pct: '50-55%' },
     ];
 
     // CAMBIO G4-1: helpers de "week-overrides" — el usuario puede marcar manualmente un día del split
@@ -4116,15 +4145,15 @@
     function _isDeload() { return _currentPhaseKey() === 'dl'; }
 
     // CAMBIO G5-2: info de fase a partir de su key ('acc'|'hyp'|'str'|'dl').
-    //   Deriva nombre y color de PHASES (fuente única). El nombre de PHASES para deload trae
-    //   un emoji ("Deload 🔄"); aquí devolvemos nombres LIMPIOS en español para el historial:
-    //   Acumulación / Hipertrofia / Fuerza / Descarga. Si la key es desconocida o falta
+    //   Deriva nombre y color de PHASES (fuente única). Nombres para el historial:
+    //   Acumulación / Hipertrofia / Fuerza / Deload (CAMBIO v16: antes «Descarga»; el resto de la
+    //   app dice «Deload» y PHASES ya no lleva emoji). Si la key es desconocida o falta
     //   (entrenos viejos sin phase guardada) → null, y el render muestra "—" sin barra.
     function _phaseInfoForKey(key) {
       if (!key) return null;
       const p = PHASES.find(x => x.key === key);
       if (!p) return null;
-      const cleanNames = { acc: 'Acumulación', hyp: 'Hipertrofia', str: 'Fuerza', dl: 'Descarga' };
+      const cleanNames = { acc: 'Acumulación', hyp: 'Hipertrofia', str: 'Fuerza', dl: 'Deload' }; // CAMBIO v16: «Deload», como en el resto de la app
       return { key: p.key, name: cleanNames[p.key] || p.name, color: p.color };
     }
 
@@ -4617,7 +4646,8 @@
 
     function renderProgressionBanner() {
       if (!CYCLE_START) {
-        return `<div style="margin:0 16px 14px;background:#22222233;border:1px solid var(--bd);border-radius:14px;padding:16px;">
+        // CAMBIO v16: fondo fijo #22222233 → var(--s1) (no se leía en tema claro)
+        return `<div style="margin:0 16px 14px;background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:16px;">
       <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--t3);margin-bottom:6px;">📊 CICLO DE PROGRESIÓN</div>
       <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Ciclo no iniciado</div>
       <div style="font-size:13px;color:var(--t2);margin-bottom:16px;">Entrena libremente hasta que estés listo para comenzar la periodización.</div>
@@ -4723,15 +4753,28 @@
 
     // ═══ CONFIGURACIÓN — APARIENCIA ══════════════════════════════════════════
 
+    // CAMBIO v16 (rediseño paso 1): los 11 tokens base del sistema gym-diseno por tema.
     const TEMAS = {
       dark: {
-        '--bg': '#0f0f0f', '--s1': '#1a1a1a', '--s2': '#222',
-        '--bd': '#2e2e2e', '--t1': '#f0f0f0', '--t2': '#b0b0b0', '--t3': '#808080',
+        '--bg': '#000000', '--s1': '#141414', '--s2': '#232323',
+        '--bd': '#2a2a2a', '--track': '#2a2a2a', '--bdin': '#3a3a3a', '--bd2': '#6e6e6e',
+        '--t1': '#f5f5f5', '--t2': '#b8b8b8', '--t3': '#8c8c8c', '--danger': '#f87171',
       },
       light: {
-        '--bg': '#f5f5f5', '--s1': '#ffffff', '--s2': '#e8e8e8',
-        '--bd': '#d0d0d0', '--t1': '#1a1a1a', '--t2': '#555555', '--t3': '#888888',
+        '--bg': '#eceef1', '--s1': '#ffffff', '--s2': '#e4e6ea',
+        '--bd': '#d5d8dd', '--track': '#d5d8dd', '--bdin': '#c3c7cd', '--bd2': '#7c8088',
+        '--t1': '#121417', '--t2': '#454a52', '--t3': '#5f646c', '--danger': '#b91c1c',
       },
+    };
+
+    // CAMBIO v16: tonos del acento por tema (sistema.md §2): [texto e íconos, relleno, letra sobre el relleno].
+    //   La clave es el hex de b5-accent.
+    const ACENTOS = {
+      '#f43f5e': { dark: ['#fb7185', '#f43f5e', '#000000'], light: ['#be123c', '#e11d48', '#ffffff'] }, // rosa
+      '#6366f1': { dark: ['#818cf8', '#6366f1', '#000000'], light: ['#4f46e5', '#4f46e5', '#ffffff'] }, // morado
+      '#22c55e': { dark: ['#4ade80', '#22c55e', '#000000'], light: ['#166534', '#16a34a', '#000000'] }, // verde
+      '#f59e0b': { dark: ['#fbbf24', '#f59e0b', '#000000'], light: ['#92400e', '#d97706', '#000000'] }, // amarillo
+      '#3b82f6': { dark: ['#60a5fa', '#3b82f6', '#000000'], light: ['#1d4ed8', '#2563eb', '#ffffff'] }, // azul
     };
 
     // FIX: setFontSize ahora actualiza --fs-zoom en :root para escalar TODO el texto
@@ -4761,6 +4804,12 @@
       const vars = TEMAS[theme] || TEMAS.dark;
       const root = document.documentElement.style;
       Object.entries(vars).forEach(([k, v]) => root.setProperty(k, v));
+      // CAMBIO v16: color-scheme y <meta name="theme-color"> siguen al tema que resolvió TEMAS
+      //   (controles nativos y barra de estado del navegador en el color del fondo).
+      const _resolvedTheme = TEMAS[theme] ? theme : 'dark';
+      document.documentElement.style.colorScheme = _resolvedTheme === 'light' ? 'light' : 'dark';
+      const _metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (_metaTheme) _metaTheme.setAttribute('content', vars['--bg']);
       localStorage.setItem('b5-theme', theme);
       document.querySelectorAll('.cfg-theme-btn').forEach(b => {
         b.classList.toggle('active', b.dataset.theme === theme);
@@ -4771,13 +4820,23 @@
 
     // FIX: --acc-rgb y --acc-bg se usaban con fallback rosa pero nadie las definía, así que el tinte
     //   del acento era siempre rosa. Las tres variables salen del mismo hex; si no es #rrggbb, rosa default.
+    // CAMBIO v16 (rediseño paso 1): acento por tema. Con el hex guardado (fila de ACENTOS; rosa si no
+    //   está) y el tema de b5-theme pone --acc (texto), --acc-fill (relleno), --acc-on (letra sobre el
+    //   relleno), --acc-rgb (de la clave de la fila), --acc-tint (.16 oscuro / .10 claro) y --acc-bg = --acc-tint.
     function _applyAccentVars(hex) {
-      if (!/^#[0-9a-fA-F]{6}$/.test(hex || '')) hex = '#f43f5e';
-      const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+      const key = String(hex || '').toLowerCase();
+      const rowKey = ACENTOS[key] ? key : '#f43f5e';
+      const theme = localStorage.getItem('b5-theme') === 'light' ? 'light' : 'dark';
+      const [accText, accFill, accOn] = ACENTOS[rowKey][theme];
+      const r = parseInt(rowKey.slice(1, 3), 16), g = parseInt(rowKey.slice(3, 5), 16), b = parseInt(rowKey.slice(5, 7), 16);
+      const tint = 'rgba(' + r + ',' + g + ',' + b + ',' + (theme === 'light' ? '.10' : '.16') + ')';
       const root = document.documentElement.style;
-      root.setProperty('--acc', hex);
+      root.setProperty('--acc', accText);
+      root.setProperty('--acc-fill', accFill);
+      root.setProperty('--acc-on', accOn);
       root.setProperty('--acc-rgb', r + ',' + g + ',' + b);
-      root.setProperty('--acc-bg', 'rgba(' + r + ',' + g + ',' + b + ',.08)');
+      root.setProperty('--acc-tint', tint);
+      root.setProperty('--acc-bg', tint);
     }
 
     function setAccent(hex) {
@@ -5441,9 +5500,10 @@
           background:var(--s2);border-radius:10px;margin-bottom:8px;
           border:1px solid var(--bd);cursor:pointer;
         `;
+        // CAMBIO v16: accent-color del checkbox → --acc-fill (relleno de acento)
         fila.innerHTML = `
           <input type="checkbox" data-dayid="${d.id}" ${marcado ? 'checked' : ''}
-            style="width:18px;height:18px;accent-color:var(--acc);flex-shrink:0;"
+            style="width:18px;height:18px;accent-color:var(--acc-fill);flex-shrink:0;"
             onchange="actualizarContadorDias()">
           <span style="width:8px;height:8px;border-radius:50%;background:${d.color};flex-shrink:0;"></span>
           <div style="flex:1;">
@@ -8019,8 +8079,9 @@ function _getPrevIdxFrom(d, fromIdx) {
       const notesBlock = document.getElementById('wo-notes-block');
       const txtEl = document.getElementById('wo-notes-text');
       if (notesBlock && txtEl) {
-        notesBlock.style.borderLeftColor = '#f59e0b';
-        notesBlock.style.background = '#f59e0b18';
+        // CAMBIO v16: el repintado usa los mismos tokens que el HTML (antes ámbar fijo)
+        notesBlock.style.borderLeftColor = 'var(--bd2)';
+        notesBlock.style.background = 'var(--s1)';
         const note = resolveNoteForExercise(e);
         if (note) {
           notesBlock.style.display = 'block';
@@ -8337,6 +8398,7 @@ function _getPrevIdxFrom(d, fromIdx) {
           const wVal = done ? logged.weight : defKg;
           const rVal = done ? logged.reps : defReps;
           const dispW = _unitMode === 'lb' ? Math.round(wVal * 2.2046 * 10) / 10 : wVal;
+          // CAMBIO v16: el ✓ sin marcar de esta fila pasa de #ffffff22 a var(--t3) (no se veía en tema claro)
           // CAMBIO 2026-04-29 G3: en bodyweight, span "—" en lugar de input de peso
           // CAMBIO registros-2 (v12): sin registros de ese ejercicio/equipo el input queda VACÍO (placeholder "kg").
           const ssWeightCell = exIsBW
@@ -8349,7 +8411,7 @@ function _getPrevIdxFrom(d, fromIdx) {
         ${ssWeightCell}
         <input type="number" inputmode="numeric" class="st-input ${done ? 'done-input' : ''}" id="${prefix}-r-${i}" value="${rVal}" step="1" style="width:54px;"
           onfocus="selInput(this)">
-        <button class="st-check ${done ? 'checked' : ''}" style="${done ? 'background:' + d.color + ';color:#fff;' : 'color:#ffffff22;'}" onclick="toggleSetSS('${ex.id}',${i},'${prefix}')">✓</button>
+        <button class="st-check ${done ? 'checked' : ''}" style="${done ? 'background:' + d.color + ';color:#fff;' : 'color:var(--t3);'}" onclick="toggleSetSS('${ex.id}',${i},'${prefix}')">✓</button>
       </div>`;
         }
         return h;
@@ -8453,12 +8515,13 @@ function _getPrevIdxFrom(d, fromIdx) {
       const noteA = resolveNoteForExercise(eA);
       const noteAStyle = noteA ? '' : 'opacity:0.6;font-style:italic;';
       const noteAText = noteA || 'Tap para agregar tu nota personal';
-      html += `<div onclick="openNoteEditorFor('${eA.id}')" style="background:#f59e0b18;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:8px 12px;margin-top:8px;cursor:pointer;">
+      // CAMBIO v16: bloque «MI NOTA» con tokens (fondo --s1, borde --bd2, etiqueta y lápiz --t3, texto --t1)
+      html += `<div onclick="openNoteEditorFor('${eA.id}')" style="background:var(--s1);border-left:3px solid var(--bd2);border-radius:0 8px 8px 0;padding:8px 12px;margin-top:8px;cursor:pointer;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#f59e0b;">📝 MI NOTA</div>
-          <div style="font-size:11px;color:#f59e0b;opacity:0.7;">✏️</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--t3);">📝 MI NOTA</div>
+          <div style="font-size:11px;color:var(--t3);opacity:0.7;">✏️</div>
         </div>
-        <div style="font-size:12px;color:#f59e0b;line-height:1.5;${noteAStyle}">${noteAText}</div>
+        <div style="font-size:12px;color:var(--t1);line-height:1.5;${noteAStyle}">${noteAText}</div>
       </div>`;
       // FIX 2026-04-21: Forma y errores DENTRO de la tarjeta del ejercicio A (antes era un bloque combinado al final)
       // CAMBIO Exec Labels v2: sección "⚡ EJECUCIÓN" del leader DENTRO de su accordion, arriba de
@@ -8535,12 +8598,13 @@ function _getPrevIdxFrom(d, fromIdx) {
       const noteB = resolveNoteForExercise(eB);
       const noteBStyle = noteB ? '' : 'opacity:0.6;font-style:italic;';
       const noteBText = noteB || 'Tap para agregar tu nota personal';
-      html += `<div onclick="openNoteEditorFor('${eB.id}')" style="background:#f59e0b18;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:8px 12px;margin-top:8px;cursor:pointer;">
+      // CAMBIO v16: bloque «MI NOTA» con tokens (fondo --s1, borde --bd2, etiqueta y lápiz --t3, texto --t1)
+      html += `<div onclick="openNoteEditorFor('${eB.id}')" style="background:var(--s1);border-left:3px solid var(--bd2);border-radius:0 8px 8px 0;padding:8px 12px;margin-top:8px;cursor:pointer;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#f59e0b;">📝 MI NOTA</div>
-          <div style="font-size:11px;color:#f59e0b;opacity:0.7;">✏️</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--t3);">📝 MI NOTA</div>
+          <div style="font-size:11px;color:var(--t3);opacity:0.7;">✏️</div>
         </div>
-        <div style="font-size:12px;color:#f59e0b;line-height:1.5;${noteBStyle}">${noteBText}</div>
+        <div style="font-size:12px;color:var(--t1);line-height:1.5;${noteBStyle}">${noteBText}</div>
       </div>`;
       // FIX 2026-04-21: Forma y errores DENTRO de la tarjeta del ejercicio B
       // CAMBIO Exec Labels v2: sección "⚡ EJECUCIÓN" del receptor DENTRO de su accordion,
@@ -9330,6 +9394,7 @@ function _getPrevIdxFrom(d, fromIdx) {
         // CAMBIO Grupo E (AMRAP): sin reps objetivo → input vacío con placeholder hasta que se registre.
         const rVal = done ? logged.reps : (isAmrap ? '' : defReps);
         const dispW = _unitMode === 'lb' ? Math.round(wVal * 2.2046 * 10) / 10 : wVal;
+        // CAMBIO v16: el ✓ sin marcar de esta fila pasa de #ffffff22 a var(--t3) (no se veía en tema claro)
         // CAMBIO 2026-04-29 G3: en bodyweight, span "—" en lugar de input de peso (peso=0 implícito)
         // CAMBIO registros-2 (v12): sin registros de ese ejercicio/equipo el input queda VACÍO (placeholder "kg").
         const weightCell = isBW
@@ -9342,7 +9407,7 @@ function _getPrevIdxFrom(d, fromIdx) {
       ${weightCell}
       <input type="number" inputmode="numeric" class="st-input ${done ? 'done-input' : ''}" id="st-r-${i}" value="${rVal}" step="1" style="width:54px;" placeholder="${isAmrap ? 'reps' : ''}"
         onfocus="selInput(this)">
-      <button class="st-check ${done ? 'checked' : ''}" style="${done ? 'background:' + d.color + ';color:#fff;' : 'color:#ffffff22;'}" onclick="toggleSet(${i})">✓</button>
+      <button class="st-check ${done ? 'checked' : ''}" style="${done ? 'background:' + d.color + ';color:#fff;' : 'color:var(--t3);'}" onclick="toggleSet(${i})">✓</button>
     </div>`;
       }
       document.getElementById('wo-set-rows').innerHTML = h;
@@ -10430,8 +10495,9 @@ function _getPrevIdxFrom(d, fromIdx) {
       const streak = calcStreak();
       // CAMBIO G4-5: botón de panel "¿Qué llevo esta semana?" arriba del calendario mensual.
       //   Solo visible si hay un ciclo iniciado (CYCLE_START != null). Si no, mensaje guía corto.
+      // CAMBIO v16: relleno de acento → --acc-fill con letra --acc-on
       const weekPanelBtn = CYCLE_START
-        ? `<button onclick="openWeekPanel()" style="width:100%;background:var(--acc);color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:14px;">📊 ¿Qué llevo esta semana?</button>`
+        ? `<button onclick="openWeekPanel()" style="width:100%;background:var(--acc-fill);color:var(--acc-on);border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:14px;">📊 ¿Qué llevo esta semana?</button>`
         : `<div style="background:var(--s2);border:1px dashed var(--bd);border-radius:12px;padding:12px;font-size:12px;color:var(--t3);text-align:center;margin-bottom:14px;">Inicia un ciclo desde el inicio para ver tu progreso semanal aquí.</div>`;
       html = weekPanelBtn + `<div style="display:flex;gap:10px;margin-bottom:16px;">
     <div class="card" style="flex:1;text-align:center;"><div style="font-size:22px;font-weight:800;color:#22c55e;">${thisMonthCount}</div><div class="slb" style="margin-top:2px;">ESTE MES</div></div>
@@ -10943,7 +11009,8 @@ function _getPrevIdxFrom(d, fromIdx) {
       const all = Object.values(pbs);
       document.getElementById('prs-list').innerHTML = all.length === 0
         ? `<div style="color:var(--t3);text-align:center;padding:60px 0;font-size:15px;">Completa tu primer entreno para ver tus PRs</div>`
-        : all.map(p => `<div class="pr-row"><div style="font-size:13px;color:var(--t2);flex:1;padding-right:12px;">${p.name}</div><div style="font-size:15px;font-weight:800;color:#ffd700;">${p.weight} kg × ${p.reps}</div></div>`).join('');
+        // CAMBIO v16: peso del PR en --acc (dorado fijo no se leía en tema claro)
+        : all.map(p => `<div class="pr-row"><div style="font-size:13px;color:var(--t2);flex:1;padding-right:12px;">${p.name}</div><div style="font-size:15px;font-weight:800;color:var(--acc);">${p.weight} kg × ${p.reps}</div></div>`).join('');
     }
 
 
@@ -11610,8 +11677,9 @@ function _getPrevIdxFrom(d, fromIdx) {
             <div style="font-size:10px;color:var(--t3);text-align:center;margin-top:6px;">Para cambiarlo en tu rutina, hazlo antes de empezar a entrenar</div>
           `;
         } else {
+          // CAMBIO v16: relleno de acento → --acc-fill con letra --acc-on
           const siempreBtn = `<button onclick="event.stopPropagation();onSwapPermanenteClick('${_escAttr(slot.id)}','${_escAttr(item.ref)}',${dayId !== null ? dayId : 'null'})"
-            style="flex:1;background:var(--acc);border:none;border-radius:8px;padding:11px 8px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;line-height:1.25;">Cambiar<br><span style="font-weight:600;font-size:11px;opacity:.85;">en mi rutina</span></button>`;
+            style="flex:1;background:var(--acc-fill);border:none;border-radius:8px;padding:11px 8px;font-size:12px;font-weight:700;color:var(--acc-on);cursor:pointer;line-height:1.25;">Cambiar<br><span style="font-weight:600;font-size:11px;opacity:.85;">en mi rutina</span></button>`;
           actions = `<div style="display:flex;gap:8px;margin-top:10px;">${hoyBtn}${siempreBtn}</div>`;
         }
       }

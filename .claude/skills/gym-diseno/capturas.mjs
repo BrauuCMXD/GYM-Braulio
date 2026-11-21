@@ -160,7 +160,11 @@ function medirToque() {
 async function recorrido(browser, { carpeta, tema, letra, pantallas, medir }) {
   const ctx = await browser.newContext({
     viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, userAgent: UA,
+    timezoneId: 'America/Mexico_City', locale: 'es-MX',
   });
+  // Fecha fija (un viernes): los entrenos sembrados caen en la misma semana y las capturas
+  // salen iguales en cada corrida, así el antes y el después se comparan sin ruido.
+  if (ctx.clock && ctx.clock.setFixedTime) await ctx.clock.setFixedTime(new Date('2026-11-20T10:00:00-06:00'));
   await ctx.addInitScript(([t, a, l]) => {
     try { localStorage.setItem('b5-theme', t); localStorage.setItem('b5-accent', a); localStorage.setItem('b5-font-size', l); } catch (e) { }
   }, [tema, ACENTO, letra]);
@@ -171,9 +175,14 @@ async function recorrido(browser, { carpeta, tema, letra, pantallas, medir }) {
 
   await page.goto(URL_APP);
   await page.waitForTimeout(800);
-  await page.evaluate(sembrar);
-  await page.reload();
-  await page.waitForTimeout(900);
+  // A veces Chromium pierde lo guardado justo antes de recargar: si falta, se siembra y se recarga otra vez.
+  for (let intento = 0; intento < 3; intento++) {
+    await page.evaluate(sembrar);
+    await page.waitForTimeout(500);
+    await page.reload();
+    await page.waitForTimeout(900);
+    if (await page.evaluate(() => history.length) >= 3) break;
+  }
 
   const dir = path.join(SALIDA, carpeta);
   fs.mkdirSync(dir, { recursive: true });
