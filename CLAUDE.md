@@ -1,10 +1,10 @@
 # CLAUDE.md — Gym Braulio PWA
 
-> **Al día con v15** (`b2141ea`, 2026-10-24). Verificado contra el código el 2026-10-24: las cifras se midieron en el archivo, no se copiaron de resúmenes. Ante cualquier duda **gana el código**.
+> **Al día con v16** (`0e73ab9`, 2026-11-21). Verificado contra el código el 2026-10-24 y puesto al día con cada versión: las cifras se midieron en el archivo, no se copiaron de resúmenes. Ante cualquier duda **gana el código**.
 > **Este archivo es PÚBLICO** (repo y GitHub Pages): solo reglas técnicas. Nada personal — medidas, salud, ubicación —; eso va en `CLAUDE.local.md`, que git ignora y Claude Code carga solo en sesiones locales. Los docs del director (`estado_actual.md`, `funciones.md`, `prompts_pendientes.md`, `backlog.md`) también son privados: en una sesión en la nube no existen; trabaja con el código y con este archivo.
 
 ## Proyecto
-HTML monolítico PWA (12,256 líneas, ~899 KB en v15). Vanilla JS/CSS/HTML, sin frameworks, sin backend, 100% offline.
+HTML monolítico PWA (12,324 líneas, ~904 KB en v16). Vanilla JS/CSS/HTML, sin frameworks, sin backend, 100% offline.
 **Deploy:** https://brauucmxd.github.io/GYM-Braulio/ | **Archivo:** `index.html`
 **Verificación:** skill `gym-verificar` (`.claude/skills/gym-verificar/`) + scripts en `tools/` (Node, sin dependencias, solo lectura): `node tools/verificar.mjs` y `node tools/simular-peso.mjs`.
 **Diseño:** skill `gym-diseno` (`.claude/skills/gym-diseno/`): sistema visual de la maqueta 4.2 aprobada — tokens por tema y acento, letra, tamaños para tocar, íconos, componentes, pantallas y orden del rediseño 4.3. Trae `capturas.mjs` (capturas a 390×844 con Playwright; si no está, no se instala).
@@ -361,8 +361,11 @@ config: cfg-sec-profile arriba de Apariencia (incluye selector de perfil + fila 
 ```
 
 ## CSS
-Variables: `--bg --s1 --s2 --bd --t1 --t2 --t3 --acc --warm --cool` + `--acc-rgb --acc-bg` (v15: las pone `_applyAccentVars(hex)` junto con `--acc`)
-Sistema del rediseño (tokens nuevos, `--acc-fill`/`--acc-on`/`--acc-tint`, escala de letra, componentes): skill `gym-diseno`. Hasta que el paso 1 de 4.3 lo implemente, el código sigue con las variables de arriba.
+Variables (v16, paso 1 del rediseño):
+- Por tema: `--bg --s1 --s2 --bd --track --bdin --bd2 --t1 --t2 --t3 --danger`, en `:root` (valores del oscuro, para el primer pintado) y en `TEMAS`, que aplica `setTheme`.
+- Acento por tema, todas desde `_applyAccentVars(hex)` con la tabla `ACENTOS`: `--acc` (texto, íconos y bordes), `--acc-fill` (relleno), `--acc-on` (letra sobre el relleno), `--acc-rgb`, `--acc-tint` (fila actual y chips) y `--acc-bg` (= `--acc-tint`, nombre de v15).
+- Letra: `--font-text` (en `body`) y `--font-num`. `--warm` y `--cool` quedan de v15 y se van con las pantallas que los usan.
+Sistema del rediseño (escala de letra, tamaños para tocar, íconos, componentes y orden de los pasos): skill `gym-diseno`.
 Clases clave: `.screen .sf .ss .card .bottom-nav .today-card .cfg-* .st-row .st-input .bnav-compact .wo-sticky(.empty) .skip-chip`
 
 ## JS — funciones críticas (no romper)
@@ -392,7 +395,7 @@ Clases clave: `.screen .sf .ss .card .bottom-nav .today-card .cfg-* .st-row .st-
 - **Guardado de entrenos (incl. PARCIALES, 2026-08-26):** `_persistWorkoutToHistory(opts)` `_workoutProgress(loggedObj, dayId)` `_teardownWorkoutSession()` `_partialChipHtml(h)` `_offerSavePendingSession(d)` · consumidores `finishWorkout` `confirmCancel` `checkPendingSession`
 - **Ciclo por trabajo (G4):** `getCurrentWeek` `isCycleExpired` `nextDayId` `startCycle` · week-overrides (getter/setter) · panel "¿Qué llevo?"
 - **Limpieza y migraciones al arrancar:** IIFE `_purgeDietData` (v13) · `_migrateRenamedVariants` (v12) · `_cleanStaleRiskyEquipment` (v14, una vez por perfil, marca `risky-cleanup-v14`). *(La Dieta se eliminó en v13; lista en funciones.md → ELIMINADAS.)*
-- **Config:** `loadApariencia` `loadConfigGrupo2` `loadConfigGrupo3` `showInfoRevertModal` `openDetailSheet` · acento `setTheme`/`setAccent` → `_applyAccentVars` (v15)
+- **Config:** `loadApariencia` `loadConfigGrupo2` `loadConfigGrupo3` `showInfoRevertModal` `openDetailSheet` · acento `setTheme`/`setAccent` → `_applyAccentVars` (v15; por tema con `ACENTOS` desde v16; `setTheme` también pone `color-scheme` y la `meta theme-color`)
 - **Resolvers:** `resolveEx(entry, d?)` `_resolveDynamicActivation(entry, d)` `resolveCardio(d)`
 - **Fase deload:** `_currentPhaseKey` `_isDeload` `_isCompound` `_phaseAdjustedRest` `_deloadTimeVal` `_round25`
 - **Reset acumulación:** `_savePreDeloadSnapshot` `_getPreDeloadSnapshot` `_referenceWeightFor` `_phaseResetPendingFor` `_markPhaseResetDoneFor` `_clearAllPhaseResetFlags`
@@ -469,7 +472,7 @@ El toggle Libre↔Smith ahora lo cubren las variantes `barra-libre`+`smith` de c
 Braulio no la usaba. Se quitaron `FOOD_DB`, `DIET_MEALS`, `NUTR`, `NUTR_META`, `PROT_G_PER_KG`, la pantalla `diet`, `edit-sheet`, `swap-sheet`, la pestaña y 30 funciones (~970 líneas). Quedan: peso, grasa y objetivo del perfil, el recordatorio de agua y `showNutrition` como "Análisis de la sesión" (duración e incrementos sugeridos). `_purgeDietData` limpia lo guardado. No reintroducir sin decisión de Braulio.
 
 ## Datos en `<script>`
-`EX_CATALOG{201}` (134 main · 34 warmup · 33 cooldown; 193 variantes en 89 mains, 77 con discos; 16 variantes con `form`/`errors` propios, P4.4; 16 con `unsafeFor`; `execLabel` en los 134 mains, frases `execCue` solo en 51 — faltan las 83 altas de las tandas; 44 mains con `swaps[]` (115 destinos) y **0 refs colgando**) `CARDIO_PROTOCOL{1}` `DAYS[6]` (51 ejercicios: 7·10·9·7·9·9) `JIMENA_DAYS[6]` (32: 5·6·5·6·5·5) `ORM_DATA{26}` (solo `name` + `unit`, Braulio) `PHASES[4]` (acc sem 1-2 12-15 · hyp 3-5 8-10 · str 6 5-7 · dl 7 12-15 ligero — fuente única de periodización y de los %) `PLATES[6]` (20·15·10·5·2.5·1.25) `BAND_SUBS{5}` `EX_SIBLINGS{9}` `TEMAS{2}` `BARBELL_EX{0}` (deprecado) `PROFILES_DEFAULT{2}` (con `conditions[]` por perfil — valores y pendientes en `CLAUDE.local.md`; `level` editable vía Config) `COMPOUND_NAMES_EN{47}` (7 exclusiones permanentes del coach por `nameEn` exacto — ver «Identificación de compuestos») `APP_BUILD`. Flags de ejercicio: `amrap:true` (Grupo E), `repsOverride:{fase:reps}` (Grupo A), `needs1RM` (Jimena), `primaryMuscle` (los 134 mains; 14 `'core'`). *(Medido en v13 el 2026-10-24. Antes de v11 el catálogo real era de 140 fichas y 73 mains: las Tandas 2A/2B no habían llegado a `main`.)*
+`EX_CATALOG{201}` (134 main · 34 warmup · 33 cooldown; 193 variantes en 89 mains, 77 con discos; 16 variantes con `form`/`errors` propios, P4.4; 16 con `unsafeFor`; `execLabel` en los 134 mains, frases `execCue` solo en 51 — faltan las 83 altas de las tandas; 44 mains con `swaps[]` (115 destinos) y **0 refs colgando**) `CARDIO_PROTOCOL{1}` `DAYS[6]` (51 ejercicios: 7·10·9·7·9·9) `JIMENA_DAYS[6]` (32: 5·6·5·6·5·5) `ORM_DATA{26}` (solo `name` + `unit`, Braulio) `PHASES[4]` (acc sem 1-2 12-15 · hyp 3-5 8-10 · str 6 5-7 · dl 7 12-15 ligero — fuente única de periodización y de los %; nombres sin emoji desde v16: Acumulación, Hipertrofia, Fuerza y Deload) `PLATES[6]` (20·15·10·5·2.5·1.25) `BAND_SUBS{5}` `EX_SIBLINGS{9}` `TEMAS{2}` (11 tokens por tema, v16) `ACENTOS{5}` (por hex de `b5-accent`: `[texto, relleno, letra sobre el relleno]` en oscuro y en claro, v16) `BARBELL_EX{0}` (deprecado) `PROFILES_DEFAULT{2}` (con `conditions[]` por perfil — valores y pendientes en `CLAUDE.local.md`; `level` editable vía Config) `COMPOUND_NAMES_EN{47}` (7 exclusiones permanentes del coach por `nameEn` exacto — ver «Identificación de compuestos») `APP_BUILD`. Flags de ejercicio: `amrap:true` (Grupo E), `repsOverride:{fase:reps}` (Grupo A), `needs1RM` (Jimena), `primaryMuscle` (los 134 mains; 14 `'core'`). *(Medido en v13 el 2026-10-24. Antes de v11 el catálogo real era de 140 fichas y 73 mains: las Tandas 2A/2B no habían llegado a `main`.)*
 
 ## NUNCA
 - Poner conteos de segundos por rep (tempo, pausas, apretones) en tip: o form[] — los segundos de apretón viven solo en execCue; isométricos/holds/respiraciones/descansos sí llevan segundos.
@@ -550,6 +553,7 @@ Braulio no la usaba. Se quitaron `FOOD_DB`, `DIET_MEALS`, `NUTR`, `NUTR_META`, `
 - **Repartir "por mano" el peso de UNA mancuerna** — solo los ids con `mancuernas`/`kettlebells` son par (`_variantIsDumbbell`); time-and-weight y BSS anotan la SUMA
 - **Recorrer `history` a mano para leer el historial de un slot** — usar `_recentSessionsFor` (más nueva primero, filtra ejercicio y equipo, `skipDeload`)
 - **Escribir datos personales en `CLAUDE.md`** (medidas, salud, ubicación, gym) — es PÚBLICO; van en `CLAUDE.local.md`
+- **`background: var(--acc)` con texto encima** — un relleno de acento con texto usa `--acc-fill` y letra `--acc-on` (v16); `--acc` es para texto, íconos, bordes y aros
 
 ## SIEMPRE
 - `showConfirm()` con 5 args (6º `cancelCb` opcional)
@@ -559,7 +563,7 @@ Braulio no la usaba. Se quitaron `FOOD_DB`, `DIET_MEALS`, `NUTR`, `NUTR_META`, `
 - `getSiblingHistory()` en vez de `exHistory[]` directo
 - `resolveEx(entry, d?)` al acceder ejercicios de cualquier slot desde DAYS
 - `resolveCardio(d)` al acceder propiedades de `d.cardio`
-- Español excepto: Press, Curl, Hip Thrust, RDL, Bayesian, RKC, Smith, Pushdown, Y-T-W, LISS, HIIT, Triceps, Core, Booty Builder, Reverse Lunge
+- Español excepto: Press, Curl, Hip Thrust, RDL, Bayesian, RKC, Smith, Pushdown, Y-T-W, LISS, HIIT, Triceps, Core, Booty Builder, Reverse Lunge, Deload
 - `getSupersetPartner(e, d)` antes de asumir que un ejercicio se renderiza solo
 - `toggleSetSS(exId, idx, prefix)` en vez de `toggleSet(idx)` dentro de la UI del superset
 - `_plateInfoFor(ex)` (base y etiqueta) / `_barWeightForVariant(v)` en vez de `BAR_WEIGHT` fijo
@@ -619,7 +623,7 @@ Braulio no la usaba. Se quitaron `FOOD_DB`, `DIET_MEALS`, `NUTR`, `NUTR_META`, `
 - **Recordar el peso por ejercicio + equipo:** `exHistory[slotId]` y `_savedRecs[slotId]` guardan `ref` y `variant`; "Anterior" y "Rec. anterior" solo se muestran si coinciden con lo activo
 - **`_progressStepFor(exId)`** como paso de progresión (5 con par de mancuernas, 2.5 el resto)
 - **`gym-verificar` antes de entregar** cualquier cambio a `index.html`, `sw.js` o `manifest.json` (`node tools/verificar.mjs`; `node tools/simular-peso.mjs` si tocaste el motor de peso, swaps, variantes o discos)
-- **Aplicar el acento con `_applyAccentVars(hex)`** (v15): pone `--acc`, `--acc-rgb` y `--acc-bg` juntos; `setTheme` y `setAccent` ya la llaman. Nunca poner `--acc` suelto.
+- **Aplicar el acento con `_applyAccentVars(hex)`** (v15; por tema desde v16): con la fila de `ACENTOS` del hex (rosa si no está) y el tema activo pone `--acc`, `--acc-fill`, `--acc-on`, `--acc-rgb`, `--acc-tint` y `--acc-bg` juntos; `setTheme` y `setAccent` ya la llaman. Nunca poner `--acc` suelto.
 - **Skill `gym-diseno` antes de cualquier cambio visual** (CSS, clases, estilos, HTML o funciones que pintan pantallas): colores con tokens, letra de la escala, 44 px para tocar (el ✓ de serie, 48), íconos de línea con `_icon`, y el color del día solo en su disco.
 
 ## Optimización de tokens
